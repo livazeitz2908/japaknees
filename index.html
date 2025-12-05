@@ -6515,10 +6515,12 @@ recognition.onresult = (ev) => {
                       ? `
                         <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;">
                           <button id="chatRecordBtn"
-                                  style="padding:.5rem .9rem; border-radius:999px;
-                                         border:none; background:#444; color:#fff; font-size:.95rem;">
-                            🎙️ Gedrückt halten
-                          </button>
+        style="padding:.5rem .9rem; border-radius:999px;
+               border:none; background:#444; color:#fff; font-size:.95rem;
+               transition:.12s transform ease-out,.12s box-shadow ease-out,.12s background-color ease-out;">
+  🎙️ Gedrückt halten
+</button>
+
                           <div id="chatRecLabel" class="hint" style="font-size:.85rem;">
                             Zum Sprechen gedrückt halten, nach links wischen zum Verwerfen.
                           </div>
@@ -6653,6 +6655,49 @@ setTimeout(() => {
         const recLabel = document.getElementById("chatRecLabel");
         const recOut   = document.getElementById("chatRecResult");
         setupHoldToTalk(recBtn, recLabel, recOut);
+
+                // Visuelles Feedback beim Gedrückthalten des Aufnahme-Buttons
+        if (recBtn){
+          const baseBg = recBtn.style.background || "#444";
+
+          const setPressed = () => {
+            recBtn.style.transform  = "scale(0.96)";
+            recBtn.style.background = "#c62828";
+            recBtn.style.boxShadow  = "0 0 0 3px rgba(198,40,40,0.4)";
+          };
+
+          const resetVisual = () => {
+            recBtn.style.transform  = "";
+            recBtn.style.background = baseBg;
+            recBtn.style.boxShadow  = "";
+          };
+
+          // Maus / Pointer
+          recBtn.addEventListener("pointerdown", () => {
+            setPressed();
+          });
+          recBtn.addEventListener("pointerup", () => {
+            resetVisual();
+          });
+          recBtn.addEventListener("pointerleave", () => {
+            resetVisual();
+          });
+          recBtn.addEventListener("pointercancel", () => {
+            resetVisual();
+          });
+
+          // Touch (für Smartphones)
+          recBtn.addEventListener("touchstart", () => {
+            setPressed();
+          }, { passive: true });
+          recBtn.addEventListener("touchend", () => {
+            resetVisual();
+          });
+          recBtn.addEventListener("touchcancel", () => {
+            resetVisual();
+          });
+        }
+
 
         // „Kann gerade nicht sprechen“ → Dialog ohne Sprachaufnahme fortsetzen
         const skipBtn = document.getElementById("chatSkipSpeechBtn");
@@ -7447,6 +7492,7 @@ function splitCSVLine(line){
 
 </body>
 </html>
+
 
 
 
