@@ -257,40 +257,69 @@ button.danger:hover { filter: brightness(1.05); }
   .match-board { grid-template-columns: repeat(2, 1fr); }
 }
 
+
+/* Burger-Button – Standard: versteckt, nur auf Mobile sichtbar */
+.nav-toggle {
+  display: none;
+  position: fixed;
+  z-index: 1100;
+  top: calc(8px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  padding: .45rem .8rem;
+  border-radius: .75rem;
+  background: rgba(42,42,42,0.95);
+  border: 1px solid #444;
+  color: var(--white);
+  font-size: .95rem;
+  gap: .35rem;
+  align-items: center;
+}
+    
 /* ===== Mobile Navbar: fixed + centered + compact ===== */
 @media (max-width: 600px) {
+
+  /* Etwas Platz nach oben, weil die Navigation nun einklappbar ist */
   body {
-    padding-top: calc(var(--nav-offset-mobile) + env(safe-area-inset-top));
+    padding-top: calc(3.2rem + env(safe-area-inset-top));
   }
 
+  /* Burger-Button jetzt sichtbar */
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  /* Navigation als ausklappbares Panel */
   nav {
     position: fixed;
-    top: 0;
+    top: calc(3rem + env(safe-area-inset-top));
     left: 0;
     right: 0;
+    z-index: 1000;
 
-    background: rgba(42, 42, 42, 0.6);
+    background: rgba(42, 42, 42, 0.98);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 
-    padding-top: calc(6px + env(safe-area-inset-top));
-    padding-bottom: 6px;
+    padding: .6rem calc(10px + env(safe-area-inset-right));
     padding-left: calc(10px + env(safe-area-inset-left));
-    padding-right: calc(10px + env(safe-area-inset-right));
-
-    font-size: 0.95rem;
-    gap: .4rem;
+    border-radius: 0 0 .75rem .75rem;
+    border-bottom: 1px solid #333;
+    box-shadow: 0 8px 20px rgba(0,0,0,.6);
 
     display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+    flex-wrap: wrap;
+    gap: .4rem;
+    justify-content: flex-start;
 
-    border: none;
-    border-radius: 0 0 .75rem .75rem;
-    box-shadow: 0 0 14px rgba(200, 168, 232, 0.16);
-    z-index: 1000;
-    margin: 0;
+    /* Burger-Effekt */
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .25s ease;
+  }
+
+  /* Wenn body die Klasse nav-open hat → Menü ist aufgeklappt */
+  body.nav-open nav {
+    max-height: 280px; /* ggf. nach Geschmack anpassen */
   }
 
   nav button,
@@ -303,14 +332,8 @@ button.danger:hover { filter: brightness(1.05); }
     text-align: center;
     justify-content: center;
   }
-
-  @media (max-width: 400px) {
-    nav {
-      flex-wrap: wrap;
-      row-gap: .35rem;
-    }
-  }
 }
+
 
 /* Touch-Optimierungen */
 @media (hover: none) {
@@ -470,9 +493,33 @@ const $$ = (sel, el=document) => [...el.querySelectorAll(sel)];
 
 // -------- Routing --------
 const state = { route: "home", sets: [], search: "" };
-$$("nav [data-route]").forEach(b => b.addEventListener("click", () => goto(b.dataset.route)));
-$("#search").addEventListener("input", (e) => { state.search = e.target.value.toLowerCase(); render(); });
-function goto(route){ state.route = route; render(); }
+
+// Navigation-Buttons (Routen) + Burger-Menü
+$$("nav [data-route]").forEach(b => b.addEventListener("click", () => {
+  goto(b.dataset.route);
+  // Auf Mobile das Menü nach Klick wieder zuklappen
+  document.body.classList.remove("nav-open");
+}));
+
+// Burger-Button für Mobile
+const navToggle = $("#navToggle");
+if (navToggle) {
+  navToggle.addEventListener("click", () => {
+    document.body.classList.toggle("nav-open");
+  });
+}
+
+// Suche
+$("#search").addEventListener("input", (e) => {
+  state.search = e.target.value.toLowerCase();
+  render();
+});
+
+function goto(route){
+  state.route = route;
+  render();
+}
+
 
 // -------- Storage (Migration + Merge) --------
 const STORAGE_KEY_V2 = "quizcards_sets_v2";
@@ -7343,4 +7390,5 @@ function splitCSVLine(line){
 
 </body>
 </html>
+
 
