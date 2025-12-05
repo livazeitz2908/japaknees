@@ -6309,12 +6309,40 @@ function renderChatPlay(mount, threadId){
                 : "⚠️ Die Erkennung weicht ab – du kannst es beliebig oft neu versuchen."
             }</div>`;
         }
+  // Wenn Aussprache jetzt OK ist und die Antwort inhaltlich schon richtig war,
+  // den „Weiter“-Button einblenden (falls noch nicht vorhanden)
+  if (ok && turnSemanticOK && i < turns.length) {
+    const chatBox = document.getElementById("chatBox");
+    if (chatBox) {
+      // alten Aussprache-Hinweis entfernen
+      chatBox.querySelectorAll(".chatPronWarn").forEach(el => el.remove());
+
+      // Falls der Weiter-Button schon da ist, nichts tun
+      if (!document.getElementById("chatNextBtn")) {
+        const nextWrap = document.createElement("div");
+        nextWrap.className = "actions";
+        nextWrap.style.marginTop = ".25rem";
+        nextWrap.style.textAlign = "center";
+        nextWrap.innerHTML = `<button class="primary" id="chatNextBtn">Weiter</button>`;
+        chatBox.appendChild(nextWrap);
+
+        document.getElementById("chatNextBtn").onclick = () => {
+          i++;
+          showNpcHint = false;
+          turnSemanticOK = false;
+          turnPronunciationOK = false;
+          draw();   // nächsten Turn anzeigen
+        };
+      }
+    }
+  }     
       };
     }
 
     return recognition;
   }
 
+  
   // ---- „Gedrückt halten + nach links wischen zum Verwerfen“ ----
   function setupHoldToTalk(btn, labelEl, outEl){
     if (!btn) return;
@@ -6555,6 +6583,7 @@ setTimeout(() => {
     if (!turnPronunciationOK){
         const warn = document.createElement("div");
         warn.style.marginTop = ".5rem";
+        warn.className = "chatPronWarn";          // <--- NEU
         warn.style.color = "#ffc200";
         warn.style.fontSize = ".9rem";
         warn.textContent = "Bitte sprich den Satz laut nach, um fortzufahren.";
@@ -7390,5 +7419,6 @@ function splitCSVLine(line){
 
 </body>
 </html>
+
 
 
