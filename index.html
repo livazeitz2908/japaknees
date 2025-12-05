@@ -6284,40 +6284,37 @@ function renderChatPlay(mount, threadId){
         }
       };
 
-      recognition.onresult = (ev) => {
-        let transcript = "";
-        try {
-          const res = ev.results && ev.results[0];
-          transcript = (res && res[0] && res[0].transcript) || "";
-        } catch(e){}
+recognition.onresult = (ev) => {
+  let transcript = "";
+  try {
+    const res = ev.results && ev.results[0];
+    transcript = (res && res[0] && res[0].transcript) || "";
+  } catch(e){}
 
-        const turn = turns[i] || {};
-        const expected =
-          Array.isArray(turn.options) && typeof turn.correct === "number"
-            ? String(turn.options[turn.correct] || "")
-            : "";
+  const turn = turns[i] || {};
+  const expected =
+    Array.isArray(turn.options) && typeof turn.correct === "number"
+      ? String(turn.options[turn.correct] || "")
+      : "";
 
-        const ok = spokenMatchesExpected(transcript, expected);
-        turnPronunciationOK = ok;
+  const ok = spokenMatchesExpected(transcript, expected);
+  turnPronunciationOK = ok;
 
-        if (outEl){
-          outEl.innerHTML =
-            `<div>Erkannt: <strong>${escapeHTML(transcript || "(nichts)")}</strong></div>` +
-            `<div style="margin-top:.2rem;">${
-              ok
-                ? "✅ Klingt sehr nah an der Zielphrase. Super!"
-                : "⚠️ Die Erkennung weicht ab – du kannst es beliebig oft neu versuchen."
-            }</div>`;
-        }
-  // Wenn Aussprache jetzt OK ist und die Antwort inhaltlich schon richtig war,
-  // den „Weiter“-Button einblenden (falls noch nicht vorhanden)
+  if (outEl){
+    outEl.innerHTML =
+      `<div>Erkannt: <strong>${escapeHTML(transcript || "(nichts)")}</strong></div>` +
+      `<div style="margin-top:.2rem;">${
+        ok
+          ? "✅ Klingt sehr nah an der Zielphrase. Super!"
+          : "⚠️ Die Erkennung weicht ab – du kannst es beliebig oft neu versuchen."
+      }</div>`;
+  }
+
+  // <<< NEU: Weiter-Logik nach guter Aussprache >>>
   if (ok && turnSemanticOK && i < turns.length) {
     const chatBox = document.getElementById("chatBox");
     if (chatBox) {
-      // alten Aussprache-Hinweis entfernen
       chatBox.querySelectorAll(".chatPronWarn").forEach(el => el.remove());
-
-      // Falls der Weiter-Button schon da ist, nichts tun
       if (!document.getElementById("chatNextBtn")) {
         const nextWrap = document.createElement("div");
         nextWrap.className = "actions";
@@ -6331,12 +6328,12 @@ function renderChatPlay(mount, threadId){
           showNpcHint = false;
           turnSemanticOK = false;
           turnPronunciationOK = false;
-          draw();   // nächsten Turn anzeigen
+          draw();
         };
       }
     }
-  }     
-      };
+  }
+};
     }
 
     return recognition;
@@ -7419,6 +7416,7 @@ function splitCSVLine(line){
 
 </body>
 </html>
+
 
 
 
