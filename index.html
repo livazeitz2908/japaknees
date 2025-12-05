@@ -11,6 +11,18 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
 
+#chatRecordBtn {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+#chatRecordBtn {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
 .write-pad { gap:.5rem; display:grid; }
 .write-pad-controls { display:flex; gap:.5rem; align-items:center; }
 .write-pad-stage {
@@ -451,6 +463,15 @@ button, a { touch-action: manipulation; } /* kein 300ms-Delay */
 #speakBtn.recording .mic-icon {
   filter: brightness(200%);
 }
+
+#chatRecordBtn.recording {
+  background: #c62828 !important;
+  color: #fff !important;
+  transform: scale(0.94);
+  box-shadow: 0 0 10px rgba(255, 60, 60, 0.5);
+  transition: all .12s ease-out;
+}
+
 
     
   </style>
@@ -7492,6 +7513,7 @@ function splitCSVLine(line){
 
 </body>
 </html>
+
 
 
 
