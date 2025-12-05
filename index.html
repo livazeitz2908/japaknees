@@ -409,6 +409,11 @@ button, a { touch-action: manipulation; } /* kein 300ms-Delay */
   <meta name="color-scheme" content="dark light">
 </head>
 <body>
+  <!-- Burger-Button nur für kleine Screens sichtbar -->
+  <button id="navToggle" class="nav-toggle" type="button" aria-label="Navigation öffnen/schließen">
+    ☰ Menü
+  </button>
+
   <nav>
     <button data-route="home">Start</button>
     <button data-route="new-set">Neues Set</button>
@@ -428,6 +433,7 @@ button, a { touch-action: manipulation; } /* kein 300ms-Delay */
   </nav>
 
   <main id="app"></main>
+
   <footer>
     <small>QuizCards • Lern-/Quiz-/Match-/Buchstabieren • Seed‑Merge • Genki‑Import (3rd Ed)</small>
   </footer>
@@ -7337,3 +7343,4 @@ function splitCSVLine(line){
 
 </body>
 </html>
+
