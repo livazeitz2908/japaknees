@@ -422,6 +422,37 @@ button, a { touch-action: manipulation; } /* kein 300ms-Delay */
   touch-action: none;
 }
 
+/* --- Aufnahme-Button Grundstil (bestehenden Stil überschreibt das nicht, erweitert nur) --- */
+#speakBtn {
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- Aktiv-Zustand beim Aufnehmen --- */
+#speakBtn.recording {
+  background: #d92c2c !important; /* kräftiges Rot */
+  color: white !important;
+  border-color: #ffb3b3 !important;
+  box-shadow: 0 0 12px rgba(255, 80, 80, 0.8);
+
+  /* kleiner „Pulse“-Effekt */
+  animation: micPulse 1.1s infinite ease-in-out;
+}
+
+/* --- Pulse-Animation --- */
+@keyframes micPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.07); }
+  100% { transform: scale(1); }
+}
+
+/* Mikrofon-Icon färben, falls du eins nutzt */
+#speakBtn.recording .mic-icon {
+  filter: brightness(200%);
+}
+
+    
   </style>
 
   
@@ -7416,6 +7447,7 @@ function splitCSVLine(line){
 
 </body>
 </html>
+
 
 
 
