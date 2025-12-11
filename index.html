@@ -6669,61 +6669,76 @@ recognition.onresult = (ev) => {
           const idx = Number(btn.dataset.idx);
           const correct = turns[i].correct;
 
-          if (idx === correct){
-            // richtig -> grün & sperren
-            btn.style.background = "#2d5a2d";
-            btn.style.color = "#dff0df";
-            lockAllOptions(optBox);
-            // Inhaltlich richtige Antwort merken
-            turnSemanticOK = true;
+if (idx === correct) {
+  // richtig -> grün & sperren
+  btn.style.background = "#2d5a2d";
+  btn.style.color = "#dff0df";
+  lockAllOptions(optBox);
+  turnSemanticOK = true;
 
-            // Übersetzung + Hinweis einblenden
-            const chatBox = document.getElementById("chatBox");
-            if (chatBox){
-              const info = document.createElement("div");
-              info.style.marginTop = ".5rem";
-              info.innerHTML =
-                `<div>Übersetzung: <strong>${escapeHTML(String(turns[i].translation || ""))}</strong></div>`;
-              chatBox.appendChild(info);
+  const chatBox = document.getElementById("chatBox");
+  if (chatBox) {
+    // Alte Warnungen & alten Weiter-Button entfernen
+    chatBox.querySelectorAll(".chatPronWarn").forEach(el => el.remove());
+    const oldNext = document.getElementById("chatNextBtn");
+    if (oldNext) oldNext.remove();
 
-              // Hinweis, falls Aussprache noch nicht als ok markiert
-              if (!turnPronunciationOK){
-                const warn = document.createElement("div");
-                warn.className = "chatPronWarn";
-                warn.style.marginTop = ".5rem";
-                warn.style.color = "#ffc200";
-                warn.style.fontSize = ".9rem";
-                warn.textContent = "Bitte sprich den Satz laut nach, um fortzufahren.";
-                chatBox.appendChild(warn);
-              } else {
-                // Wenn Aussprache schon ok ist → direkt Weiter-Button
-                const nextWrap = document.createElement("div");
-                nextWrap.className = "actions";
-                nextWrap.style.marginTop = ".25rem";
-                nextWrap.style.textAlign = "center";
-                nextWrap.innerHTML = `<button class="primary" id="chatNextBtn">Weiter</button>`;
-                chatBox.appendChild(nextWrap);
+    // Übersetzung anzeigen
+    const info = document.createElement("div");
+    info.style.marginTop = ".5rem";
+    info.innerHTML =
+      `<div>Übersetzung: <strong>${
+        escapeHTML(String(turns[i].translation || ""))
+      }</strong></div>`;
+    chatBox.appendChild(info);
 
-                document.getElementById("chatNextBtn").onclick = () => {
-                  i++;
-                  showNpcHint = false;
-                  turnSemanticOK = false;
-                  turnPronunciationOK = false;
-                  draw();
-                };
-              }
-            }
+    // Wenn noch keine gute Aussprache UND Sprachmodus aktiv:
+    // Hinweis anzeigen und NICHT weitergehen
+    if (!turnPronunciationOK && !speechBlocked) {
+      const warn = document.createElement("div");
+      warn.className = "chatPronWarn";
+      warn.style.marginTop = ".5rem";
+      warn.style.color = "#ffc200";
+      warn.style.fontSize = ".9rem";
+      warn.textContent =
+        "Bitte sprich den Satz laut nach, um fortzufahren.";
+      chatBox.appendChild(warn);
+      return; // Weiter erst, wenn gesprochen wurde (solange Sprechen aktiv ist)
+    }
 
-            // evtl. kleine Verzögerung, falls du sie nutzen willst:
-            // setTimeout(draw, CHAT_TRANSLATION_DELAY_MS);
+    // Ab hier: Entweder Aussprache ok ODER Sprachmodus deaktiviert
+    // → Weiter-Button erzeugen
+    const nextWrap = document.createElement("div");
+    nextWrap.className = "actions";
+    nextWrap.style.marginTop = ".25rem";
+    nextWrap.style.textAlign = "center";
+    nextWrap.innerHTML =
+      `<button class="primary" id="chatNextBtn">Weiter</button>`;
+    chatBox.appendChild(nextWrap);
 
-          } else {
-            // falsch -> rot, Button sperren (weitere Versuche möglich)
-            hadMistake = true;
-            btn.style.background = "#5a2a2a";
-            btn.style.color = "#ffcccc";
-            btn.disabled = true;
-          }
+    const nextBtn = document.getElementById("chatNextBtn");
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        i++;
+        showNpcHint = false;
+        turnSemanticOK = false;
+        turnPronunciationOK = false;
+        draw();
+      };
+    }
+  }
+
+  // // optional: Verzögerung, falls du sie wieder nutzen willst
+  // setTimeout(draw, CHAT_TRANSLATION_DELAY_MS);
+
+} else {
+  // falsch -> rot, Button sperren (weitere Versuche möglich)
+  hadMistake = true;
+  btn.style.background = "#5a2a2a";
+  btn.style.color = "#ffcccc";
+  btn.disabled = true;
+}
+
         };
       });
       
@@ -7571,7 +7586,6 @@ function splitCSVLine(line){
 
 </body>
 </html>
-
 
 
 
