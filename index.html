@@ -6349,32 +6349,77 @@ recognition.onresult = (ev) => {
       ? String(turn.options[turn.correct] || "")
       : "";
 
-  const ok = spokenMatchesExpected(transcript, expected);
-  turnPronunciationOK = ok;
+  // --- Hilfsfunktion: einfacher Ähnlichkeitscheck ---
+  function normalize(s){
+    return String(s || "")
+      .toLowerCase()
+      .replace(/[\s\u3000]+/g, "")     // Leerzeichen & japanische Spaces weg
+      .replace(/[。、,.!?！？]/g, ""); // Satzzeichen weg
+  }
+
+  const spokenNorm  = normalize(transcript);
+  const expectNorm  = normalize(expected);
+
+  let level = 0; // 0 = völlig daneben, 1 = halbwegs, 2 = gut/nahe dran
+
+  if (spokenNorm && expectNorm){
+    if (spokenNorm === expectNorm){
+      level = 2; // perfekt/fast perfekt
+    } else if (spokenNorm.includes(expectNorm) || expectNorm.includes(spokenNorm)){
+      level = 2; // Zielphrase größtenteils enthalten
+    } else {
+      // sehr simpler "Overlap": wie viele Zeichen aus expected kommen im Gesprochenen vor?
+      let common = 0;
+      const uniq = [...new Set(expectNorm.split(""))];
+      uniq.forEach(ch => {
+        if (spokenNorm.includes(ch)) common++;
+      });
+      const ratio = common / Math.max(1, expectNorm.length);
+
+      if (ratio >= 0.5){
+        level = 2; // deutlich verwandt
+      } else if (ratio >= 0.2){
+        level = 1; // halbwegs, aber nicht super
+      } else {
+        level = 0; // wirklich daneben
+      }
+    }
+  } else {
+    level = 0; // nichts / leer -> auch daneben
+  }
+
+  // Für den Rest der App: "Aussprache ok" = alles ab Level 1
+  turnPronunciationOK = level > 0;
+
+  // Feedback-Text je nach Stufe
+  let verdict;
+  if (level === 0){
+    verdict = "❌ Die Erkennung weicht deutlich von der Zielphrase ab. Versuch es bitte noch einmal.";
+  } else if (level === 1){
+    verdict = "✅ Verständlich, auch wenn es nicht perfekt war. Das gilt als richtig.";
+  } else {
+    verdict = "✅ Klingt sehr nah an der Zielphrase. Super!";
+  }
 
   if (outEl){
     outEl.innerHTML =
       `<div>Erkannt: <strong>${escapeHTML(transcript || "(nichts)")}</strong></div>` +
-      `<div style="margin-top:.2rem;">${
-        ok
-          ? "✅ Klingt sehr nah an der Zielphrase. Super!"
-          : "⚠️ Die Erkennung weicht ab – du kannst es beliebig oft neu versuchen."
-      }</div>`;
+      `<div style="margin-top:.2rem;">${verdict}</div>`;
   }
 
-  // <<< Weiter-Logik nach guter Aussprache >>>
-  // Nur wenn:
-  // - Semantik richtig gewählt wurde (turnSemanticOK == true)
-  // - Aussprache ok (ok == true)
-  // → Weiter-Button einblenden
-  if (ok && turnSemanticOK && i < turns.length) {
+  // --- Weiter-Button anzeigen, sobald NICHT "ganz falsch" ---
+  // Bedingung:
+  //  - Inhaltliche Antwort war richtig (turnSemanticOK = true)
+  //  - Aussprache mindestens Level 1 (turnPronunciationOK = true)
+  if (turnSemanticOK && level > 0 && i < turns.length){
     const chatBox = document.getElementById("chatBox");
-    if (chatBox) {
-      // Alte Aussprache-Warnungen entfernen
+    if (chatBox){
+
+      // Gelben Warnhinweis entfernen
       chatBox.querySelectorAll(".chatPronWarn").forEach(el => el.remove());
 
-      // „Weiter“-Button nur einmal hinzufügen
-      if (!document.getElementById("chatNextBtn")) {
+      // Falls noch kein Weiter-Button existiert: erstellen
+      if (!document.getElementById("chatNextBtn")){
         const nextWrap = document.createElement("div");
         nextWrap.className = "actions";
         nextWrap.style.marginTop = ".25rem";
@@ -6393,6 +6438,7 @@ recognition.onresult = (ev) => {
     }
   }
 };
+
     }
 
     return recognition;
@@ -6624,13 +6670,13 @@ recognition.onresult = (ev) => {
           const correct = turns[i].correct;
 
           if (idx === correct){
-            // richtig -> grün & sperren
-            btn.style.background = "#2d5a2d";
-            btn.style.color = "#dff0df";
-            lockAllOptions(optBox);
-            turnSemanticOK = true;
-            turnSemanticOK = false;
-
+  // richtig -> grün & sperren
+  btn.style.background = "#2d5a2d";
+  btn.style.color = "#dff0df";
+  lockAllOptions(optBox);
+  // Inhaltlich richtige Antwort merken
+  turnSemanticOK = true;
+}
             const { npc, ans } = getDE(turns[i], idx);
 
             // kleine Verzögerung wie CHAT_TRANSLATION_DELAY_MS
@@ -6640,7 +6686,7 @@ setTimeout(() => {
 // Wenn noch keine gute Aussprache: Hinweis anzeigen
 if (!turnPronunciationOK){
   const warn = document.createElement("div");
-  warn.className = "chatPronWarn";          // <<< WICHTIG: Klasse hinzufügen
+  warn.className = "chatPronWarn";                 // <- NEU
   warn.style.marginTop = ".5rem";
   warn.style.color = "#ffc200";
   warn.style.fontSize = ".9rem";
@@ -7520,6 +7566,7 @@ function splitCSVLine(line){
 
 </body>
 </html>
+
 
 
 
