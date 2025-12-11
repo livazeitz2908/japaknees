@@ -472,6 +472,48 @@ button, a { touch-action: manipulation; } /* kein 300ms-Delay */
   transition: all .12s ease-out;
 }
 
+.jt {
+  cursor: default;
+  white-space: pre-wrap;
+}
+
+.jt-clickable {
+  cursor: pointer;
+}
+
+.jt-tooltip {
+  position: absolute;
+  background: #f9f9f9;
+  padding: 4px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  font-size: 0.85rem;
+  z-index: 9999;
+  opacity: 0;
+  animation: fadeIn 0.15s forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+.vocab-token {
+  cursor: pointer;
+  border-bottom: 1px dotted rgba(255,255,255,0.35);
+  padding: 0 0.05em;
+}
+
+.vocab-token:hover {
+  background: rgba(255,255,255,0.07);
+}
+
+.vocab-info {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
 
     
   </style>
@@ -2302,6 +2344,86 @@ function load(){
   }
 }
 
+// Macht japanischen Text klickbar und verbindet ihn mit Story-Vokabeln
+function buildJaWithVocab(textJa, vocab) {
+  if (!textJa) return "";
+
+  const safeVocab = Array.isArray(vocab) ? vocab : [];
+
+  // Längere Einträge zuerst, damit 今日 vor 日 matcht etc.
+  const vocabEntries = safeVocab
+    .map(v => ({
+      de: v.de || "",
+      kana: v.kana || "",
+      kanji: v.kanji || "",
+      romaji: v.romaji || ""
+    }))
+    .sort((a, b) => {
+      const lenA = Math.max(a.kana.length, a.kanji.length, a.romaji.length);
+      const lenB = Math.max(b.kana.length, b.kanji.length, b.romaji.length);
+      return lenB - lenA;
+    });
+
+  let html = "";
+  let i = 0;
+
+  while (i < textJa.length) {
+    let matched = null;
+    let matchedLen = 0;
+
+    for (const v of vocabEntries) {
+      const candList = [v.kana, v.kanji].filter(Boolean);
+      for (const cand of candList) {
+        if (!cand) continue;
+        if (textJa.startsWith(cand, i)) {
+          if (cand.length > matchedLen) {
+            matched = { v, cand };
+            matchedLen = cand.length;
+          }
+        }
+      }
+    }
+
+    if (matched && matchedLen > 0) {
+      const surface = matched.cand;
+      const reading = matched.v.kana || matched.v.kanji || matched.v.romaji || "";
+      const de = matched.v.de || "";
+
+      html += `<span class="vocab-token" data-de="${escapeHTML(de)}" data-reading="${escapeHTML(reading)}">${escapeHTML(surface)}</span>`;
+      i += matchedLen;
+    } else {
+      const ch = textJa[i];
+      // Andere Zeichen normal ausgeben (ohne Tooltip)
+      html += escapeHTML(ch);
+      i++;
+    }
+  }
+
+  return html;
+}
+
+// Aktiviert das Klick-Verhalten auf .vocab-token in einem gegebenen Container
+function attachVocabClickHandlers(root) {
+  if (!root) return;
+  const infoBox = root.querySelector(".vocab-info");
+  if (!infoBox) return;
+
+  root.querySelectorAll(".vocab-token").forEach(span => {
+    span.addEventListener("click", () => {
+      const de = span.getAttribute("data-de") || "";
+      const reading = span.getAttribute("data-reading") || "";
+
+      if (!de && !reading) {
+        infoBox.textContent = "";
+        return;
+      }
+
+      infoBox.textContent = reading
+        ? `${reading} – ${de}`
+        : de;
+    });
+  });
+}
 
 // -------- Views --------
 function render(){
@@ -3775,22 +3897,53 @@ const st = getStoryById(id);
         });
       }
     } else if(step === 2){
-      mount.innerHTML = `
-        <h2>${escapeHTML(st.title)} ${st.level?`<span class="badge">${st.level}</span>`:""}</h2>
-        <div class="card">
-          <div style="white-space:pre-wrap; font-size:1.1rem;">${escapeHTML(st.text_ja || '')}</div>
-          <button id="speakStoryBtn" class="mini">🔊 Vorlesen</button>
-          <div class="actions" style="margin-top:.5rem;">
-            <button id="toggleDeBtn">${showDe ? 'Übersetzung ausblenden' : 'Übersetzung anzeigen'}</button>
-            <button class="primary" id="finishReadBtn">Fertig gelesen</button>
-          </div>
-          ${showDe ? `<hr/><div class="hint" style="white-space:pre-wrap;">${escapeHTML(st.text_de||'')}</div>` : ``}
-        </div>
-      `;
-      document.getElementById("toggleDeBtn").onclick = () => { showDe = !showDe; renderStep(); };
-      document.getElementById("finishReadBtn").onclick = () => { step = 3; renderStep(); };
-      if('speechSynthesis' in window){ const b=document.getElementById('speakStoryBtn'); if(b){ b.onclick=()=>{ const u=new SpeechSynthesisUtterance(st.text_ja||''); u.lang='ja-JP'; speechSynthesis.speak(u); } } }
-    } else {
+  const jaHtml = buildJaWithVocab(st.text_ja || "", st.vocab || []);
+
+  mount.innerHTML = `
+    <h2>${escapeHTML(st.title)} ${st.level?`<span class="badge">${st.level}</span>`:""}</h2>
+    <div class="card">
+      <div class="story-text-ja" style="white-space:pre-wrap; font-size:1.1rem;">
+        ${jaHtml}
+      </div>
+
+      <button id="speakStoryBtn" class="mini">🔊 Vorlesen</button>
+
+      <div class="vocab-info hint" style="margin-top:0.75rem;"></div>
+
+      <div class="actions" style="margin-top:.5rem;">
+        <button id="toggleDeBtn">${showDe ? 'Übersetzung ausblenden' : 'Übersetzung anzeigen'}</button>
+        <button class="primary" id="finishReadBtn">Fertig gelesen</button>
+      </div>
+
+      ${showDe ? `<hr/><div class="hint" style="white-space:pre-wrap;">${escapeHTML(st.text_de||'')}</div>` : ``}
+    </div>
+  `;
+
+  // Übersetzungs-Anzeige aktivieren
+  attachVocabClickHandlers(mount);
+
+  document.getElementById("toggleDeBtn").onclick = () => { 
+    showDe = !showDe; 
+    renderStep(); 
+  };
+
+  document.getElementById("finishReadBtn").onclick = () => { 
+    step = 3; 
+    renderStep(); 
+  };
+
+  if('speechSynthesis' in window){
+    const b = document.getElementById('speakStoryBtn');
+    if(b){
+      b.onclick = () => { 
+        const u = new SpeechSynthesisUtterance(st.text_ja||''); 
+        u.lang='ja-JP'; 
+        speechSynthesis.speak(u); 
+      }
+    }
+  }
+}
+ else {
       mount.innerHTML = `
         <h2>${escapeHTML(st.title)}</h2>
         <div class="card">
@@ -7258,6 +7411,57 @@ function endDraw() {
   points = [];
   lastMid = null;
 }
+
+// Trennt japanischen Text in Token und erstellt klickbare Wörter
+function makeTextInteractive(text, dictionary) {
+  // dictionary: { "はじめまして": "Nice to meet you", ... }
+
+  // 1) Tokenisierung: einfache Heuristik für Japanisch
+  // (Kanji-Bereiche, Hiragana, Katakana, Romaji, Satzzeichen separat)
+  const tokens = [...text.matchAll(/[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]+|[。、？！,.!?]/gu)]
+                 .map(m => m[0]);
+
+  // 2) Für jedes Token ein klickbares <span> bauen
+  return tokens.map(t => {
+    const meaning = dictionary[t];
+    if (!meaning) return `<span class="jt">${t}</span>`; // normales Wort
+
+    return `<span class="jt jt-clickable" data-meaning="${meaning}">${t}</span>`;
+  }).join("");
+}
+
+// Tooltip erzeugen
+function showTooltip(el, text) {
+  // existierende Tooltips entfernen
+  document.querySelectorAll(".jt-tooltip").forEach(t => t.remove());
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "jt-tooltip";
+  tooltip.textContent = text;
+  document.body.appendChild(tooltip);
+
+  const rect = el.getBoundingClientRect();
+  const top = rect.top + window.scrollY - 36; // über dem Wort
+  const left = rect.left + window.scrollX;
+
+  tooltip.style.top = top + "px";
+  tooltip.style.left = left + "px";
+
+  // automatisch verschwinden lassen
+  setTimeout(() => tooltip.remove(), 2500);
+}
+
+function bindWordTooltipEvents() {
+  document.querySelectorAll(".jt-clickable").forEach(el => {
+    el.addEventListener("click", () => {
+      const meaning = el.dataset.meaning;
+      if (meaning) showTooltip(el, meaning);
+    });
+  });
+}
+
+bindWordTooltipEvents();
+
 
 // Event-Bindings (wie gehabt)
 canvas.addEventListener("pointerdown", startDraw);
