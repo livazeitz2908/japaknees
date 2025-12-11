@@ -6666,81 +6666,147 @@ recognition.onresult = (ev) => {
       // Antwort-Buttons
       optBox.querySelectorAll(".optBtn").forEach(btn => {
         btn.onclick = () => {
-          const idx = Number(btn.dataset.idx);
-          const correct = turns[i].correct;
+          const idx        = Number(btn.dataset.idx);
+          const correctIdx = turns[i].correct;
+          const isCorrect  = idx === correctIdx;
 
-if (idx === correct) {
-  // richtig -> grün & sperren
-  btn.style.background = "#2d5a2d";
-  btn.style.color = "#dff0df";
-  lockAllOptions(optBox);
-  turnSemanticOK = true;
+          // ------------------------
+          // FALSCH → rot markieren
+          // ------------------------
+          if (!isCorrect) {
+            hadMistake = true;
+            btn.style.background = "#5a2a2a";
+            btn.style.color      = "#ffcccc";
+            btn.disabled         = true;
+            return;
+          }
 
-  const chatBox = document.getElementById("chatBox");
-  if (chatBox) {
-    // Alte Warnungen & alten Weiter-Button entfernen
-    chatBox.querySelectorAll(".chatPronWarn").forEach(el => el.remove());
-    const oldNext = document.getElementById("chatNextBtn");
-    if (oldNext) oldNext.remove();
+          // ------------------------
+          // RICHTIG → Übersetzung + Weiter-Logik
+          // ------------------------
 
-    // Übersetzung anzeigen
-    const info = document.createElement("div");
-    info.style.marginTop = ".5rem";
-    info.innerHTML =
-      `<div>Übersetzung: <strong>${
-        escapeHTML(String(turns[i].translation || ""))
-      }</strong></div>`;
-    chatBox.appendChild(info);
+          turnSemanticOK = true;
 
-    // Wenn noch keine gute Aussprache UND Sprachmodus aktiv:
-    // Hinweis anzeigen und NICHT weitergehen
-    if (!turnPronunciationOK && !speechBlocked) {
-      const warn = document.createElement("div");
-      warn.className = "chatPronWarn";
-      warn.style.marginTop = ".5rem";
-      warn.style.color = "#ffc200";
-      warn.style.fontSize = ".9rem";
-      warn.textContent =
-        "Bitte sprich den Satz laut nach, um fortzufahren.";
-      chatBox.appendChild(warn);
-      return; // Weiter erst, wenn gesprochen wurde (solange Sprechen aktiv ist)
-    }
+          // Button optisch als richtig markieren
+          btn.style.background = "#2d5a2d";
+          btn.style.color      = "#dff0df";
+          lockAllOptions(optBox);
 
-    // Ab hier: Entweder Aussprache ok ODER Sprachmodus deaktiviert
-    // → Weiter-Button erzeugen
-    const nextWrap = document.createElement("div");
-    nextWrap.className = "actions";
-    nextWrap.style.marginTop = ".25rem";
-    nextWrap.style.textAlign = "center";
-    nextWrap.innerHTML =
-      `<button class="primary" id="chatNextBtn">Weiter</button>`;
-    chatBox.appendChild(nextWrap);
+          const chatBox = document.getElementById("chatBox");
+          if (!chatBox) return;
 
-    const nextBtn = document.getElementById("chatNextBtn");
-    if (nextBtn) {
-      nextBtn.onclick = () => {
-        i++;
-        showNpcHint = false;
-        turnSemanticOK = false;
-        turnPronunciationOK = false;
-        draw();
-      };
-    }
-  }
+          // Alte Warnungen & alten Weiter-Button entfernen
+          chatBox.querySelectorAll(".chatPronWarn").forEach(el => el.remove());
+          const oldNext = document.getElementById("chatNextBtn");
+          if (oldNext) oldNext.remove();
 
-  // // optional: Verzögerung, falls du sie wieder nutzen willst
-  // setTimeout(draw, CHAT_TRANSLATION_DELAY_MS);
+          // 1) Übersetzung anzeigen (DE, falls vorhanden, sonst JP)
+          const { npc, ans } = getDE(turns[i], idx);
+          const info = document.createElement("div");
+          info.style.marginTop = ".5rem";
+          info.innerHTML =
+            `<div>Übersetzung: <strong>${escapeHTML(ans || "")}</strong></div>`;
+          chatBox.appendChild(info);
 
-} else {
-  // falsch -> rot, Button sperren (weitere Versuche möglich)
-  hadMistake = true;
-  btn.style.background = "#5a2a2a";
-  btn.style.color = "#ffcccc";
-  btn.disabled = true;
-}
+          // 2) Muss gesprochen werden oder nicht?
+          const requireSpeech = hasSpeechRecognition() && !speechBlocked;
 
+          // Sprachmodus aktiv UND Aussprache noch nicht ok → Hinweis, kein Weiter
+          if (requireSpeech && !turnPronunciationOK) {
+            const warn = document.createElement("div");
+            warn.className       = "chatPronWarn";
+            warn.style.marginTop = ".5rem";
+            warn.style.color     = "#ffc200";
+            warn.style.fontSize  = ".9rem";
+            warn.textContent     = "Bitte sprich den Satz laut nach, um fortzufahren.";
+            chatBox.appendChild(warn);
+            return;
+          }
+
+          // 3) Entweder Aussprache ok ODER Sprachmodus deaktiviert („kann nicht sprechen“):
+          //    → Weiter-Button anzeigen
+          const nextWrap = document.createElement("div");
+          nextWrap.className       = "actions";
+          nextWrap.style.marginTop = ".25rem";
+          nextWrap.style.textAlign = "center";
+          nextWrap.innerHTML =
+            `<button class="primary" id="chatNextBtn">Weiter</button>`;
+          chatBox.appendChild(nextWrap);
+
+          const nextBtn = document.getElementById("chatNextBtn");
+          if (nextBtn) {
+            nextBtn.onclick = () => {
+              i++;
+              showNpcHint         = false;
+              turnSemanticOK      = false;
+              turnPronunciationOK = false;
+              draw();
+            };
+          }
         };
       });
+
+      // Speech-UI initialisieren (falls verfügbar)
+      if (hasSpeechRecognition() && !speechBlocked){
+        const recBtn   = document.getElementById("chatRecordBtn");
+        const recLabel = document.getElementById("chatRecLabel");
+        const recOut   = document.getElementById("chatRecResult");
+        setupHoldToTalk(recBtn, recLabel, recOut);
+
+        // Visuelles Feedback beim Gedrückthalten des Aufnahme-Buttons
+        if (recBtn){
+          const baseBg = recBtn.style.background || "#444";
+
+          const setPressed = () => {
+            recBtn.style.transform  = "scale(0.96)";
+            recBtn.style.background = "#c62828";
+            recBtn.style.boxShadow  = "0 0 0 3px rgba(198,40,40,0.4)";
+          };
+
+          const resetVisual = () => {
+            recBtn.style.transform  = "";
+            recBtn.style.background = baseBg;
+            recBtn.style.boxShadow  = "";
+          };
+
+          // Maus / Pointer
+          recBtn.addEventListener("pointerdown", () => {
+            setPressed();
+          });
+          recBtn.addEventListener("pointerup", () => {
+            resetVisual();
+          });
+          recBtn.addEventListener("pointerleave", () => {
+            resetVisual();
+          });
+          recBtn.addEventListener("pointercancel", () => {
+            resetVisual();
+          });
+
+          // Touch (für Smartphones)
+          recBtn.addEventListener("touchstart", () => {
+            setPressed();
+          }, { passive: true });
+          recBtn.addEventListener("touchend", () => {
+            resetVisual();
+          });
+          recBtn.addEventListener("touchcancel", () => {
+            resetVisual();
+          });
+        }
+
+        // „Kann gerade nicht sprechen“ → Dialog ohne Sprachaufnahme fortsetzen
+        const skipBtn = document.getElementById("chatSkipSpeechBtn");
+        if (skipBtn){
+          skipBtn.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            speechBlocked = true; // für diese Chat-Sitzung in den Lese-/Hörmodus wechseln
+            alert("Alles klar – dieser Dialog läuft jetzt ohne Sprachaufnahme weiter. Du kannst einfach mit den Antwort-Buttons fortfahren.");
+            draw(); // UI neu zeichnen -> oben erscheint der Hinweis-Text statt Mikro
+          });
+        }
+      }
+
       
       // Speech-UI initialisieren (falls verfügbar)
       // Speech-UI initialisieren (falls verfügbar)
