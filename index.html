@@ -6568,19 +6568,30 @@ recognition.onresult = (ev) => {
                   }
                 </div>
 
-                <!-- Antwortoptionen -->
-                <div id="optBox" style="display:grid; gap:.45rem; margin-top:1.2rem;">
-                  ${turns[i].options.map((txt,idx)=>`
-                    <div style="text-align:right;">
-                      <button class="optBtn" data-idx="${idx}"
-                              style="font-size:.92rem; padding:.45rem .7rem;
-                                     background:#2a2a2a; border:none; border-radius:.8rem .8rem 0 .8rem;
-                                     max-width:80%; text-align:right; color:var(--white);">
-                        ${escapeHTML(txt)}
-                      </button>
-                    </div>
-                  `).join("")}
-                </div>
+               <!-- Antwortoptionen -->
+<div id="optBox" style="display:grid; gap:.45rem; margin-top:1.2rem;">
+  ${turns[i].options.map((txt,idx)=>`
+    <div style="display:flex; justify-content:flex-end; gap:.35rem; align-items:center;">
+      <!-- Audio-Button für die Option -->
+      <button class="optAudioBtn"
+              data-idx="${idx}"
+              data-jp="${String(txt || '').replace(/`/g,'')}"
+              style="padding:.25rem .45rem; border-radius:999px;
+                     border:none; background:#333; color:#fff;
+                     font-size:.85rem; line-height:1;">
+        🔊
+      </button>
+      <!-- eigentliche Antwort-Option -->
+      <button class="optBtn" data-idx="${idx}"
+              style="font-size:.92rem; padding:.45rem .7rem;
+                     background:#2a2a2a; border:none; border-radius:.8rem .8rem 0 .8rem;
+                     max-width:80%; text-align:right; color:var(--white);">
+        ${escapeHTML(txt)}
+      </button>
+    </div>
+  `).join("")}
+</div>
+
 
                                 <!-- Sprechbereich -->
                 <div id="speechArea" style="margin-top:1rem; border-top:1px dashed #444; padding-top:.75rem;">
@@ -6745,6 +6756,26 @@ recognition.onresult = (ev) => {
           }
         };
       });
+
+      // Audio-Buttons für Antwortoptionen (nur wenn SpeechSynthesis verfügbar ist)
+if ("speechSynthesis" in window) {
+  optBox.querySelectorAll(".optAudioBtn").forEach(b => {
+    b.onclick = () => {
+      const t = b.dataset.jp || "";
+      if (!t) return;
+      try {
+        // laufende Ausgaben abbrechen
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(String(t));
+        u.lang = "ja-JP"; // Antworten sind hier Japanisch
+        speechSynthesis.speak(u);
+      } catch (e) {
+        console.warn("Konnte Audio für Antwort nicht abspielen:", e);
+      }
+    };
+  });
+}
+
 
       // Speech-UI initialisieren (falls verfügbar)
       if (hasSpeechRecognition() && !speechBlocked){
