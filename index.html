@@ -6362,11 +6362,18 @@ recognition.onresult = (ev) => {
       }</div>`;
   }
 
-  // <<< NEU: Weiter-Logik nach guter Aussprache >>>
+  // <<< Weiter-Logik nach guter Aussprache >>>
+  // Nur wenn:
+  // - Semantik richtig gewählt wurde (turnSemanticOK == true)
+  // - Aussprache ok (ok == true)
+  // → Weiter-Button einblenden
   if (ok && turnSemanticOK && i < turns.length) {
     const chatBox = document.getElementById("chatBox");
     if (chatBox) {
+      // Alte Aussprache-Warnungen entfernen
       chatBox.querySelectorAll(".chatPronWarn").forEach(el => el.remove());
+
+      // „Weiter“-Button nur einmal hinzufügen
       if (!document.getElementById("chatNextBtn")) {
         const nextWrap = document.createElement("div");
         nextWrap.className = "actions";
@@ -6630,17 +6637,17 @@ recognition.onresult = (ev) => {
 setTimeout(() => {
     appendTranslationBubble(chatBox, npc, ans);
 
-    // Wenn noch keine gute Aussprache: Hinweis anzeigen
-    if (!turnPronunciationOK){
-        const warn = document.createElement("div");
-        warn.style.marginTop = ".5rem";
-        warn.className = "chatPronWarn";          // <--- NEU
-        warn.style.color = "#ffc200";
-        warn.style.fontSize = ".9rem";
-        warn.textContent = "Bitte sprich den Satz laut nach, um fortzufahren.";
-        chatBox.appendChild(warn);
-        return; // Weiter erst wenn Speak OK
-    }
+// Wenn noch keine gute Aussprache: Hinweis anzeigen
+if (!turnPronunciationOK){
+  const warn = document.createElement("div");
+  warn.className = "chatPronWarn";          // <<< WICHTIG: Klasse hinzufügen
+  warn.style.marginTop = ".5rem";
+  warn.style.color = "#ffc200";
+  warn.style.fontSize = ".9rem";
+  warn.textContent = "Bitte sprich den Satz laut nach, um fortzufahren.";
+  chatBox.appendChild(warn);
+  return; // Weiter erst wenn Speak OK
+}
 
     // ✔ Semantik OK + Aussprache OK → Weiter-Button
     const nextWrap = document.createElement("div");
@@ -7513,6 +7520,7 @@ function splitCSVLine(line){
 
 </body>
 </html>
+
 
 
 
