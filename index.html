@@ -1058,20 +1058,13 @@ details {
 }
 
 .flash-word {
-  display: block;
-  width: min(100%, 92%);
   max-width: 100%;
-
   text-align: center;
-  font-size: clamp(2rem, 10vw, 4.5rem);
+  font-size: clamp(4.3rem, 12vw, 4.5rem);
   font-weight: 850;
   line-height: 1.08;
   letter-spacing: -.03em;
-
-  white-space: normal;
   overflow-wrap: anywhere;
-  word-break: normal;
-
   text-shadow: 0 8px 20px rgba(96, 60, 70, .18);
 }
 
@@ -1456,6 +1449,39 @@ nav {
 
   #speechArea > div {
     gap: .6rem !important;
+  }
+}
+
+/* === Flashcard: Wortgröße automatisch passend machen === */
+
+.flashcard-bottom {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.flash-word {
+  display: block;
+  width: 100%;
+  max-width: calc(100% - .5rem);
+  margin: 0 auto;
+
+  text-align: center;
+  font-size: 3rem; /* Fallback, wird per JS überschrieben */
+  font-weight: 850;
+  line-height: 1.06;
+  letter-spacing: -.03em;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  text-shadow: 0 8px 20px rgba(96, 60, 70, .18);
+}
+
+/* Überschreibt deine alte Mobile-Regel */
+@media (max-width: 640px) {
+  .flash-word {
+    font-size: 3rem;
   }
 }
   </style>
@@ -3814,60 +3840,104 @@ window.deleteGrammar = (id) => {
   }
 };
 
+
+const LEARN_CFG = { shuffle: true, repeatWrong: true };
+
+function getFlashWordStartSize(text, areaWidth) {
+  const str = String(text || "").trim();
+  const len = [...str].length;
+  const hasLatin = /[A-Za-zÄÖÜäöüß]/.test(str);
+
+  let size;
+
+  if (hasLatin) {
+    if (len <= 4) size = 76;
+    else if (len <= 8) size = 62;
+    else if (len <= 12) size = 50;
+    else if (len <= 18) size = 40;
+    else if (len <= 26) size = 32;
+    else size = 26;
+  } else {
+    if (len <= 2) size = 88;
+    else if (len <= 4) size = 76;
+    else if (len <= 6) size = 64;
+    else if (len <= 9) size = 52;
+    else if (len <= 14) size = 40;
+    else if (len <= 22) size = 32;
+    else size = 26;
+  }
+
+  // an Kartenbreite koppeln, damit es auf Mobile nicht zu groß wird
+  return Math.min(size, Math.floor(areaWidth * 0.19));
+}
+
 function fitFlashWords(root = document) {
   const words = root.querySelectorAll(".flash-word");
+  if (!words.length) return;
 
-  words.forEach(word => {
-    const area =
-      word.closest(".flashcard-bottom") ||
-      word.closest(".flashcard-word-area") ||
-      word.parentElement;
-
-    if (!area) return;
-
-    const text = word.textContent.trim();
-    const chars = [...text].length;
-
-    let maxSize = 72;
-    let minSize = 26;
-
-    if (chars > 6) maxSize = 64;
-    if (chars > 10) maxSize = 54;
-    if (chars > 16) maxSize = 44;
-    if (chars > 24) maxSize = 34;
-
-    word.style.fontSize = maxSize + "px";
-    word.style.lineHeight = "1.08";
-
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      const maxWidth = area.clientWidth * 0.88;
-      const maxHeight = area.clientHeight * 0.58;
+      words.forEach(word => {
+        const area = word.closest(".flashcard-bottom");
+        if (!area) return;
 
-      let size = maxSize;
+        const text = word.textContent || "";
+        const areaStyle = getComputedStyle(area);
 
-      while (
-        size > minSize &&
-        (word.scrollWidth > maxWidth || word.scrollHeight > maxHeight)
-      ) {
-        size -= 2;
+        const paddingX =
+          parseFloat(areaStyle.paddingLeft || 0) +
+          parseFloat(areaStyle.paddingRight || 0);
+
+        const paddingY =
+          parseFloat(areaStyle.paddingTop || 0) +
+          parseFloat(areaStyle.paddingBottom || 0);
+
+        const tap = area.querySelector(".flash-tap");
+
+        const maxWidth = Math.max(120, area.clientWidth - paddingX - 16);
+        const maxHeight = Math.max(
+          70,
+          area.clientHeight - paddingY - (tap ? tap.offsetHeight + 22 : 0)
+        );
+
+        let size = getFlashWordStartSize(text, area.clientWidth);
+        const minSize = 18;
+
+        word.style.maxWidth = maxWidth + "px";
         word.style.fontSize = size + "px";
-      }
+        word.style.lineHeight = "1.06";
+
+        let guard = 80;
+
+        while (
+          guard > 0 &&
+          size > minSize &&
+          (word.scrollWidth > maxWidth || word.scrollHeight > maxHeight)
+        ) {
+          size -= 2;
+          word.style.fontSize = size + "px";
+          guard--;
+        }
+      });
     });
   });
 }
-const LEARN_CFG = { shuffle: true, repeatWrong: true };
+
+if (!window.__flashWordsResizeBound) {
+  window.__flashWordsResizeBound = true;
+
+  window.addEventListener("resize", () => {
+    fitFlashWords(document);
+  });
+}
+
 function renderLearn(mount, setId) {
   const s = state.sets.find(x => x.id === setId);
 
   if (!s || !Array.isArray(s.cards) || !s.cards.length) {
     mount.innerHTML = `<p>Keine Karten.</p>`;
-    fitFlashWords(mount);
     return;
   }
-  
-window.addEventListener("resize", () => {
-  fitFlashWords(document);
-});
 
   const learnState = {
     mode: "kana",          // "kana" | "romaji"
@@ -4138,10 +4208,12 @@ window.addEventListener("resize", () => {
     `;
 
     updateCardOnly();
+fitFlashWords(mount);
 
     document.getElementById("flashcard").onclick = () => {
-      learnState.flipped = !learnState.flipped;
-      updateCardOnly();
+learnState.flipped = !learnState.flipped;
+updateCardOnly();
+fitFlashWords(mount);
 
       const flipBtn = document.getElementById("flipBtn");
       const answerActions = document.querySelector(".answer-actions");
