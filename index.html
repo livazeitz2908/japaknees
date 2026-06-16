@@ -3425,7 +3425,36 @@ const m = $("#app");
     return renderGrammarPractice(m, id);
   }
 }
+function renameSet(setId) {
+  const s = state.sets.find(x => x.id === setId);
 
+  if (!s) {
+    alert("Set nicht gefunden.");
+    return;
+  }
+
+  const oldName = String(s.name || "").trim();
+
+  const newName = prompt("Neuer Name für dieses Lernset:", oldName);
+
+  // Abbrechen
+  if (newName === null) return;
+
+  const cleanedName = newName.trim();
+
+  if (!cleanedName) {
+    alert("Der Name darf nicht leer sein.");
+    return;
+  }
+
+  if (cleanedName === oldName) return;
+
+  s.name = cleanedName;
+  s.updatedAt = Date.now();
+
+  save();
+  render();
+}
 function renderHome(mount){
   const filtered = state.search
     ? state.sets.filter(s => s.name.toLowerCase().includes(state.search))
@@ -3442,8 +3471,9 @@ function renderHome(mount){
         <h3>${s.name}</h3>
         <div class="badge">${s.cards.length} Karten</div>
         <div class="actions" style="margin-top:.5rem;">
-          <button onclick="goto('set/${s.id}')">Öffnen</button>
-          <button onclick="goto('learn/${s.id}')">Lernen</button>
+<button onclick="goto('set/${s.id}')">Öffnen</button>
+<button onclick="goto('learn/${s.id}')">Lernen</button>
+<button onclick="renameSet('${s.id}')">Umbenennen</button>
           <button onclick="goto('quiz/${s.id}')">Quiz</button>
           <button onclick="goto('match/${s.id}')">Match 60s</button>
           <button class="primary" onclick="goto('spell/${s.id}')">Buchstabieren</button><button class="danger" onclick="deleteSet('${s.id}')">Löschen</button>
