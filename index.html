@@ -1058,13 +1058,20 @@ details {
 }
 
 .flash-word {
+  display: block;
+  width: min(100%, 92%);
   max-width: 100%;
+
   text-align: center;
-  font-size: clamp(4.3rem, 12vw, 4.5rem);
+  font-size: clamp(2rem, 10vw, 4.5rem);
   font-weight: 850;
   line-height: 1.08;
   letter-spacing: -.03em;
+
+  white-space: normal;
   overflow-wrap: anywhere;
+  word-break: normal;
+
   text-shadow: 0 8px 20px rgba(96, 60, 70, .18);
 }
 
@@ -3807,15 +3814,60 @@ window.deleteGrammar = (id) => {
   }
 };
 
+function fitFlashWords(root = document) {
+  const words = root.querySelectorAll(".flash-word");
 
+  words.forEach(word => {
+    const area =
+      word.closest(".flashcard-bottom") ||
+      word.closest(".flashcard-word-area") ||
+      word.parentElement;
+
+    if (!area) return;
+
+    const text = word.textContent.trim();
+    const chars = [...text].length;
+
+    let maxSize = 72;
+    let minSize = 26;
+
+    if (chars > 6) maxSize = 64;
+    if (chars > 10) maxSize = 54;
+    if (chars > 16) maxSize = 44;
+    if (chars > 24) maxSize = 34;
+
+    word.style.fontSize = maxSize + "px";
+    word.style.lineHeight = "1.08";
+
+    requestAnimationFrame(() => {
+      const maxWidth = area.clientWidth * 0.88;
+      const maxHeight = area.clientHeight * 0.58;
+
+      let size = maxSize;
+
+      while (
+        size > minSize &&
+        (word.scrollWidth > maxWidth || word.scrollHeight > maxHeight)
+      ) {
+        size -= 2;
+        word.style.fontSize = size + "px";
+      }
+    });
+  });
+}
 const LEARN_CFG = { shuffle: true, repeatWrong: true };
 function renderLearn(mount, setId) {
   const s = state.sets.find(x => x.id === setId);
 
   if (!s || !Array.isArray(s.cards) || !s.cards.length) {
     mount.innerHTML = `<p>Keine Karten.</p>`;
+    fitFlashWords(mount);
     return;
   }
+  
+window.addEventListener("resize", () => {
+  fitFlashWords(document);
+});
 
   const learnState = {
     mode: "kana",          // "kana" | "romaji"
