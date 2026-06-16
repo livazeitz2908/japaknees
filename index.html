@@ -830,8 +830,627 @@ details {
     animation: none !important;
   }
 }
+/* === Neue Flashcard-Lernen-Funktion === */
 
+.flash-learn {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.flash-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.flash-head h2 {
+  margin-bottom: .1rem;
+}
+
+.flash-head p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.flash-counter {
+  padding: .45rem .8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .75);
+  border: 1px solid var(--border);
+  font-weight: 800;
+  color: #31515c;
+  box-shadow: var(--shadow-soft);
+}
+
+.flash-settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .85rem;
+  margin-bottom: 1rem;
+}
+
+.flash-setting-group {
+  display: grid;
+  gap: .4rem;
+}
+
+.flash-setting-group > span {
+  font-size: .85rem;
+  font-weight: 800;
+  color: #4f7d80;
+}
+
+.segmented {
+  display: flex;
+  gap: .35rem;
+  padding: .25rem;
+  border-radius: 999px;
+  background: rgba(85, 185, 199, .09);
+  border: 1px solid rgba(85, 185, 199, .16);
+}
+
+.segmented button {
+  flex: 1;
+  min-height: 40px;
+  padding: .4rem .65rem;
+  border-radius: 999px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #42646d;
+}
+
+.segmented button:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(255, 255, 255, .55);
+}
+
+.segmented button.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--mizu), var(--matcha));
+  box-shadow: 0 8px 18px rgba(85, 185, 199, .22);
+}
+
+.flash-progress {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: .85rem 0 1rem;
+  background: rgba(85, 185, 199, .13);
+  border: 1px solid rgba(85, 185, 199, .14);
+}
+
+.flash-progress > div {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mizu), var(--matcha), var(--yuzu));
+  transition: width .25s ease;
+}
+
+.flashcard {
+  display: block;
+  width: min(430px, 100%);
+  height: min(560px, 72vh);
+  min-height: 430px;
+  margin: 1.1rem auto;
+  padding: 0;
+  border: none;
+  border-radius: 2rem;
+  background: transparent;
+  box-shadow: none;
+  perspective: 1200px;
+}
+
+.flashcard:hover {
+  background: transparent;
+  box-shadow: none;
+  transform: translateY(-2px);
+}
+
+.flashcard-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .55s cubic-bezier(.2, .7, .2, 1);
+}
+
+.flashcard.is-flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 45% 55%;
+  overflow: hidden;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, .85);
+  box-shadow: 0 22px 48px rgba(96, 129, 141, .24);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+.flashcard-top {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 214, 107, .28), transparent 7rem),
+    linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+}
+
+.flashcard-top.back {
+  background:
+    radial-gradient(circle at 80% 18%, rgba(245, 169, 191, .28), transparent 7rem),
+    linear-gradient(180deg, #ffffff 0%, #f8fcff 100%);
+}
+
+.flash-symbol {
+  font-size: clamp(1rem, 5vw, 1.5rem);
+  line-height: 1;
+  color: #111;
+  font-weight: 800;
+  filter: drop-shadow(0 8px 14px rgba(96, 129, 141, .12));
+}
+
+.flashcard-bottom {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: .75rem;
+  padding: 2rem;
+  color: #fff;
+  background:
+    radial-gradient(circle at 30% 80%, rgb(242, 196, 247), transparent 7rem),
+    linear-gradient(145deg, #db82ed 0%, #f58ca2 46%, #fb97d6 100%);
+}
+
+.flashcard-bottom::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 1.1rem;
+  width: 180px;
+  height: 100px;
+  transform: translateX(-50%);
+  opacity: .24;
+  background-repeat: no-repeat;
+  background-size: 90px 90px, 105px 105px, 130px 130px;
+  background-position: 8px 18px, 66px 10px, 34px 0;
+}
+
+.flashcard-bottom.back {
+  background:
+    radial-gradient(circle at 30% 80%, rgb(253, 239, 150), transparent 7rem),
+    linear-gradient(145deg, #eddb82 0%, #f58ca2 46%, #fadd72 100%);
+}
+
+.flash-label,
+.flash-word,
+.flash-tap {
+  position: relative;
+  z-index: 1;
+}
+
+.flash-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  padding: .28rem .65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .22);
+  font-size: .78rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.flash-word {
+  max-width: 100%;
+  text-align: center;
+  font-size: clamp(4.3rem, 12vw, 4.5rem);
+  font-weight: 850;
+  line-height: 1.08;
+  letter-spacing: -.03em;
+  overflow-wrap: anywhere;
+  text-shadow: 0 8px 20px rgba(96, 60, 70, .18);
+}
+
+.flash-tap {
+  font-size: .9rem;
+  font-weight: 700;
+  opacity: .82;
+}
+
+.flash-actions {
+  display: flex;
+  justify-content: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  margin-top: .75rem;
+}
+
+.answer-actions {
+  display: none;
+}
+
+.answer-actions.show {
+  display: flex;
+}
+
+.flash-score {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 1rem;
+}
+
+.flash-finished {
+  max-width: 520px;
+  margin: 1.5rem auto;
+  text-align: center;
+}
+
+.flash-finished-icon {
+  width: 86px;
+  height: 86px;
+  display: grid;
+  place-items: center;
+  margin: .25rem auto 1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--yuzu), var(--sakura));
+  color: #fff;
+  font-size: 2.6rem;
+  font-weight: 900;
+  box-shadow: 0 12px 28px rgba(233, 138, 165, .28);
+}
+
+@media (max-width: 640px) {
+  .flash-head {
+    align-items: start;
+  }
+
+  .flash-settings {
+    grid-template-columns: 1fr;
+  }
+
+  .flashcard {
+    width: min(360px, 100%);
+    height: 500px;
+    min-height: 420px;
+  }
+
+  .flashcard-bottom {
+    padding: 1.35rem;
+  }
+
+  .flash-word {
+    font-size: clamp(2rem, 16vw, 3.8rem);
+  }
+}
+
+@media (max-width: 400px) {
+  .segmented {
+    border-radius: 1.1rem;
+    flex-direction: column;
+  }
+
+  .segmented button {
+    width: 100%;
+  }
+
+  .flashcard {
+    height: 460px;
+    min-height: 400px;
+  }
+}
     
+/* === Hintergrund: reduzierter, kühler Sakura-Look === */
+
+body {
+  /* etwas kälteres, saubereres Weiß */
+  background:
+    /* wenige rosa Kreise statt vieler bunter Kreise */
+    radial-gradient(circle at 9% 10%,
+      rgba(245, 169, 191, 0.26) 0 7.2rem,
+      transparent 7.6rem
+    ),
+    radial-gradient(circle at 88% 8%,
+      rgba(255, 196, 211, 0.22) 0 8rem,
+      transparent 8.4rem
+    ),
+    radial-gradient(circle at 76% 88%,
+      rgba(245, 169, 191, 0.14) 0 10rem,
+      transparent 10.5rem
+    ),
+    linear-gradient(145deg,
+      #ffffff 0%,
+      #fbfdff 42%,
+      #f3fafc 100%
+    );
+  background-attachment: fixed;
+}
+
+/* zweite Hintergrundebene stark reduzieren */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+
+  background:
+    radial-gradient(circle at 18% 78%,
+      rgba(255, 205, 216, 0.13) 0 11rem,
+      transparent 11.5rem
+    ),
+    radial-gradient(circle at 92% 42%,
+      rgba(245, 169, 191, 0.11) 0 12rem,
+      transparent 12.6rem
+    ),
+    linear-gradient(120deg,
+      transparent 0 58%,
+      rgba(255, 255, 255, 0.34) 58% 58.8%,
+      transparent 59%
+    );
+}
+
+/* Falls vorher ein body::after für Sakura-Motive eingefügt wurde */
+body::after {
+  display: none;
+}
+
+/* kühleres Weiß für Flächen, aber nur dezent */
+:root {
+  --bg-dark: #fbfdff;
+  --bg-light: #ffffff;
+  --paper: rgba(255, 255, 255, 0.84);
+  --paper-strong: rgba(255, 255, 255, 0.96);
+}
+
+/* Karten behalten den Look, aber der Schimmer wird weniger gelb/beige */
+.card::before {
+  background:
+    radial-gradient(circle at 100% 0%,
+      rgba(245, 169, 191, 0.13),
+      transparent 7rem
+    ),
+    radial-gradient(circle at 0% 100%,
+      rgba(255, 205, 216, 0.10),
+      transparent 7rem
+    );
+}
+
+/* Navbar etwas kühler und klarer */
+nav {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(245, 169, 191, 0.22);
+}
+
+/* Mobile Navbar passend angleichen */
+@media (max-width: 600px) {
+  nav {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(245, 169, 191, 0.24);
+  }
+}
+
+/* === Chat-Design: helle Sakura-Sprechblasen === */
+
+/* Chat-Karte allgemein */
+#chatBox {
+  min-height: 240px;
+  padding: .35rem .15rem;
+  color: var(--ink);
+}
+
+/* Die große Chat-Card weicher und heller */
+.card:has(#chatBox) {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(245, 169, 191, 0.24);
+  box-shadow: 0 18px 42px rgba(105, 128, 138, 0.14);
+}
+
+/* NPC-Bubble links */
+#chatBox > div:first-child > div[style*="background:#333"],
+#chatBox > div:first-child > div[style*="background: #333"] {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .96), rgba(255, 246, 249, .94)) !important;
+  color: #24404b !important;
+  border: 1px solid rgba(245, 169, 191, .28) !important;
+  border-radius: 1.25rem 1.25rem 1.25rem .35rem !important;
+  box-shadow: 0 12px 26px rgba(105, 128, 138, .12) !important;
+  font-weight: 750 !important;
+}
+
+/* Romaji/Übersetzungs-Button */
+#npcHintToggle {
+  color: #9b5c6d !important;
+  background: rgba(255, 255, 255, .78) !important;
+  border: 1px solid rgba(245, 169, 191, .20) !important;
+  border-radius: 999px !important;
+  padding: .42rem .72rem !important;
+  font-weight: 750 !important;
+  box-shadow: 0 8px 20px rgba(105, 128, 138, .10) !important;
+}
+
+#npcHintToggle:hover {
+  background: rgba(255, 247, 250, .96) !important;
+  border-color: rgba(245, 169, 191, .36) !important;
+  transform: translateY(-1px);
+}
+
+/* Romaji/Deutsch-Infobox */
+#npcHintBox {
+  color: #45616c !important;
+  background: rgba(255, 255, 255, .84) !important;
+  border: 1px solid rgba(245, 169, 191, .22) !important;
+  border-left: 4px solid rgba(245, 169, 191, .7) !important;
+  border-radius: 1rem !important;
+  padding: .65rem .8rem !important;
+  box-shadow: 0 10px 24px rgba(105, 128, 138, .10) !important;
+}
+
+/* Antwortbereich */
+#optBox {
+  gap: .6rem !important;
+  margin-top: 1.35rem !important;
+}
+
+/* Antwort-Bubbles rechts */
+#optBox .optBtn {
+  background:
+    linear-gradient(135deg, rgba(255, 247, 250, .98), rgba(246, 253, 255, .94)) !important;
+  color: #24404b !important;
+  border: 1px solid rgba(85, 185, 199, .22) !important;
+  border-radius: 1.25rem 1.25rem .35rem 1.25rem !important;
+  padding: .62rem .9rem !important;
+  max-width: 80% !important;
+  text-align: right !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
+  box-shadow: 0 12px 26px rgba(105, 128, 138, .12) !important;
+}
+
+#optBox .optBtn:hover {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(255, 244, 248, .96)) !important;
+  border-color: rgba(245, 169, 191, .36) !important;
+  transform: translateY(-1px);
+}
+
+/* Audio-Buttons neben Antworten */
+#optBox .optAudioBtn {
+  background: rgba(255, 255, 255, .88) !important;
+  color: #52777f !important;
+  border: 1px solid rgba(85, 185, 199, .22) !important;
+  border-radius: 999px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: .35rem .55rem !important;
+  box-shadow: 0 10px 22px rgba(105, 128, 138, .12) !important;
+}
+
+#optBox .optAudioBtn:hover {
+  background: rgba(246, 253, 255, .98) !important;
+  border-color: rgba(85, 185, 199, .36) !important;
+}
+
+/* Falsch markierte Antwort */
+#optBox .optBtn[style*="5a2a2a"],
+#optBox .optBtn[style*="rgb(90, 42, 42)"] {
+  background: linear-gradient(135deg, #fff1f0, #ffe6e4) !important;
+  color: #b44444 !important;
+  border-color: rgba(220, 105, 105, .38) !important;
+}
+
+/* Richtig markierte Antwort */
+#optBox .optBtn[style*="2d5a2d"],
+#optBox .optBtn[style*="rgb(45, 90, 45)"] {
+  background: linear-gradient(135deg, #ecf8ef, #dcf3e2) !important;
+  color: #2f6f47 !important;
+  border-color: rgba(127, 182, 133, .45) !important;
+}
+
+/* Deaktivierte Optionen */
+#optBox .optBtn:disabled {
+  opacity: .72;
+  cursor: default;
+}
+
+/* Sprechbereich unten */
+#speechArea {
+  margin-top: 1.2rem !important;
+  border-top: 1px dashed rgba(106, 126, 136, .28) !important;
+  padding-top: 1rem !important;
+}
+
+/* Aufnahmebutton */
+#chatRecordBtn {
+  background:
+    linear-gradient(135deg, #ff9478, #f5a9bf) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: .62rem 1rem !important;
+  font-weight: 850 !important;
+  box-shadow: 0 12px 26px rgba(245, 169, 191, .28) !important;
+}
+
+#chatRecordBtn:hover {
+  filter: saturate(1.05) brightness(1.02);
+  transform: translateY(-1px);
+}
+
+/* Aufnahme aktiv */
+#chatRecordBtn.recording {
+  background: linear-gradient(135deg, #d94a4a, #f07a7a) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 18px rgba(217, 74, 74, .34) !important;
+}
+
+/* Aufnahme-Hinweise */
+#chatRecLabel,
+#chatRecResult,
+#speechArea .hint {
+  color: #6e7c85 !important;
+}
+
+/* Button: Kann gerade nicht sprechen */
+#chatSkipSpeechBtn {
+  background: rgba(255, 255, 255, .86) !important;
+  color: #24404b !important;
+  border: 1px solid rgba(245, 169, 191, .24) !important;
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 8px 20px rgba(105, 128, 138, .10) !important;
+}
+
+#chatSkipSpeechBtn:hover {
+  background: rgba(255, 247, 250, .96) !important;
+  border-color: rgba(245, 169, 191, .38) !important;
+}
+
+/* Übersetzung nach richtiger Antwort */
+#chatBox > div:not(#optBox):not(:first-child) {
+  color: #45616c;
+}
+
+/* Weiter-Button im Chat */
+#chatNextBtn {
+  background: linear-gradient(135deg, #55b9c7, #7fb685) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 26px rgba(85, 185, 199, .24) !important;
+}
+
+/* Mobile: Bubbles etwas breiter und luftiger */
+@media (max-width: 600px) {
+  #optBox .optBtn {
+    max-width: 88% !important;
+    font-size: .95rem !important;
+  }
+
+  #chatBox > div:first-child > div[style*="background:#333"],
+  #chatBox > div:first-child > div[style*="background: #333"] {
+    max-width: 88% !important;
+  }
+
+  #speechArea > div {
+    gap: .6rem !important;
+  }
+}
   </style>
 
   
@@ -3190,46 +3809,341 @@ window.deleteGrammar = (id) => {
 
 
 const LEARN_CFG = { shuffle: true, repeatWrong: true };
-function renderLearn(mount, setId){
-  let hadMistake = false;
+function renderLearn(mount, setId) {
   const s = state.sets.find(x => x.id === setId);
-  if (!s || !Array.isArray(s.cards) || !s.cards.length) { mount.innerHTML = `<p>Keine Karten.</p>`; return; }
-  const cards = (typeof LEARN_CFG !== 'undefined' && LEARN_CFG.shuffle)
-    ? [...s.cards].sort(() => Math.random() - 0.5)
-    : [...s.cards];
-  let i = 0, showAnswer = false, known = 0;
 
-  function redraw(){
-    const c = cards[i];
-    mount.innerHTML = `
-      <h2>Lernen: ${s.name}</h2>
-      <div class="card">
-        <div><strong>Frage ${i+1}/${cards.length}:</strong> ${escapeHTML(c.question)} <button id="speakQ" class="mini" title="Frage vorlesen">🔊</button></div>
-        ${showAnswer ? `<div style="margin-top:.5rem;"><strong>Antwort:</strong> ${escapeHTML(c.answer)} <button id="speakA" class="mini" title="Antwort vorlesen">🔊</button></div>` : ``}
-      </div>
-      <div class="actions"><button class="danger" onclick="deleteSet('${s.id}')">Löschen</button>
-        ${!showAnswer ? `<button id="reveal">Antwort zeigen</button>` : `
-          <button id="know">Gewusst</button>
-          <button id="dontknow">Nicht gewusst</button>`
-        }
-        <button id="next">${i < cards.length-1 ? "Nächste" : "Fertig"}</button>
-      </div>
-      <p>Punktestand (gewusst): ${known}</p>
-    `;
-    (function(){var _sq=$("#speakQ"); if(_sq) _sq.onclick=function(){ speak(c.question); };})();
-    (function(){var _sa=$("#speakA"); if(_sa) _sa.onclick=function(){ speak(c.answer); };})();
-    (function(){var __t=$("#reveal"); if(__t) __t.addEventListener("click", function(){ showAnswer = true; redraw(); });})();
-    (function(){var __t=$("#know"); if(__t) __t.addEventListener("click", function(){ known++; next(); });})();
-    (function(){var __t=$("#dontknow"); if(__t) __t.addEventListener("click", function(){ if (typeof LEARN_CFG !== "undefined" && LEARN_CFG.repeatWrong) { cards.push(cards[i]); } next(); });})();
-    $("#next").addEventListener("click", () => next());
+  if (!s || !Array.isArray(s.cards) || !s.cards.length) {
+    mount.innerHTML = `<p>Keine Karten.</p>`;
+    return;
   }
-  function next(){
-    if (i < cards.length-1) { i++; showAnswer = false; redraw(); }
-    else {
-      if (!hadMistake && known === cards.length) { try { addProgressIfFlawless(1); } catch(e){} }
-      mount.innerHTML = `<h2>Fertig!</h2><p>Gewusst: ${known} / ${cards.length}</p><button onclick="goto('set/${s.id}')">Zurück</button>`;
+
+  const learnState = {
+    mode: "kana",          // "kana" | "romaji"
+    direction: "foreign",  // "foreign" = Japanisch zuerst, "de" = Deutsch zuerst
+    i: 0,
+    flipped: false,
+    known: 0,
+    wrong: 0,
+    cards: []
+  };
+
+  function cleanGermanQuestion(q) {
+    return String(q || "")
+      .replace(/\s*[–-]\s*\((Kana|Kanji|Romaji)\)\s*$/i, "")
+      .trim();
+  }
+
+  function getCardType(q) {
+    const str = String(q || "");
+    if (/\(Kana\)/i.test(str)) return "kana";
+    if (/\(Romaji\)/i.test(str)) return "romaji";
+    if (/\(Kanji\)/i.test(str)) return "kanji";
+    return "normal";
+  }
+
+  function buildFlashcards(mode) {
+    const grouped = new Map();
+
+    s.cards.forEach(card => {
+      const type = getCardType(card.question);
+
+      if (type === "kana" || type === "romaji" || type === "kanji") {
+        const de = cleanGermanQuestion(card.question);
+
+        if (!grouped.has(de)) {
+          grouped.set(de, {
+            id: de,
+            de,
+            kana: "",
+            romaji: "",
+            kanji: ""
+          });
+        }
+
+        const item = grouped.get(de);
+        item[type] = card.answer || "";
+      }
+    });
+
+    const japaneseCards = [...grouped.values()]
+      .map(item => {
+        const foreign =
+          mode === "romaji"
+            ? item.romaji || item.kana || item.kanji
+            : item.kana || item.kanji || item.romaji;
+
+        return {
+          id: item.id,
+          de: item.de,
+          foreign,
+          kana: item.kana,
+          romaji: item.romaji,
+          kanji: item.kanji,
+          isJapanese: true
+        };
+      })
+      .filter(item => item.de && item.foreign);
+
+    if (japaneseCards.length) {
+      return shuffle(japaneseCards);
+    }
+
+    return shuffle(s.cards.map(card => ({
+      id: card.id,
+      de: card.answer || "",
+      foreign: card.question || "",
+      isJapanese: false
+    })));
+  }
+
+  function frontText(card) {
+    return learnState.direction === "foreign" ? card.foreign : card.de;
+  }
+
+  function backText(card) {
+    return learnState.direction === "foreign" ? card.de : card.foreign;
+  }
+
+  function frontLabel() {
+    if (learnState.direction === "foreign") {
+      return learnState.mode === "romaji" ? "Romaji" : "Kana";
+    }
+    return "Deutsch";
+  }
+
+  function backLabel() {
+    if (learnState.direction === "foreign") {
+      return "Deutsch";
+    }
+    return learnState.mode === "romaji" ? "Romaji" : "Kana";
+  }
+
+  function resetRound() {
+    learnState.cards = buildFlashcards(learnState.mode);
+    learnState.i = 0;
+    learnState.flipped = false;
+    learnState.known = 0;
+    learnState.wrong = 0;
+  }
+
+  function updateCardOnly() {
+    const cardEl = document.getElementById("flashcard");
+    if (!cardEl) return;
+
+    if (learnState.flipped) {
+      cardEl.classList.add("is-flipped");
+    } else {
+      cardEl.classList.remove("is-flipped");
     }
   }
+
+  function renderFinished() {
+    const total = learnState.cards.length;
+    const flawless = learnState.wrong === 0 && learnState.known === total;
+
+    if (flawless) {
+      try { addProgressIfFlawless(1); } catch(e) {}
+    }
+
+    mount.innerHTML = `
+      <h2>Flashcards: ${escapeHTML(s.name)}</h2>
+
+      <div class="flash-finished card">
+        <div class="flash-finished-icon">山</div>
+        <h3>Runde beendet</h3>
+        <p>Gewusst: <strong>${learnState.known}</strong> / ${total}</p>
+        <p>Nochmal üben: <strong>${learnState.wrong}</strong></p>
+        ${flawless ? `<p class="hint">Perfekt! Fehlerfreie Runde zählt für deinen Level-Fortschritt.</p>` : ""}
+      </div>
+
+      <div class="actions flash-actions">
+        <button class="primary" id="againBtn">Nochmal lernen</button>
+        <button onclick="goto('set/${s.id}')">Zurück zum Set</button>
+      </div>
+    `;
+
+    document.getElementById("againBtn").onclick = () => {
+      resetRound();
+      redraw();
+    };
+  }
+
+  function nextCard(wasKnown) {
+    if (wasKnown) {
+      learnState.known++;
+    } else {
+      learnState.wrong++;
+    }
+
+    if (learnState.i >= learnState.cards.length - 1) {
+      renderFinished();
+      return;
+    }
+
+    learnState.i++;
+    learnState.flipped = false;
+    redraw();
+  }
+
+  function redraw() {
+    const total = learnState.cards.length;
+
+    if (!total) {
+      mount.innerHTML = `
+        <h2>Flashcards: ${escapeHTML(s.name)}</h2>
+        <div class="card">
+          <p>Für diesen Modus wurden keine passenden Karten gefunden.</p>
+          <p class="hint">Für Japanisch sollten Karten zum Beispiel so heißen: <strong>Wasser – (Kana)</strong> und <strong>Wasser – (Romaji)</strong>.</p>
+        </div>
+        <button onclick="goto('set/${s.id}')">Zurück</button>
+      `;
+      return;
+    }
+
+    const c = learnState.cards[learnState.i];
+    const progress = Math.round(((learnState.i + 1) / total) * 100);
+
+    mount.innerHTML = `
+      <section class="flash-learn">
+        <div class="flash-head">
+          <div>
+            <h2>Flashcards</h2>
+            <p>${escapeHTML(s.name)}</p>
+          </div>
+
+          <div class="flash-counter">
+            ${learnState.i + 1} / ${total}
+          </div>
+        </div>
+
+        <div class="flash-settings card">
+          <div class="flash-setting-group">
+            <span>Schrift</span>
+            <div class="segmented">
+              <button type="button" id="modeKana" class="${learnState.mode === "kana" ? "active" : ""}">Kana</button>
+              <button type="button" id="modeRomaji" class="${learnState.mode === "romaji" ? "active" : ""}">Romaji</button>
+            </div>
+          </div>
+
+          <div class="flash-setting-group">
+            <span>Vorderseite</span>
+            <div class="segmented">
+              <button type="button" id="dirForeign" class="${learnState.direction === "foreign" ? "active" : ""}">
+                Fremdsprache
+              </button>
+              <button type="button" id="dirDe" class="${learnState.direction === "de" ? "active" : ""}">
+                Deutsch
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flash-progress">
+          <div style="width:${progress}%"></div>
+        </div>
+
+        <button id="flashcard" class="flashcard" type="button" aria-label="Flashcard umdrehen">
+  <span class="flashcard-inner">
+    <span class="flashcard-face flashcard-front">
+      <span class="flashcard-top">
+        <span class="flash-symbol flash-category">${frontLabel()}</span>
+      </span>
+      <span class="flashcard-bottom">
+        <span class="flash-word">${escapeHTML(frontText(c))}</span>
+        <span class="flash-tap">Tippen zum Umdrehen</span>
+      </span>
+    </span>
+
+    <span class="flashcard-face flashcard-back">
+      <span class="flashcard-top back">
+        <span class="flash-symbol flash-category">${backLabel()}</span>
+      </span>
+      <span class="flashcard-bottom back">
+        <span class="flash-word">${escapeHTML(backText(c))}</span>
+        <span class="flash-tap">Antwort</span>
+      </span>
+    </span>
+  </span>
+</button>
+
+        <div class="flash-actions">
+          <button id="speakFront" type="button">🔊 Vorlesen</button>
+          <button id="flipBtn" class="primary" type="button">
+            ${learnState.flipped ? "Vorderseite zeigen" : "Antwort zeigen"}
+          </button>
+        </div>
+
+        <div class="flash-actions answer-actions ${learnState.flipped ? "show" : ""}">
+          <button id="wrongBtn" class="danger" type="button">Nochmal üben</button>
+          <button id="rightBtn" class="primary" type="button">Gewusst</button>
+        </div>
+
+        <p class="flash-score">
+          Gewusst: <strong>${learnState.known}</strong>
+          · Nochmal: <strong>${learnState.wrong}</strong>
+        </p>
+      </section>
+    `;
+
+    updateCardOnly();
+
+    document.getElementById("flashcard").onclick = () => {
+      learnState.flipped = !learnState.flipped;
+      updateCardOnly();
+
+      const flipBtn = document.getElementById("flipBtn");
+      const answerActions = document.querySelector(".answer-actions");
+
+      if (flipBtn) {
+        flipBtn.textContent = learnState.flipped ? "Vorderseite zeigen" : "Antwort zeigen";
+      }
+
+      if (answerActions) {
+        answerActions.classList.toggle("show", learnState.flipped);
+      }
+    };
+
+    document.getElementById("flipBtn").onclick = () => {
+      learnState.flipped = !learnState.flipped;
+      redraw();
+    };
+
+    document.getElementById("rightBtn").onclick = () => nextCard(true);
+    document.getElementById("wrongBtn").onclick = () => nextCard(false);
+
+    document.getElementById("modeKana").onclick = () => {
+      if (learnState.mode === "kana") return;
+      learnState.mode = "kana";
+      resetRound();
+      redraw();
+    };
+
+    document.getElementById("modeRomaji").onclick = () => {
+      if (learnState.mode === "romaji") return;
+      learnState.mode = "romaji";
+      resetRound();
+      redraw();
+    };
+
+    document.getElementById("dirForeign").onclick = () => {
+      learnState.direction = "foreign";
+      learnState.flipped = false;
+      redraw();
+    };
+
+    document.getElementById("dirDe").onclick = () => {
+      learnState.direction = "de";
+      learnState.flipped = false;
+      redraw();
+    };
+
+    document.getElementById("speakFront").onclick = () => {
+      const text = learnState.flipped ? backText(c) : frontText(c);
+      try { speak(text); } catch(e) {}
+    };
+  }
+
+  resetRound();
   redraw();
 }
 
