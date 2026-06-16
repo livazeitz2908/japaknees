@@ -3940,8 +3940,8 @@ function renderLearn(mount, setId) {
   }
 
   const learnState = {
-    mode: "kana",          // "kana" | "romaji"
-    direction: "foreign",  // "foreign" = Japanisch zuerst, "de" = Deutsch zuerst
+    mode: "kana",          // "kana" | "romaji" | "kanji"
+    direction: "foreign",  // "foreign" = Fremdsprache zuerst, "de" = Deutsch zuerst
     i: 0,
     flipped: false,
     known: 0,
@@ -3963,8 +3963,15 @@ function renderLearn(mount, setId) {
     return "normal";
   }
 
-  function buildFlashcards(mode) {
+  /*
+    Wichtig:
+    Diese Funktion baut jetzt NICHT mehr abhängig von Kana/Romaji/Kanji.
+    Sie baut einmal feste Wortkarten.
+    Jede Karte enthält alle vorhandenen Schreibweisen.
+  */
+  function buildFlashcards() {
     const grouped = new Map();
+    const normalCards = [];
 
     s.cards.forEach(card => {
       const type = getCardType(card.question);
@@ -3972,76 +3979,103 @@ function renderLearn(mount, setId) {
       if (type === "kana" || type === "romaji" || type === "kanji") {
         const de = cleanGermanQuestion(card.question);
 
+        if (!de) return;
+
         if (!grouped.has(de)) {
           grouped.set(de, {
             id: de,
             de,
             kana: "",
             romaji: "",
-            kanji: ""
+            kanji: "",
+            isJapanese: true
           });
         }
 
         const item = grouped.get(de);
-        item[type] = card.answer || "";
+        item[type] = String(card.answer || "").trim();
+      } else {
+        normalCards.push({
+          id: card.id,
+          de: card.answer || "",
+          foreign: card.question || "",
+          kana: "",
+          romaji: "",
+          kanji: "",
+          isJapanese: false
+        });
       }
     });
 
     const japaneseCards = [...grouped.values()]
-      .map(item => {
-        const foreign =
-          mode === "romaji"
-            ? item.romaji || item.kana || item.kanji
-            : item.kana || item.kanji || item.romaji;
-
-        return {
-          id: item.id,
-          de: item.de,
-          foreign,
-          kana: item.kana,
-          romaji: item.romaji,
-          kanji: item.kanji,
-          isJapanese: true
-        };
-      })
-      .filter(item => item.de && item.foreign);
+      .filter(item =>
+        item.de &&
+        (
+          item.kana ||
+          item.romaji ||
+          item.kanji
+        )
+      );
 
     if (japaneseCards.length) {
       return shuffle(japaneseCards);
     }
 
-    return shuffle(s.cards.map(card => ({
-      id: card.id,
-      de: card.answer || "",
-      foreign: card.question || "",
-      isJapanese: false
-    })));
+    return shuffle(normalCards);
+  }
+
+  function modeLabel() {
+    if (learnState.mode === "romaji") return "Romaji";
+    if (learnState.mode === "kanji") return "Kanji";
+    return "Kana";
+  }
+
+  function missingModeText(mode) {
+    if (mode === "kanji") return "Kein Kanji";
+    if (mode === "romaji") return "Kein Romaji";
+    return "Kein Kana";
+  }
+
+  function foreignText(card) {
+    if (!card) return "";
+
+    if (!card.isJapanese) {
+      return card.foreign || "";
+    }
+
+    if (learnState.mode === "romaji") {
+      return card.romaji || missingModeText("romaji");
+    }
+
+    if (learnState.mode === "kanji") {
+      return card.kanji || missingModeText("kanji");
+    }
+
+    return card.kana || missingModeText("kana");
   }
 
   function frontText(card) {
-    return learnState.direction === "foreign" ? card.foreign : card.de;
+    return learnState.direction === "foreign"
+      ? foreignText(card)
+      : card.de;
   }
 
   function backText(card) {
-    return learnState.direction === "foreign" ? card.de : card.foreign;
+    return learnState.direction === "foreign"
+      ? card.de
+      : foreignText(card);
   }
 
   function frontLabel() {
-    if (learnState.direction === "foreign") {
-      return learnState.mode === "romaji" ? "Romaji" : "Kana";
-    }
-    return "Deutsch";
+    return learnState.direction === "foreign" ? modeLabel() : "Deutsch";
   }
 
   function backLabel() {
-    if (learnState.direction === "foreign") {
-      return "Deutsch";
-    }
-    return learnState.mode === "romaji" ? "Romaji" : "Kana";
+    return learnState.direction === "foreign" ? "Deutsch" : modeLabel();
   }
 
   function resetRound() {
-    learnState.cards = buildFlashcards(learnState.mode);
+    learnState.cards = buildFlashcards();
     learnState.i = 0;
     learnState.flipped = false;
     learnState.known = 0;
@@ -4056,6 +4090,12 @@ function renderLearn(mount, setId) {
       cardEl.classList.add("is-flipped");
     } else {
       cardEl.classList.remove("is-flipped");
+    }
+  }
+
+  function refitFlashWords() {
+    if (typeof fitFlashWords === "function") {
+      fitFlashWords(mount);
     }
   }
 
@@ -4107,6 +4147,27 @@ function renderLearn(mount, setId) {
     redraw();
   }
 
+  function setFlashMode(mode) {
+    if (learnState.mode === mode) return;
+
+    /*
+      Wichtig:
+      Hier KEIN resetRound().
+      Dadurch bleibt dieselbe Karte aktiv.
+      Nur die Schreibweise wird gewechselt.
+    */
+    learnState.mode = mode;
+    redraw();
+  }
+
+  function setDirection(direction) {
+    if (learnState.direction === direction) return;
+
+    learnState.direction = direction;
+    learnState.flipped = false;
+    redraw();
+  }
+
   function redraw() {
     const total = learnState.cards.length;
 
@@ -4114,8 +4175,13 @@ function renderLearn(mount, setId) {
       mount.innerHTML = `
         <h2>Flashcards: ${escapeHTML(s.name)}</h2>
         <div class="card">
-          <p>Für diesen Modus wurden keine passenden Karten gefunden.</p>
-          <p class="hint">Für Japanisch sollten Karten zum Beispiel so heißen: <strong>Wasser – (Kana)</strong> und <strong>Wasser – (Romaji)</strong>.</p>
+          <p>Für dieses Set wurden keine passenden Karten gefunden.</p>
+          <p class="hint">
+            Für Japanisch sollten Karten zum Beispiel so heißen:
+            <strong>Wasser – (Kana)</strong>,
+            <strong>Wasser – (Kanji)</strong> und
+            <strong>Wasser – (Romaji)</strong>.
+          </p>
         </div>
         <button onclick="goto('set/${s.id}')">Zurück</button>
       `;
@@ -4142,8 +4208,15 @@ function renderLearn(mount, setId) {
           <div class="flash-setting-group">
             <span>Schrift</span>
             <div class="segmented">
-              <button type="button" id="modeKana" class="${learnState.mode === "kana" ? "active" : ""}">Kana</button>
-              <button type="button" id="modeRomaji" class="${learnState.mode === "romaji" ? "active" : ""}">Romaji</button>
+              <button type="button" id="modeKana" class="${learnState.mode === "kana" ? "active" : ""}">
+                Kana
+              </button>
+              <button type="button" id="modeKanji" class="${learnState.mode === "kanji" ? "active" : ""}">
+                Kanji
+              </button>
+              <button type="button" id="modeRomaji" class="${learnState.mode === "romaji" ? "active" : ""}">
+                Romaji
+              </button>
             </div>
           </div>
 
@@ -4165,28 +4238,28 @@ function renderLearn(mount, setId) {
         </div>
 
         <button id="flashcard" class="flashcard" type="button" aria-label="Flashcard umdrehen">
-  <span class="flashcard-inner">
-    <span class="flashcard-face flashcard-front">
-      <span class="flashcard-top">
-        <span class="flash-symbol flash-category">${frontLabel()}</span>
-      </span>
-      <span class="flashcard-bottom">
-        <span class="flash-word">${escapeHTML(frontText(c))}</span>
-        <span class="flash-tap">Tippen zum Umdrehen</span>
-      </span>
-    </span>
+          <span class="flashcard-inner">
+            <span class="flashcard-face flashcard-front">
+              <span class="flashcard-top">
+                <span class="flash-symbol flash-category">${frontLabel()}</span>
+              </span>
+              <span class="flashcard-bottom">
+                <span class="flash-word">${escapeHTML(frontText(c))}</span>
+                <span class="flash-tap">Tippen zum Umdrehen</span>
+              </span>
+            </span>
 
-    <span class="flashcard-face flashcard-back">
-      <span class="flashcard-top back">
-        <span class="flash-symbol flash-category">${backLabel()}</span>
-      </span>
-      <span class="flashcard-bottom back">
-        <span class="flash-word">${escapeHTML(backText(c))}</span>
-        <span class="flash-tap">Antwort</span>
-      </span>
-    </span>
-  </span>
-</button>
+            <span class="flashcard-face flashcard-back">
+              <span class="flashcard-top back">
+                <span class="flash-symbol flash-category">${backLabel()}</span>
+              </span>
+              <span class="flashcard-bottom back">
+                <span class="flash-word">${escapeHTML(backText(c))}</span>
+                <span class="flash-tap">Antwort</span>
+              </span>
+            </span>
+          </span>
+        </button>
 
         <div class="flash-actions">
           <button id="speakFront" type="button">🔊 Vorlesen</button>
@@ -4208,18 +4281,20 @@ function renderLearn(mount, setId) {
     `;
 
     updateCardOnly();
-fitFlashWords(mount);
+    refitFlashWords();
 
     document.getElementById("flashcard").onclick = () => {
-learnState.flipped = !learnState.flipped;
-updateCardOnly();
-fitFlashWords(mount);
+      learnState.flipped = !learnState.flipped;
+      updateCardOnly();
+      refitFlashWords();
 
       const flipBtn = document.getElementById("flipBtn");
       const answerActions = document.querySelector(".answer-actions");
 
       if (flipBtn) {
-        flipBtn.textContent = learnState.flipped ? "Vorderseite zeigen" : "Antwort zeigen";
+        flipBtn.textContent = learnState.flipped
+          ? "Vorderseite zeigen"
+          : "Antwort zeigen";
       }
 
       if (answerActions) {
@@ -4236,29 +4311,23 @@ fitFlashWords(mount);
     document.getElementById("wrongBtn").onclick = () => nextCard(false);
 
     document.getElementById("modeKana").onclick = () => {
-      if (learnState.mode === "kana") return;
-      learnState.mode = "kana";
-      resetRound();
-      redraw();
+      setFlashMode("kana");
+    };
+
+    document.getElementById("modeKanji").onclick = () => {
+      setFlashMode("kanji");
     };
 
     document.getElementById("modeRomaji").onclick = () => {
-      if (learnState.mode === "romaji") return;
-      learnState.mode = "romaji";
-      resetRound();
-      redraw();
+      setFlashMode("romaji");
     };
 
     document.getElementById("dirForeign").onclick = () => {
-      learnState.direction = "foreign";
-      learnState.flipped = false;
-      redraw();
+      setDirection("foreign");
     };
 
     document.getElementById("dirDe").onclick = () => {
-      learnState.direction = "de";
-      learnState.flipped = false;
-      redraw();
+      setDirection("de");
     };
 
     document.getElementById("speakFront").onclick = () => {
