@@ -2,12 +2,10 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>QuizCards – Komplett (Single‑File, inline CSS & JS)</title>
-  <audio id="ding" preload="auto" playsinline></audio>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
 
@@ -2134,8 +2132,6 @@ nav {
   </style>
 
   
-  <!-- SheetJS for optional XLSX/CSV import -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="color-scheme" content="dark light">
@@ -2930,7 +2926,8 @@ function applyGrammarExercises(items){
 
 // sanft exponentiell ↑ : 1→20, 2→30, 3→50 … 50→~1000, 100→~2000
 function tasksRequired(level){
-  return Math.floor(20 * Math.pow(1.045, level * 1.2));
+  // 3 fehlerfreie Aufgaben auf Stufe 1, langsam steigend, maximal 8
+  return Math.min(8, 3 + Math.floor((Math.max(1, level) - 1) / 4));
 }
 
 function loadLevels(){
@@ -2972,7 +2969,8 @@ function ensureSeedLevels(){
     // tasksRequired & level & id beibehalten
     out.level = typeof out.level === "number" ? out.level : seed.level;
     out.id    = out.id || seed.id;
-    out.tasksRequired = typeof out.tasksRequired === "number" ? out.tasksRequired : seed.tasksRequired;
+    // immer neu berechnen, damit gespeicherte Altwerte (z.B. 21 / 108) ersetzt werden
+    out.tasksRequired = tasksRequired(out.level);
     return out;
   };
 
@@ -4077,6 +4075,11 @@ const m = $("#app");
     const id = decodeURIComponent(state.route.split("/")[2]);
     return renderGrammarPractice(m, id);
   }
+
+  // Unbekannte Route: nicht leer lassen
+  m.innerHTML = `<h2>Seite nicht gefunden</h2>
+    <div class="card"><p>Diese Ansicht gibt es nicht (<code>${escapeHTML(state.route)}</code>).</p>
+    <div class="actions"><button class="primary" onclick="goto('home')">Zur Startseite</button></div></div>`;
 }
 function renameSet(setId) {
   const s = state.sets.find(x => x.id === setId);
@@ -5042,9 +5045,32 @@ function renderQuiz(mount, setId){
   const questions = shuffle(s.cards);
   let i = 0, score = 0;
 
+  // Schriftart einer Antwort: Falschantworten sollen dieselbe Art haben,
+  // sonst erkennt man die richtige Antwort allein an der Schrift.
+  function scriptKind(t){
+    const x = String(t || "");
+    if (/[一-鿿]/.test(x)) return "kanji";
+    if (/[゠-ヿ]/.test(x)) return "katakana";
+    if (/[぀-ゟ]/.test(x)) return "hiragana";
+    if (/^[\x00-\x7f]+$/.test(x)) return "latin";
+    return "other";
+  }
   function makeOptions(correct, allCards){
-    const wrongs = shuffle(allCards.filter(c => c !== correct)).slice(0,3).map(c => c.answer);
-    return shuffle([correct.answer, ...wrongs]);
+    const kind = scriptKind(correct.answer);
+    const seen = new Set([correct.answer]);
+    const others = shuffle(allCards.filter(c => c !== correct));
+    const pick = [];
+    const take = (list) => {
+      for (const c of list){
+        if (pick.length >= 3) break;
+        if (seen.has(c.answer)) continue;
+        seen.add(c.answer);
+        pick.push(c.answer);
+      }
+    };
+    take(others.filter(c => scriptKind(c.answer) === kind));
+    take(others);
+    return shuffle([correct.answer, ...pick]);
   }
   function redraw(){
     const c = questions[i];
@@ -5107,15 +5133,22 @@ function renderMatch(mount, setId){
 
   function startTimer(){
     timer = setInterval(() => {
+      // Ansicht wurde verlassen -> Timer beenden
+      if (!document.body.contains(timeEl())) { clearInterval(timer); return; }
       remainingMs -= 1000;
       if (remainingMs <= 0) { remainingMs = 0; clearInterval(timer); finish(); }
-      $("#time").textContent = fmtTime(remainingMs);
+      showTime();
     }, 1000);
+  }
+  function timeEl(){ return $("#time"); }
+  function showTime(){
+    const el = timeEl();
+    if (el) el.textContent = fmtTime(remainingMs);
   }
   function timePenalty(ms){
     remainingMs = Math.max(0, remainingMs - ms);
     if (remainingMs === 0) { clearInterval(timer); finish(); }
-    $("#time").textContent = fmtTime(remainingMs);
+    showTime();
   }
 
   let selectedQ = null, selectedA = null;
@@ -6646,10 +6679,10 @@ function renderSpell(mount, setId) {
           : ``}
         <button onclick="goto('set/${s.id}')">Zurück</button>
       </div>
-
+      <div id="write-container"></div>
     `;
 
-    
+
  if (!document.getElementById("writeCanvas")) {
     const container = document.getElementById("write-container");
     container.innerHTML = `
@@ -6998,6 +7031,7 @@ localStorage.removeItem("quizcards_chats_v2"); // neuer Key
 
 // Init
 load();
+if (!state.sets.length) ensureSeedSets();   // nur beim ersten Start, damit die Startseite nicht leer ist (gelöschte Sets kommen so nicht zurück)
 ensureSeedLevels();   // <-- NEU: Level-Seeds sofort bereitstellen
 render();
 
@@ -10512,9 +10546,6 @@ try { ensureSeedChats(); } catch(e){}
   window.__audioCtx = ctx;
 })();
 
-const tapEvt = ('ontouchstart' in window) ? 'touchstart' : 'click';
-document.getElementById('startBtn')
-  .addEventListener(tapEvt, startGame, {passive:true});
 class WritingPad {
   constructor(canvas, hintEl) {
     this.canvas = canvas;
