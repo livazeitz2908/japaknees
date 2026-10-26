@@ -4248,31 +4248,44 @@ function renderSet(mount, setId){
 }
 
 function renderGrammarList(mount){
-    const items = applyGrammarExercises(loadGrammar());
+  const items = applyGrammarExercises(Array.isArray(loadGrammar()) ? loadGrammar() : []);
+  const lessons = items.filter(it => it.seed).sort((a, b) => (a.order || 0) - (b.order || 0));
+  const others = items.filter(it => !it.seed);
+  const gs = grammarStats();
+  const nextLesson = lessons.find(it => !isGrammarPassed(it.id));
   mount.innerHTML = `
     <h1>Grammatik</h1>
     <div class="card">
-      <input id="gSearch" placeholder="Grammatik suchen …" />
+      <p>Die Lektionen bauen aufeinander auf: Erklärung lesen, Beispiele anhören, dann die Übungen mit mindestens ${PASS_PCT} % bestehen.</p>
+      <div class="hint">${gs.passed} / ${gs.total} Lektionen bestanden</div>
+      <div class="progress"><div style="width:${Math.round(100 * gs.passed / gs.total)}%;"></div></div>
+      ${nextLesson ? `<div class="actions" style="margin-top:.5rem;"><button class="primary" onclick="goto('grammar/view/${encodeURIComponent(nextLesson.id)}')">Weiter: ${escapeHTML(nextLesson.title)}</button></div>` : ""}
     </div>
+    <div class="card"><input id="gSearch" placeholder="Grammatik suchen …" /></div>
     <div class="grid" id="gList"></div>
+    <div id="gOthers"></div>
   `;
-  const gList = $("#gList");
+  const card = (it) => {
+    const done = it.seed && isGrammarPassed(it.id);
+    const best = it.seed ? grammarBest(it.id) : null;
+    const exp = it.explanation_de || "";
+    return `
+     <div class="card">
+      <h3>${escapeHTML(it.title || "")}</h3>
+      ${done ? `<span class="badge">Bestanden${best != null ? " · " + best + " %" : ""}</span>` : ""}
+      <p>${escapeHTML(exp.slice(0, 140))}${exp.length > 140 ? "…" : ""}</p>
+      <div class="actions">
+        <button${it.seed && !done ? ' class="primary"' : ""} onclick="goto('grammar/view/${encodeURIComponent(it.id)}')">Öffnen</button>
+        ${it.seed ? "" : `<button class="danger" onclick="deleteGrammar('${encodeURIComponent(it.id)}')">Löschen</button>`}
+      </div>
+     </div>`;
+  };
   function redraw(){
     const q = ($("#gSearch").value || "").toLowerCase();
-    const filtered = !q ? items : items.filter(it =>
-      (it.title||"").toLowerCase().includes(q) ||
-      (it.explanation_de||"").toLowerCase().includes(q)
-    );
-    gList.innerHTML = filtered.map(it => `
-     <div class="card">
-    <h3>${it.title}</h3>
-    <p>${(it.explanation_de||"").slice(0,140)}${(it.explanation_de||"").length>140?"…":""}</p>
-    <div class="actions">
-      <button onclick="goto('grammar/view/${encodeURIComponent(it.id)}')">Öffnen</button>
-      <button class="danger" onclick="deleteGrammar('${encodeURIComponent(it.id)}')">Löschen</button>
-    </div>
-  </div>
-    `).join("") || "<p>Keine Treffer.</p>";
+    const match = it => !q || (it.title || "").toLowerCase().includes(q) || (it.explanation_de || "").toLowerCase().includes(q);
+    $("#gList").innerHTML = lessons.filter(match).map(card).join("") || (lessons.length ? "<p>Keine Treffer.</p>" : "");
+    const o = others.filter(match);
+    $("#gOthers").innerHTML = o.length ? `<h3 style="margin-top:1rem;">Weitere Einträge</h3><div class="grid">${o.map(card).join("")}</div>` : "";
   }
   $("#gSearch").addEventListener("input", redraw);
   redraw();
@@ -4295,7 +4308,9 @@ function renderGrammarView(mount, id){
       }
       ${Array.isArray(g.examples) && g.examples.length ? `
         <h3>Beispiele</h3>
-        <ul>${g.examples.map(ex=>`<li><strong>${escapeHTML(ex.ja||"")}</strong><br>${escapeHTML(ex.de||"")}</li>`).join("")}</ul>` : ""
+        <ul>${g.examples.map(ex=>`<li><strong>${escapeHTML(ex.ja||"")}</strong>
+          <button class="mini speak-g" type="button" data-say="${escapeHTML(ex.ja||"")}" aria-label="Vorlesen" style="width:auto;">🔊</button>
+          ${ex.romaji ? `<br><span class="hint">${escapeHTML(ex.romaji)}</span>` : ""}<br>${escapeHTML(ex.de||"")}</li>`).join("")}</ul>` : ""
       }
     </div>
     <div class="actions">
@@ -4305,9 +4320,10 @@ function renderGrammarView(mount, id){
           Übungen starten
         </button>
       ` : ""}
-      <button class="danger" onclick="deleteGrammar('${String(id)}')">Löschen</button>
+      ${g.seed ? "" : `<button class="danger" onclick="deleteGrammar('${String(id)}')">Löschen</button>`}
     </div>
   `;
+  $$(".speak-g", mount).forEach(b => { b.onclick = () => speak(b.dataset.say); });
 }
 
 function renderGrammarPractice(mount, id){
@@ -4319,7 +4335,10 @@ function renderGrammarPractice(mount, id){
     return;
   }
 
-  const exercises = Array.isArray(g.exercises) ? g.exercises : [];
+  // Antwortreihenfolge mischen, wenn die richtige Antwort als Text hinterlegt ist
+  const exercises = (Array.isArray(g.exercises) ? g.exercises : []).map(ex =>
+    (Array.isArray(ex.options) && typeof ex.correctIndex !== "number" && typeof ex.correct_index !== "number")
+      ? { ...ex, options: shuffle(ex.options) } : ex);
   if (!exercises.length){
     mount.innerHTML = `
       <h2>${escapeHTML(g.title || "Grammatik")}</h2>
@@ -4399,15 +4418,21 @@ function renderGrammarPractice(mount, id){
         if (flawless){
           try { addProgressIfFlawless(1); } catch(e){}
         }
+        const pct = Math.round(100 * correct / total);
+        const passed = g.seed ? markGrammarResult(g.id, pct) : false;
+        const nextG = g.seed ? GRAMMAR_SEED[(g.order || 0)] : null;   // order ist 1-basiert, also Index der nächsten Lektion
         mount.innerHTML = `
           <h2>Übungen zu: ${escapeHTML(g.title || "")}</h2>
           <div class="card">
-            <p>Richtig: ${correct} / ${total}</p>
+            <p>Richtig: ${correct} / ${total} (${pct} %)</p>
             <p>Falsch: ${wrong}</p>
-            ${flawless ? `<p class="hint">Top! Fehlerfreie Runde – zählt als Aufgabe im Level-System.</p>` : ""}
+            ${g.seed ? (pct >= PASS_PCT
+              ? `<p><span class="badge">Bestanden</span> Lektion abgeschlossen.</p>`
+              : `<p><span class="badge">Noch nicht bestanden</span> Du brauchst mindestens ${PASS_PCT} %. Lies die Erklärung noch einmal und versuche es erneut.</p>`) : ""}
           </div>
           <div class="actions">
-            <button class="primary" onclick="goto('grammar/practice/${encodeURIComponent(String(id))}')">Nochmal</button>
+            ${passed && nextG ? `<button class="primary" onclick="goto('grammar/view/${encodeURIComponent(nextG.id)}')">Nächste Lektion</button>` : ""}
+            <button${passed && nextG ? "" : ' class="primary"'} onclick="goto('grammar/practice/${encodeURIComponent(String(id))}')">Nochmal</button>
             <button onclick="goto('grammar/view/${encodeURIComponent(String(id))}')">Zurück zur Erklärung</button>
           </div>
         `;
@@ -7603,12 +7628,26 @@ function nextStep(){
   const hira = KANA.hiragana.groups.find(g => !isKanaPassed("hiragana", g.id));
   if (hira) return { label: `Hiragana, Gruppe ${hira.id}: ${hira.head} – ${hira.label}`,
                      desc: "Zeichen ansehen, üben und den Test bestehen.", route: `kana/hiragana/${hira.id}` };
-  const kata = KANA.katakana.groups.find(g => !isKanaPassed("katakana", g.id));
-  if (kata && kataUnlocked()) return { label: `Katakana, Gruppe ${kata.id}: ${kata.head} – ${kata.label}`,
+  const levels = contentLevels();
+  const levelStep = (lvl) => ({ label: `Stufe ${lvl.level}: ${lvl.title}`,
+                     desc: "Story lesen, Vokabeln lernen und den Vokabeltest bestehen.", route: `level/read/${lvl.id}` });
+  const used = new Set();
+  for (const item of CURRICULUM) {
+    if (item === "K") {
+      const kata = KANA.katakana.groups.find(g => !isKanaPassed("katakana", g.id));
+      if (kata && kataUnlocked()) return { label: `Katakana, Gruppe ${kata.id}: ${kata.head} – ${kata.label}`,
                      desc: "Die Schrift für Fremdwörter und Namen.", route: `kana/katakana/${kata.id}` };
-  const lvl = syncLevelProgress();
-  if (lvl && !isLevelPassed(lvl)) return { label: `Stufe ${lvl.level}: ${lvl.title}`,
-                     desc: "Story lesen, Vokabeln lernen und den Vokabeltest bestehen.", route: `level/read/${lvl.id}` };
+    } else if (item.startsWith("g:")) {
+      const g = GRAMMAR_SEED.find(x => x.id === item.slice(2));
+      if (g && !isGrammarPassed(g.id)) return { label: `Grammatik ${g.title}`,
+                     desc: "Erklärung lesen und die Übungen mit mindestens " + PASS_PCT + " % bestehen.", route: `grammar/view/${g.id}` };
+    } else if (item.startsWith("l:")) {
+      const lvl = levels.find(l => l.level === Number(item.slice(2)));
+      if (lvl) { used.add(lvl.id); if (!isLevelPassed(lvl)) return levelStep(lvl); }
+    }
+  }
+  const rest = levels.find(l => !used.has(l.id) && !isLevelPassed(l));
+  if (rest) return levelStep(rest);
   return null;
 }
 
@@ -7617,6 +7656,7 @@ function renderPath(mount){
   const levels = contentLevels();
   const lvlDone = levels.filter(isLevelPassed).length;
   const step = nextStep();
+  const gr = grammarStats();
   const stage = (nr, title, text, done, total, route, extra, disabled) => `
     <div class="card${disabled ? " step-locked" : ""}">
       <h3>${nr}. ${title}</h3>
@@ -7646,8 +7686,9 @@ function renderPath(mount){
     <div class="grid">
       ${stage(1, "Hiragana", "Die erste Silbenschrift. Ohne sie geht nichts.", h.passed, h.total, "kana/hiragana")}
       ${stage(2, "Katakana", "Die Schrift für Fremdwörter und Namen." + (kataUnlocked() ? "" : " Wird nach Hiragana-Gruppen 1–10 freigeschaltet."), k.passed, k.total, "kana/katakana", "", !kataUnlocked())}
-      ${stage(3, "Stufen: Geschichten & Wortschatz", "Kurze Geschichten, Vokabeln und ein Test pro Stufe. Hinweis: Die Texte enthalten schon Kanji.", lvlDone, levels.length, "levels")}
-      ${stage(4, "Grammatik & Kanji", "In Vorbereitung.", 0, 0, "", "", true)}
+      ${stage(3, "Grammatik", "Kurze Lektionen mit Erklärung, Beispielen und Übungen. Sie bauen aufeinander auf.", gr.passed, gr.total, "grammar")}
+      ${stage(4, "Stufen: Geschichten & Wortschatz", "Kurze Geschichten, Vokabeln und ein Test pro Stufe. Hinweis: Die Texte enthalten schon Kanji.", lvlDone, levels.length, "levels")}
+      ${stage(5, "Kanji", "In Vorbereitung.", 0, 0, "", "", true)}
     </div>
     <h3 style="margin-top:1rem;">Zum Üben nebenbei</h3>
     <div class="actions">
@@ -7658,9 +7699,263 @@ function renderPath(mount){
     </div>`;
 }
 
+// ---------- Reihenfolge des Lernpfads ----------
+// "K" = Katakana-Block; "g:" = Grammatik-Lektion; "l:" = Stufe
+const CURRICULUM = ["g:kb-desu","g:kb-ka","g:kb-dewa","K","l:1","g:kb-no","l:2","g:kb-kore","g:kb-koko","g:kb-mo-to","g:kb-masu","l:3",
+  "g:kb-ni-de-e","g:kb-masen","l:4","g:kb-i-adj","g:kb-na-adj","l:5","g:kb-aru-iru","l:6","g:kb-masenka","g:kb-tai"];
+
+// =========================================================
+// Grammatik-Lektionen für Anfänger (Phase 3a)
+// Nutzt die vorhandene Grammatik-Ansicht (grammar, grammar/view/<id>, grammar/practice/<id>).
+// Eintrag: { id, title, seed:true, order, explanation_de, patterns[], examples[{ja,romaji,de}], exercises[] }
+// =========================================================
+const GRAMMAR_SRC = [
+  { id:"kb-desu", title:"XはYです – A ist B",
+    expl:"Der Grundsatz im Japanischen: Thema + は + Aussage + です. は ist hier eine Partikel und wird „wa“ gesprochen (nicht „ha“). です entspricht „ist/bin/sind“ und bleibt immer gleich, egal ob ich, du oder wir. Artikel (der/die/das) gibt es nicht.",
+    patterns:["XはYです。→ X ist Y.","わたしは がくせいです。"],
+    ex:[["わたしは がくせいです。","watashi wa gakusei desu.","Ich bin Student/in."],
+        ["たなかさんは せんせいです。","Tanaka-san wa sensei desu.","Herr/Frau Tanaka ist Lehrer/in."],
+        ["わたしは ドイツじんです。","watashi wa doitsujin desu.","Ich bin Deutsche/r."],
+        ["ハンナさんは だいがくせいです。","Hanna-san wa daigakusei desu.","Hanna ist Universitätsstudentin."]],
+    q:[["Wie spricht man は in „わたしは“ aus?","wa",["ha","ba"],"Als Partikel wird は „wa“ gelesen."],
+       ["Ergänze: わたし__ がくせいです。","は",["です","か"],"は markiert das Thema des Satzes."],
+       ["Wie sagt man „Ich bin Lehrer/in“?","わたしは せんせいです。",["せんせいは です わたし。","わたしです せんせいは。"],"Reihenfolge: Thema は Aussage です."],
+       ["Was bedeutet „たなかさんは がくせいです。“?","Herr/Frau Tanaka ist Student/in.",["Herr/Frau Tanaka fragt den Studenten.","Herr/Frau Tanaka mag Studenten."],""],
+       ["Ändert sich です je nach Person (ich, du, er)?","Nein, です bleibt immer gleich.",["Ja, es gibt drei Formen."],"です hat in der höflichen Sprache nur eine Form."]] },
+
+  { id:"kb-ka", title:"か – Fragen stellen",
+    expl:"Aus einer Aussage wird eine Frage, indem du か ans Satzende setzt. Ein Fragezeichen ist nicht nötig. Antworten: はい (ja), いいえ (nein). „Das stimmt“ sagt man mit そうです, „das stimmt nicht“ mit ちがいます.",
+    patterns:["XはYですか。→ Ist X Y?","はい、Yです。","いいえ、ちがいます。"],
+    ex:[["あなたは がくせいですか。","anata wa gakusei desu ka.","Bist du Student/in?"],
+        ["はい、がくせいです。","hai, gakusei desu.","Ja, ich bin Student/in."],
+        ["いいえ、ちがいます。","iie, chigaimasu.","Nein, das stimmt nicht."],
+        ["おなまえは なんですか。","onamae wa nan desu ka.","Wie heißt du? (wörtl.: Was ist dein Name?)"]],
+    q:[["Wie fragt man „Bist du Student?“","あなたは がくせいですか。",["あなたは がくせいです。か","か あなたは がくせいです。"],"か steht am Ende des Satzes."],
+       ["Was bedeutet いいえ?","Nein",["Ja","Bitte"],""],
+       ["Antworte mit „Ja“ auf „せんせいですか。“","はい、せんせいです。",["いいえ、せんせいです。","はい、せんせいですか。"],""],
+       ["Was steht am Ende eines Fragesatzes?","か",["は","の"],""],
+       ["Was bedeutet „なんですか。“?","Was ist es?",["Wer ist das?","Wo ist es?"],"なん/なに = was."]] },
+
+  { id:"kb-dewa", title:"ではありません – Verneinung",
+    expl:"Die höfliche Verneinung von です ist ではありません. Im Gespräch sagt man meist じゃありません. XはYではありません = X ist nicht Y. Das では liest man „dewa“.",
+    patterns:["XはYではありません。","XはYじゃありません。(gesprochen)"],
+    ex:[["わたしは せんせいでは ありません。","watashi wa sensei dewa arimasen.","Ich bin nicht Lehrer/in."],
+        ["たなかさんは がくせいじゃ ありません。","Tanaka-san wa gakusei ja arimasen.","Herr/Frau Tanaka ist kein/e Student/in."],
+        ["ハンナさんは にほんじんでは ありません。","Hanna-san wa nihonjin dewa arimasen.","Hanna ist keine Japanerin."],
+        ["いいえ、がくせいでは ありません。","iie, gakusei dewa arimasen.","Nein, ich bin kein/e Student/in."]],
+    q:[["„Ich bin kein Student.“","わたしは がくせいでは ありません。",["わたしは がくせいじゃ です。","わたしは がくせいません。"],""],
+       ["Wie lautet die lockere Form von ではありません?","じゃありません",["ませんです","ではです"],""],
+       ["Wie liest man では in ではありません?","dewa",["deha","dewo"],"Wie bei は wird die Partikel-Form „wa“ gelesen."],
+       ["Antworte: „がくせいですか。“ – „いいえ, …“","がくせいでは ありません。",["がくせいです。","がくせいですか。"],""],
+       ["Was drückt ありません hier aus?","Verneinung (nicht)",["Frage","Vergangenheit"],""]] },
+
+  { id:"kb-no", title:"の – Zugehörigkeit",
+    expl:"の verbindet zwei Nomen: A の B = B von A (A’s B). Das Bestimmende steht vorne, das Bestimmte hinten. So sagt man auch Herkunft oder Zugehörigkeit: だいがくの せんせい (Lehrer/in an der Universität).",
+    patterns:["A の B → das B von A","わたしの ほん → mein Buch"],
+    ex:[["わたしの ほん","watashi no hon","mein Buch"],
+        ["たなかさんの くるま","Tanaka-san no kuruma","Herr Tanakas Auto"],
+        ["だいがくの せんせい","daigaku no sensei","Lehrer/in an der Universität"],
+        ["わたしの なまえは ハンナです。","watashi no namae wa Hanna desu.","Mein Name ist Hanna."]],
+    q:[["„mein Buch“","わたしの ほん",["ほんの わたし","わたしを ほん"],"Das Bestimmende (ich) steht vorn."],
+       ["„Herrn Tanakas Auto“: たなかさん__ くるま","の",["は","か"],""],
+       ["„Lehrer/in an der Uni“","だいがくの せんせい",["せんせいの だいがく","だいがくは せんせい"],""],
+       ["„A の B“ bedeutet …","B von A",["A von B","A ist B"],""],
+       ["„Mein Name ist Hanna.“","わたしの なまえは ハンナです。",["わたしは なまえの ハンナです。","なまえの わたしは ハンナです。"],""]] },
+
+  { id:"kb-kore", title:"これ・それ・あれ – Dinge zeigen",
+    expl:"Zeigewörter für Dinge: これ = das hier (nah beim Sprecher), それ = das da (nah beim Hörer), あれ = das dort (weit von beiden), どれ = welches? Vor einem Nomen heißt es この / その / あの / どの: このほん (dieses Buch). これ steht allein, この braucht immer ein Nomen.",
+    patterns:["これ/それ/あれ は X です。","この/その/あの + Nomen"],
+    ex:[["これは ほんです。","kore wa hon desu.","Das (hier) ist ein Buch."],
+        ["それは なんですか。","sore wa nan desu ka.","Was ist das (bei dir)?"],
+        ["あれは がっこうです。","are wa gakkō desu.","Das dort drüben ist eine Schule."],
+        ["この ほんは わたしのです。","kono hon wa watashi no desu.","Dieses Buch gehört mir."]],
+    q:[["Du hältst ein Buch in der Hand. Du sagst …","これは ほんです。",["あれは ほんです。","それは ほんです。"],"これ = nah bei mir."],
+       ["Ein Gebäude weit weg von dir und deinem Gegenüber:","あれ",["これ","それ"],""],
+       ["„dieses Buch“","この ほん",["これ ほん","これの ほん"],"Vor einem Nomen braucht man この, nicht これ."],
+       ["Was bedeutet どれ?","welches (von mehreren)",["wo","wer"],""],
+       ["Dein Gegenüber zeigt auf einen Stift bei sich. Du fragst:","それは なんですか。",["これは なんですか。","あれは なんですか。"],"それ = nah beim Hörer."]] },
+
+  { id:"kb-koko", title:"ここ・そこ・あそこ – Orte",
+    expl:"Ortswörter: ここ = hier, そこ = dort (beim Hörer), あそこ = da drüben, どこ = wo? Mit Orten fragt man: X は どこですか。 – Wo ist X? Antwort: X は ここ/そこ/あそこ です.",
+    patterns:["Xは どこですか。","Xは あそこです。"],
+    ex:[["ここは がっこうです。","koko wa gakkō desu.","Hier ist die Schule."],
+        ["トイレは どこですか。","toire wa doko desu ka.","Wo ist die Toilette?"],
+        ["トイレは あそこです。","toire wa asoko desu.","Die Toilette ist da drüben."],
+        ["えきは そこです。","eki wa soko desu.","Der Bahnhof ist dort (bei dir)."]],
+    q:[["„Wo ist der Bahnhof?“","えきは どこですか。",["えきは なんですか。","えきは どれですか。"],"Für Orte fragt man どこ."],
+       ["あそこ bedeutet …","da drüben",["hier","wo"],""],
+       ["Antwort auf „トイレは どこですか。“ (du zeigst auf den Platz bei dir)","ここです。",["これです。","わたしです。"],"Für Orte nimmt man ここ, nicht これ."],
+       ["どこ ist ein Fragewort für …","Orte",["Dinge","Zahlen"],""],
+       ["Ergänze: ___は がっこうです。 (Hier ist die Schule.)","ここ",["これ","この"],""]] },
+
+  { id:"kb-mo-to", title:"も und と – auch und und",
+    expl:"も heißt „auch“ und ersetzt は: わたしも がくせいです。 と heißt „und“ und verbindet Nomen: ほんと ノート. も ersetzt は (oder を), man schreibt nicht beides zusammen.",
+    patterns:["XもYです。→ X ist auch Y.","AとB → A und B"],
+    ex:[["わたしも がくせいです。","watashi mo gakusei desu.","Ich bin auch Student/in."],
+        ["ハンナさんと たなかさんは がくせいです。","Hanna-san to Tanaka-san wa gakusei desu.","Hanna und Tanaka sind Studenten."],
+        ["ほんと ノートです。","hon to nōto desu.","Es sind ein Buch und ein Heft."],
+        ["たなかさんも せんせいでは ありません。","Tanaka-san mo sensei dewa arimasen.","Tanaka ist auch kein Lehrer."]],
+    q:[["„Ich bin auch Student.“","わたしも がくせいです。",["わたしはも がくせいです。","わたしと がくせいです。"],"も ersetzt は."],
+       ["„Buch und Heft“","ほんと ノート",["ほんも ノート","ほんの ノート"],""],
+       ["Welche Partikel bedeutet „auch“?","も",["と","の"],""],
+       ["„Tanaka ist auch Student.“","たなかさんも がくせいです。",["たなかさんは がくせいも です。","たなかさんと がくせいです。"],""],
+       ["Kann man は und も zusammen an ein Wort hängen (わたしはも)?","Nein, も ersetzt は.",["Ja, immer."],""]] },
+
+  { id:"kb-masu", title:"Verben: ます-Form und を",
+    expl:"Die höfliche Verbform endet auf ます und gilt für Gegenwart und Zukunft: たべます = ich esse / ich werde essen. Das Objekt steht mit を vor dem Verb: パンを たべます。 Das Verb steht immer am Satzende. Wichtige Verben: たべます (essen), のみます (trinken), みます (sehen), ききます (hören), よみます (lesen), かきます (schreiben), いきます (gehen), きます (kommen), かえります (nach Hause gehen), します (machen). Die Partikel を wird „o“ gesprochen.",
+    patterns:["Objekt を Verb-ます","パンを たべます。"],
+    ex:[["パンを たべます。","pan o tabemasu.","Ich esse Brot."],
+        ["みずを のみます。","mizu o nomimasu.","Ich trinke Wasser."],
+        ["ほんを よみます。","hon o yomimasu.","Ich lese ein Buch."],
+        ["まいにち にほんごを べんきょうします。","mainichi nihongo o benkyō shimasu.","Ich lerne jeden Tag Japanisch."]],
+    q:[["Höfliche Form von のむ (trinken):","のみます",["のます","のむます"],""],
+       ["„Ich esse Brot.“","パンを たべます。",["パンを たべです。","たべます パンを。"],"Objekt を, dann das Verb am Ende."],
+       ["Wie wird die Partikel を gesprochen?","o",["wa","e"],""],
+       ["Wo steht das Verb im japanischen Satz?","am Ende",["nach dem Subjekt","am Anfang"],""],
+       ["Ergänze: ほん__ よみます。","を",["です","か"],""],
+       ["ます-Form von みる (sehen):","みます",["みるます","みいます"],""]] },
+
+  { id:"kb-ni-de-e", title:"に・で・へ – Zeit, Ort, Richtung",
+    expl:"に: Zeitpunkt (しちじに) und Ziel bei Bewegung (がっこうに いきます). で: Ort einer Handlung (としょかんで べんきょうします) und Mittel (バスで いきます). へ: Richtung (がっこうへ いきます); als Partikel wird へ „e“ gesprochen und ist bei Bewegungsverben oft austauschbar mit に.",
+    patterns:["Zeit に Verb","Ort で Verb (Handlung)","Ort に/へ いきます","Mittel で いきます"],
+    ex:[["しちじに おきます。","shichiji ni okimasu.","Ich stehe um 7 Uhr auf."],
+        ["がっこうへ いきます。","gakkō e ikimasu.","Ich gehe zur Schule."],
+        ["としょかんで ほんを よみます。","toshokan de hon o yomimasu.","Ich lese in der Bibliothek ein Buch."],
+        ["バスで がっこうに いきます。","basu de gakkō ni ikimasu.","Ich fahre mit dem Bus zur Schule."]],
+    q:[["Ergänze: としょかん__ べんきょうします。 (in der Bibliothek)","で",["に","を"],"で nennt den Ort der Handlung."],
+       ["Ergänze: がっこう__ いきます。 (zur Schule)","に oder へ",["で","を"],"Bei Bewegungsverben geht に und へ."],
+       ["Ergänze: しちじ__ おきます。","に",["で","を"],"に steht bei Zeitpunkten."],
+       ["Wie liest man へ als Partikel?","e",["he","ke"],""],
+       ["„mit dem Bus“","バスで",["バスに","バスを"],"で nennt das Mittel."]] },
+
+  { id:"kb-masen", title:"ません・ました・ませんでした",
+    expl:"Die vier höflichen Formen: Gegenwart/Zukunft ます, verneint ません; Vergangenheit ました, verneint ませんでした. たべます – たべません – たべました – たべませんでした. Auch です hat Vergangenheit: でした (war), ではありませんでした (war nicht).",
+    patterns:["Verb-ます → ません / ました / ませんでした","です → でした"],
+    ex:[["コーヒーを のみません。","kōhī o nomimasen.","Ich trinke keinen Kaffee."],
+        ["きのう えいがを みました。","kinō eiga o mimashita.","Gestern habe ich einen Film gesehen."],
+        ["けさ なにも たべませんでした。","kesa nani mo tabemasen deshita.","Heute Morgen habe ich nichts gegessen."],
+        ["きのうは やすみでした。","kinō wa yasumi deshita.","Gestern war frei."]],
+    q:[["Vergangenheit von たべます:","たべました",["たべるました","たべます た"],""],
+       ["Verneinung von いきます:","いきません",["いきないます","いきませんです"],""],
+       ["„Ich habe nicht gelesen.“ (よみます)","よみませんでした",["よみませんました","よみないでした"],""],
+       ["„Gestern habe ich Wasser getrunken.“","きのう みずを のみました。",["きのう みずを のみます。","きのう みずを のみません。"],""],
+       ["でした ist die Vergangenheit von …","です",["ます","ません"],""]] },
+
+  { id:"kb-i-adj", title:"い-Adjektive",
+    expl:"い-Adjektive enden auf い: たかい (hoch/teuer), やすい (billig), おおきい (groß), ちいさい (klein), あたらしい (neu), ふるい (alt), おいしい (lecker), たのしい (lustig, schön). Vor einem Nomen bleiben sie unverändert: おおきい いぬ. Als Aussage: おいしいです. Verneinung: い → くない + です (おいしくないです). Vergangenheit: い → かった + です (おいしかったです). Ausnahme: いい (gut) wird zu よくないです / よかったです.",
+    patterns:["Adj-い + Nomen","Adj-い + です","Adj-くない + です","Adj-かった + です"],
+    ex:[["この ラーメンは おいしいです。","kono rāmen wa oishii desu.","Dieses Ramen ist lecker."],
+        ["あたらしい くるまです。","atarashii kuruma desu.","Es ist ein neues Auto."],
+        ["この ほんは たかくないです。","kono hon wa takakunai desu.","Dieses Buch ist nicht teuer."],
+        ["きのうは たのしかったです。","kinō wa tanoshikatta desu.","Gestern war es schön."]],
+    q:[["Verneinung von おいしい:","おいしくないです",["おいしないです","おいしいじゃ ありません"],"い fällt weg, dann くない."],
+       ["Vergangenheit von たのしい:","たのしかったです",["たのしいでした","たのしでした"],"い fällt weg, dann かった."],
+       ["„ein großer Hund“","おおきい いぬ",["おおきいの いぬ","おおきいです いぬ"],""],
+       ["Verneinung von いい (gut):","よくないです",["いくないです","いいくないです"],"いい ist eine Ausnahme: よい → よくない."],
+       ["Welches Wort ist ein い-Adjektiv?","やすい",["しずか","きれい"],"きれい endet auf い, ist aber ein な-Adjektiv."]] },
+
+  { id:"kb-na-adj", title:"な-Adjektive",
+    expl:"な-Adjektive: しずか (ruhig), きれい (schön, sauber), ゆうめい (berühmt), げんき (munter, gesund), すき (mögen), じょうず (gut können), へた (schlecht können), べんり (praktisch). Vor einem Nomen steht な: しずかな まち. Als Aussage: しずかです. Verneinung: しずかじゃありません. Vergangenheit: しずかでした. Sie verhalten sich wie ein Nomen + です. Achtung: きれい und ゆうめい enden auf い und sind trotzdem な-Adjektive. Bei すき, じょうず, へた steht das Objekt mit が.",
+    patterns:["Adj + な + Nomen","Adj + です","Adj + じゃありません","Adj + でした"],
+    ex:[["しずかな まちです。","shizuka na machi desu.","Es ist eine ruhige Stadt."],
+        ["この へやは きれいです。","kono heya wa kirei desu.","Dieses Zimmer ist sauber."],
+        ["わたしは ねこが すきです。","watashi wa neko ga suki desu.","Ich mag Katzen."],
+        ["たなかさんは えいごが じょうずです。","Tanaka-san wa eigo ga jōzu desu.","Herr/Frau Tanaka kann gut Englisch."]],
+    q:[["„eine ruhige Stadt“","しずかな まち",["しずかい まち","しずかの まち"],""],
+       ["„Das Zimmer ist nicht sauber.“","へやは きれいじゃ ありません。",["へやは きれくないです。","へやは きれいくないです。"],"な-Adjektive verneint man wie です."],
+       ["Vergangenheit von しずかです:","しずかでした",["しずかかったです","しずかいでした"],""],
+       ["Ergänze: わたしは ねこ__ すきです。","が",["を","に"],"すき nimmt が."],
+       ["Welches Wort ist ein な-Adjektiv?","ゆうめい",["おいしい","たかい"],""]] },
+
+  { id:"kb-aru-iru", title:"あります・います – es gibt, es befindet sich",
+    expl:"あります für Dinge (leblos), います für Personen und Tiere. Muster: Ort に X が あります/います. Wo ist X? X は どこに ありますか。 Verneinung: ありません / いません. Lagewörter: うえ (auf, oben), した (unter), なか (in), まえ (vor), うしろ (hinter), となり (neben).",
+    patterns:["Ort に Ding が あります。","Ort に Person/Tier が います。"],
+    ex:[["つくえの うえに ほんが あります。","tsukue no ue ni hon ga arimasu.","Auf dem Tisch ist ein Buch."],
+        ["にわに ねこが います。","niwa ni neko ga imasu.","Im Garten ist eine Katze."],
+        ["えきは どこに ありますか。","eki wa doko ni arimasu ka.","Wo ist der Bahnhof?"],
+        ["ここに トイレは ありません。","koko ni toire wa arimasen.","Hier gibt es keine Toilette."]],
+    q:[["Die Katze im Garten: にわに ねこが ___","います",["あります","きます"],"Tiere und Personen: います."],
+       ["Das Buch auf dem Tisch: つくえの うえに ほんが ___","あります",["います","いきます"],"Dinge: あります."],
+       ["„unter dem Tisch“","つくえの した",["つくえの うえ","つくえの なか"],""],
+       ["Ergänze: ここに ほん__ あります。","が",["を","へ"],"Bei あります/います steht das Vorhandene mit が."],
+       ["Welches Verb benutzt man für Personen?","います",["あります"],""]] },
+
+  { id:"kb-masenka", title:"〜ませんか・〜ましょう – einladen",
+    expl:"Einladen: ます-Form → ません + か heißt „Wollen wir …? / Möchtest du …?“: いっしょに たべませんか。 Zusagen: ええ、いいですね。 〜ましょう heißt „Lass uns …“: いきましょう。 いっしょに = zusammen. Eine höfliche Absage: すみません、ちょっと…",
+    patterns:["Verb-ませんか。","Verb-ましょう。"],
+    ex:[["いっしょに ひるごはんを たべませんか。","issho ni hirugohan o tabemasen ka.","Wollen wir zusammen zu Mittag essen?"],
+        ["ええ、いいですね。","ee, ii desu ne.","Ja, gern."],
+        ["いっしょに かえりましょう。","issho ni kaerimashō.","Lass uns zusammen nach Hause gehen."],
+        ["すみません、きょうは ちょっと…。","sumimasen, kyō wa chotto…","Entschuldigung, heute passt es leider nicht."]],
+    q:[["„Wollen wir zusammen Kaffee trinken?“","いっしょに コーヒーを のみませんか。",["いっしょに コーヒーを のみましたか。","いっしょに コーヒーを のみません。"],""],
+       ["„Lass uns gehen!“","いきましょう。",["いきません。","いきました。"],""],
+       ["Höfliche Zusage:","ええ、いいですね。",["いいえ、ちがいます。","すみません、ちょっと…。"],""],
+       ["いっしょに bedeutet …","zusammen",["später","immer"],""],
+       ["Welche Endung lädt freundlich ein?","〜ませんか",["〜ました","〜ません"],""]] },
+
+  { id:"kb-tai", title:"〜たいです – etwas möchten",
+    expl:"Wunsch: ます-Stamm + たいです = „ich möchte …“. たべます → たべたいです. Das Objekt kann mit を oder が stehen. たい wird wie ein い-Adjektiv gebeugt: たべたくないです (ich möchte nicht essen), たべたかったです (ich wollte essen).",
+    patterns:["Verb-Stamm + たいです","Verb-Stamm + たくないです"],
+    ex:[["にほんへ いきたいです。","nihon e ikitai desu.","Ich möchte nach Japan fahren."],
+        ["すしを たべたいです。","sushi o tabetai desu.","Ich möchte Sushi essen."],
+        ["きょうは なにも したくないです。","kyō wa nani mo shitakunai desu.","Heute möchte ich nichts tun."],
+        ["おちゃを のみたいですか。","ocha o nomitai desu ka.","Möchtest du Tee trinken?"]],
+    q:[["„Ich möchte essen.“","たべたいです",["たべますたいです","たべるたいです"],""],
+       ["„Ich möchte nicht gehen.“","いきたくないです",["いかたいないです","いきたいません"],"たい wird wie ein い-Adjektiv verneint."],
+       ["Wie lautet der Stamm von のみます?","のみ",["のま","のむ"],"Stamm = ます weglassen."],
+       ["„Möchtest du Tee trinken?“","おちゃを のみたいですか。",["おちゃを のみますたいか。","おちゃは のむたいですか。"],""],
+       ["Wie wird たい gebeugt?","wie ein い-Adjektiv",["wie ein な-Adjektiv","wie ein Nomen"],""]] }
+];
+
+const GRAMMAR_SEED = GRAMMAR_SRC.map((s, i) => ({
+  id: s.id,
+  title: `${i + 1}. ${s.title}`,
+  seed: true,
+  order: i + 1,
+  explanation_de: s.expl,
+  patterns: s.patterns,
+  examples: s.ex.map(([ja, romaji, de]) => ({ ja, romaji, de })),
+  exercises: s.q.map(([prompt, right, wrong, why]) => ({
+    prompt_de: prompt,
+    options: [right, ...wrong],
+    correctText: right,
+    explanation_de: why || ""
+  }))
+}));
+
+// Seed-Lektionen anlegen oder aktualisieren; eigene/importierte Einträge bleiben unberührt
+function ensureSeedGrammar(){
+  const cur = Array.isArray(loadGrammar()) ? loadGrammar() : [];
+  const byId = new Map(cur.map(g => [String(g.id), g]));
+  GRAMMAR_SEED.forEach(seed => byId.set(seed.id, seed));
+  const rest = cur.filter(g => !String(g.id).startsWith("kb-"));
+  saveGrammar([...GRAMMAR_SEED, ...rest]);
+}
+
+function isGrammarPassed(id){
+  const g = (loadPath().grammar || {})[id];
+  return !!(g && g.passed);
+}
+function grammarBest(id){
+  const g = (loadPath().grammar || {})[id];
+  return g ? (g.best || 0) : null;
+}
+function markGrammarResult(id, pct){
+  const p = loadPath();
+  p.grammar = p.grammar || {};
+  const prev = p.grammar[id] || { best: 0, passed: false };
+  p.grammar[id] = { best: Math.max(prev.best || 0, pct), passed: !!(prev.passed || pct >= PASS_PCT), at: Date.now() };
+  savePath(p);
+  return p.grammar[id].passed;
+}
+function grammarStats(){
+  return { passed: GRAMMAR_SEED.filter(g => isGrammarPassed(g.id)).length, total: GRAMMAR_SEED.length };
+}
+
 // Init
 load();
 if (!state.sets.length) ensureSeedSets();   // nur beim ersten Start, damit die Startseite nicht leer ist (gelöschte Sets kommen so nicht zurück)
+ensureSeedGrammar();  // Grammatik-Lektionen anlegen/aktualisieren
 ensureSeedLevels();   // <-- NEU: Level-Seeds sofort bereitstellen
 render();
 
