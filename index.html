@@ -2154,6 +2154,53 @@ nav {
 .kanji-big { font-size:3.2rem; line-height:1.1; min-width:4.2rem; text-align:center; }
 .kanji-words { list-style:none; padding:0; margin:.3rem 0 0; }
 .kanji-words li { margin:.25rem 0; }
+
+/* ===== Weg (Konzept 2.0) ===== */
+.daily-row { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.5rem; }
+.daily-pill { background:var(--paper-strong); border:1px solid var(--border); border-radius:999px; padding:.25rem .8rem; }
+.weg-settings { display:flex; gap:1rem; flex-wrap:wrap; margin-top:.5rem; }
+.weg-settings label { display:flex; flex-direction:column; font-size:.85rem; color:var(--muted); gap:.2rem; }
+.weg-section { margin-top:1.25rem; }
+.weg-unit { margin-top:.6rem; }
+.weg-head { margin-bottom:.5rem; }
+.weg-nodes { display:flex; flex-direction:column; gap:.4rem; }
+.weg-node { display:flex; align-items:center; gap:.75rem; width:auto; text-align:left; background:transparent; border:0; box-shadow:none; padding:.2rem; }
+.weg-node.pos1, .weg-node.pos3 { margin-left:2.5rem; }
+.weg-node.pos2 { margin-left:4rem; }
+.weg-circle { width:3.2rem; height:3.2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.4rem; background:var(--paper-strong); border:3px solid var(--mizu); color:var(--ink); flex:none; }
+.weg-node.done .weg-circle { background:var(--matcha); border-color:var(--matcha); color:#fff; }
+.weg-node.current .weg-circle { background:linear-gradient(135deg, var(--sunset), var(--sakura)); border-color:var(--sunset); color:#fff; box-shadow:0 0 0 6px rgba(255,148,120,.25); }
+.weg-node.locked .weg-circle { opacity:.45; border-color:var(--border); }
+.weg-node.check .weg-circle { border-radius:14px; }
+.weg-label { font-size:.95rem; color:var(--ink); }
+.lesson { padding-top:.8rem; }
+.lesson-top { display:flex; gap:.6rem; align-items:center; margin-bottom:.6rem; }
+.lesson-top select { width:auto; }
+.lesson-card { min-height:14rem; }
+.lesson-foot { position:sticky; bottom:.5rem; margin-top:.75rem; }
+.feedback-bar { display:flex; justify-content:space-between; align-items:center; gap:.75rem; padding:.75rem 1rem; border-radius:1rem; background:var(--paper-strong); border:1px solid var(--border); }
+.feedback-bar.ok { background:rgba(127,182,133,.3); border-color:var(--matcha); }
+.feedback-bar.bad { background:rgba(233,138,165,.3); border-color:var(--lavender); }
+.feedback-bar button { width:auto; }
+.w-ja, .w-ro-main, .w-de { display:block; }
+.w-ro, .w-ja-sub { display:block; font-size:.62em; color:var(--muted); font-weight:400; }
+.w-de-sub { display:block; font-size:.55em; color:var(--muted); margin-top:.3rem; }
+.w-opt.sel { outline:3px solid var(--mizu); }
+.w-opt.ok { background:rgba(127,182,133,.35); border-color:var(--matcha); }
+.w-opt.bad { background:rgba(233,138,165,.35); border-color:var(--lavender); }
+.match2 { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+.match2 > div { display:flex; flex-direction:column; gap:.5rem; }
+.intro-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(7rem, 1fr)); gap:.5rem; }
+.intro-card { display:flex; flex-direction:column; align-items:center; padding:.6rem; }
+.intro-big { font-size:1.8rem; }
+.intro-sub { font-size:.85rem; color:var(--muted); }
+.intro-ex { display:flex; gap:.6rem; align-items:flex-start; margin:.5rem 0; }
+.intro-ja { font-size:1.2rem; }
+.hear-wrap { text-align:center; margin:1rem 0; }
+.hear-btn { font-size:2.5rem; width:5rem; height:5rem; border-radius:50%; padding:0; }
+.chips-answer { min-height:3.2rem; border-bottom:2px solid var(--border); display:flex; flex-wrap:wrap; gap:.4rem; padding:.4rem 0; margin:.8rem 0; }
+.chips-bank { display:flex; flex-wrap:wrap; gap:.5rem; justify-content:center; }
+.chip { width:auto; padding:.5rem .9rem; font-size:1.1rem; }
 </style>
 
   
@@ -2168,6 +2215,7 @@ nav {
   </button>
 
   <nav>
+    <button data-route="weg">Weg (neu)</button>
     <button data-route="path">Lernpfad</button>
     <button data-route="review">Wiederholen</button>
     <button data-route="home">Meine Sets</button>
@@ -4074,6 +4122,8 @@ const m = $("#app");
   if (state.route === "levels") return renderLevels(m);
   if (state.route === "path") return renderPath(m);
   if (state.route === "review") return renderReview(m);
+  if (state.route === "weg") return renderWeg(m);
+  if (state.route.startsWith("lektion/")) return renderLektion(m, state.route.split("/").slice(1));
   if (state.route === "kanji" || state.route.startsWith("kanji/")) return renderKanjiRoute(m, state.route.split("/").slice(1));
   if (state.route === "kana" || state.route.startsWith("kana/")) return renderKanaRoute(m, state.route.split("/").slice(1));
   if (state.route.startsWith("level/test/")) return renderLevelTest(m, state.route.split("/")[2]);
@@ -7329,7 +7379,7 @@ function runQuizSession(mount, cfg){
       <div class="card">
         <div class="hint">Frage ${i + 1} / ${qs.length}${q.review ? " · Wiederholung" : ""}</div>
         <div class="progress"><div style="width:${Math.round(100 * i / qs.length)}%;"></div></div>
-        <div class="${q.big ? "big-kana" : "quiz-prompt"}">${escapeHTML(q.prompt)}</div>
+        <div class="${q.big ? "big-kana" : "quiz-prompt"}">${hv(q.promptHtml) || escapeHTML(q.prompt)}</div>
         ${q.sub ? `<div class="hint" style="text-align:center;">${escapeHTML(q.sub)}</div>` : ""}
         ${q.say ? `<div style="text-align:center; margin-top:.4rem;"><button class="mini" id="qSay" type="button" aria-label="Vorlesen">🔊</button></div>` : ""}
         <div class="kana-opts${q.optionsBig ? " kana-opts-big" : ""}" id="qOpts"></div>
@@ -7723,6 +7773,11 @@ function renderPath(mount){
   mount.innerHTML = `
     <h2>Lernpfad</h2>
     <div class="card">
+      <h3>Neu: Der Weg</h3>
+      <p>Kurze Lektionen in einer festen, logischen Reihenfolge, mit Tagesziel und Serie. Der Weg wird Schritt für Schritt ausgebaut und ersetzt später diesen Lernpfad.</p>
+      <div class="actions"><button class="primary" onclick="goto('weg')">Zum Weg</button></div>
+    </div>
+    <div class="card" style="margin-top:.75rem;">
       <h3>So lernst du</h3>
       <ol>
         <li>Jeden Tag kurz: zuerst Altes wiederholen, dann etwas Neues lernen, am Ende üben.</li>
@@ -7998,11 +8053,21 @@ function allVocabPool(){
 }
 
 // Aus einem gespeicherten Eintrag wieder eine Frage machen
+// Bausteine aus abgeschlossenen Lektionen
+function learnedTokens(){
+  const out = [];
+  WEG_UNITS.forEach(u => u.lessons.forEach(l => { if (lessonDone(l.id)) (l.teach || []).forEach(id => { if (TOK[id]) out.push(TOK[id]); }); }));
+  return out;
+}
+
 function srsQuestion(item){
   const d = item.d || {};
   const dir = Math.random() < 0.5;
   if (item.t === "kana") {
-    const pool = kanaPool(scriptOfKana(d.k), 99);
+    // Falschantworten nur aus bekannten Zeichen, solange genug davon da sind
+    let pool = kanaPool(scriptOfKana(d.k), 99);
+    const known = pool.filter(it => knownKana().has(it.k));
+    if (known.length >= 6 && known.some(it => it.k === d.k)) pool = known;
     return kanaQuestion(dir ? "k2r" : "r2k", { k: d.k, r: d.r }, pool);
   }
   if (item.t === "word") {
@@ -8010,6 +8075,16 @@ function srsQuestion(item){
     return wordQuestion(dir ? "k2de" : "de2k", [d.k, d.r, d.de], g ? g.items : [[d.k, d.r, d.de]]);
   }
   if (item.t === "kanji" || item.t === "kword") return srsKanjiQuestion(item);
+  if (item.t === "tok") {
+    const t = TOK[(item.d || {}).id];
+    if (!t) return null;
+    let pool = learnedTokens().filter(x => x.kind !== "punct" && x.kind !== "part" && x.kind !== "aux" && x.kind !== "suffix");
+    if (pool.length < 4) pool = Object.values(TOK).filter(x => x.kind === "word" || x.kind === "phrase");
+    if (dir) return { prompt: t.ja, promptHtml: () => wegHtml([t.id]), big: true, say: t.ja, sub: "Was bedeutet das?", answer: t.de,
+      options: shuffle([t.de, ...pickDistractors(t.de, pool.map(x => x.de), 3)]), srs: tokSrs(t) };
+    return { prompt: t.de, big: false, sub: "Wie sagt man das auf Japanisch?", answer: t.ja,
+      options: shuffle([t.ja, ...pickDistractors(t.ja, pool.map(x => x.ja), 3)]), srs: tokSrs(t) };
+  }
   if (item.t === "vocab") {
     return vocabQuestion({ de: d.de, kana: d.kana, romaji: d.romaji }, allVocabPool(), dir ? "de2ja" : "ja2de");
   }
@@ -8035,6 +8110,7 @@ function renderReview(mount){
     title: "Wiederholung",
     questions: qs,
     graded: false,
+    onFinish: () => dailyAdd(1),
     ungradedNote: "Deine Karten wurden neu eingeordnet: Richtiges kommt später wieder, Falsches früher.",
     backRoute: "path",
     buttons: () => {
@@ -8373,6 +8449,804 @@ function kanjiWrite(gid){
     i: 0, target: "kanji"
   };
   goto("write");
+}
+
+// =========================================================
+// Weg (Konzept 2.0, Etappe 1)
+// Ein Weg aus Einheiten und kurzen Lektionen. Routen: weg | lektion/<einheit>/<index>
+// Daten: TOK (Wörter und Bausteine), WEG_UNITS (Lektionen), WEG_OUTLINE (alle geplanten Einheiten)
+// Prüfung der Reihenfolge: checkCurriculum()
+// =========================================================
+const SCRIPT_KEY = "quizcards_script";   // "auto" | "romaji" | "kana"
+function scriptMode(){ const v = lsGet(SCRIPT_KEY); return (v === "romaji" || v === "kana") ? v : "auto"; }
+function setScriptMode(v){ lsSet(SCRIPT_KEY, v); }
+
+// ---------- Bausteine (Tokens) ----------
+// [id, Japanisch, Romaji, Deutsch, Art, hängt ohne Leerzeichen an]
+// Art: word, phrase, name, part (Partikel), aux (です usw.), suffix, punct
+const TOK = {};
+function defTokens(list){
+  list.forEach(([id, ja, ro, de, kind, attach]) => { TOK[id] = { id, ja, ro, de, kind: kind || "word", attach: !!attach }; });
+}
+defTokens([
+  [",", "、", ",", "(Komma)", "punct", true],
+  [".", "。", ".", "(Punkt)", "punct", true],
+  // Einheit 1: Mini-Wörter zum Kana-Lesen
+  ["ai", "あい", "ai", "Liebe"], ["ie", "いえ", "ie", "Haus"], ["ue", "うえ", "ue", "oben"], ["ao", "あお", "ao", "blau"],
+  ["aka", "あか", "aka", "rot"], ["kao", "かお", "kao", "Gesicht"], ["koe", "こえ", "koe", "Stimme"], ["eki", "えき", "eki", "Bahnhof"],
+  // Einheit 1: Grüße
+  ["konnichiwa", "こんにちは", "konnichiwa", "Guten Tag", "phrase"],
+  ["ohayou", "おはようございます", "ohayō gozaimasu", "Guten Morgen", "phrase"],
+  ["konbanwa", "こんばんは", "konbanwa", "Guten Abend", "phrase"],
+  ["oyasumi", "おやすみなさい", "oyasuminasai", "Gute Nacht", "phrase"],
+  ["sayonara", "さようなら", "sayōnara", "Auf Wiedersehen", "phrase"],
+  ["arigatou", "ありがとうございます", "arigatō gozaimasu", "Vielen Dank", "phrase"],
+  ["douitashimashite", "どういたしまして", "dō itashimashite", "Gern geschehen", "phrase"],
+  ["sumimasen", "すみません", "sumimasen", "Entschuldigung", "phrase"],
+  ["gomennasai", "ごめんなさい", "gomen nasai", "Tut mir leid", "phrase"],
+  ["douzo", "どうぞ", "dōzo", "Bitte sehr", "phrase"],
+  ["hai", "はい", "hai", "Ja", "phrase"],
+  ["iie", "いいえ", "iie", "Nein", "phrase"],
+  ["onegai", "おねがいします", "onegai shimasu", "Bitte (ich bitte darum)", "phrase"],
+  // Einheit 2: Ich bin …
+  ["watashi", "わたし", "watashi", "ich"], ["anata", "あなた", "anata", "du"],
+  ["gakusei", "がくせい", "gakusei", "Student/in"], ["sensei", "せんせい", "sensei", "Lehrer/in"],
+  ["kaishain", "かいしゃいん", "kaishain", "Büroangestellte/r"],
+  ["san", "さん", "-san", "Herr/Frau (Anrede)", "suffix", true],
+  ["hanna", "ハンナ", "Hanna", "Hanna", "name"], ["tanaka", "たなか", "Tanaka", "Tanaka", "name"],
+  ["wa", "は", "wa", "(Themapartikel)", "part", true],
+  ["desu", "です", "desu", "ist / bin / bist / sind", "aux", true],
+  ["ka", "か", "ka", "(Fragepartikel)", "part", true],
+  ["dewa", "では", "dewa", "(nicht) …", "aux", true],
+  ["arimasen", "ありません", "arimasen", "gibt es nicht / ist nicht"],
+  ["hajimemashite", "はじめまして", "hajimemashite", "Freut mich (beim Kennenlernen)", "phrase"],
+  ["yoroshiku", "よろしくおねがいします", "yoroshiku onegai shimasu", "Auf gute Zusammenarbeit", "phrase"],
+  ["nan", "なん", "nan", "was"], ["onamae", "おなまえ", "onamae", "Name (höflich)"]
+]);
+
+// Satz aus Tokens: wegS("deutsche Übersetzung", "id id id …")
+function wegS(de, ids){ return { de, ids: ids.split(" ") }; }
+
+// ---------- Einheiten ----------
+// Lektionstypen: kana | words | grammar | dialog | check
+const WEG_UNITS = [
+  { id: 1, lessons: [
+    { id: "u1l1", type: "kana", title: "あ-Reihe", script: "hiragana",
+      chars: [["あ","a"],["い","i"],["う","u"],["え","e"],["お","o"]] },
+    { id: "u1l2", type: "kana", title: "か-Reihe", script: "hiragana",
+      chars: [["か","ka"],["き","ki"],["く","ku"],["け","ke"],["こ","ko"]] },
+    { id: "u1l3", type: "words", title: "Erste Wörter lesen", teach: ["ai","ie","ue","ao","aka","kao","koe","eki"], reading: true },
+    { id: "u1l4", type: "words", title: "Grüße 1", teach: ["konnichiwa","ohayou","konbanwa","oyasumi","sayonara"] },
+    { id: "u1l5", type: "words", title: "Grüße 2", teach: ["arigatou","douitashimashite","sumimasen","gomennasai","douzo"] },
+    { id: "u1l6", type: "words", title: "Ja, nein, bitte", teach: ["hai","iie","onegai"],
+      scenes: [
+        ["Du kommst morgens ins Büro. Was sagst du?", "ohayou"],
+        ["Jemand hält dir die Tür auf. Was sagst du?", "arigatou"],
+        ["Du stößt aus Versehen jemanden an. Was sagst du?", "gomennasai"],
+        ["Du gehst abends ins Bett. Was sagst du zu deiner Familie?", "oyasumi"],
+        ["Jemand bietet dir Tee an und du möchtest gern. Was sagst du?", "hai"]
+      ] },
+    { id: "u1l7", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 2, lessons: [
+    { id: "u2l1", type: "kana", title: "さ-Reihe", script: "hiragana",
+      chars: [["さ","sa"],["し","shi"],["す","su"],["せ","se"],["そ","so"]] },
+    { id: "u2l2", type: "kana", title: "た-Reihe", script: "hiragana",
+      chars: [["た","ta"],["ち","chi"],["つ","tsu"],["て","te"],["と","to"]] },
+    { id: "u2l3", type: "words", title: "Personen", teach: ["watashi","anata","gakusei","sensei","kaishain","san"] },
+    { id: "u2l4", type: "grammar", title: "XはYです", teach: ["wa","desu","hanna","tanaka"], focus: "desu",
+      explain: "Das Verb steht im Japanischen am Satzende. Das Muster lautet <b>X は Y です</b> und bedeutet „X ist Y“. は ist hier ein Partikel und wird „wa“ gesprochen. です heißt „ist / bin / bist“ und bleibt immer gleich.",
+      sentences: [
+        wegS("Ich bin Student/in.", "watashi wa gakusei desu ."),
+        wegS("Du bist Lehrer/in.", "anata wa sensei desu ."),
+        wegS("Ich bin Hanna.", "watashi wa hanna desu ."),
+        wegS("Herr Tanaka ist Büroangestellter.", "tanaka san wa kaishain desu .")
+      ] },
+    { id: "u2l5", type: "grammar", title: "か – Fragen", teach: ["ka"], focus: "ka",
+      explain: "Mit <b>か</b> am Satzende wird aus der Aussage eine Frage. Ein Fragezeichen ist nicht nötig. Antworten kannst du mit はい (ja) oder いいえ (nein).",
+      sentences: [
+        wegS("Bist du Student/in?", "anata wa gakusei desu ka ."),
+        wegS("Ja, ich bin Student/in.", "hai , watashi wa gakusei desu ."),
+        wegS("Nein, ich bin Lehrer/in.", "iie , watashi wa sensei desu ."),
+        wegS("Ist Herr Tanaka Lehrer?", "tanaka san wa sensei desu ka .")
+      ] },
+    { id: "u2l6", type: "grammar", title: "ではありません", teach: ["dewa","arimasen"], focus: "dewa",
+      explain: "Die Verneinung von です lautet <b>ではありません</b> („ist nicht“). Im Gespräch hörst du oft じゃありません. Das では wird „dewa“ gesprochen.",
+      sentences: [
+        wegS("Ich bin nicht Lehrer/in.", "watashi wa sensei dewa arimasen ."),
+        wegS("Herr Tanaka ist kein Student.", "tanaka san wa gakusei dewa arimasen ."),
+        wegS("Nein, ich bin nicht Student/in.", "iie , watashi wa gakusei dewa arimasen ."),
+        wegS("Du bist nicht Lehrer/in.", "anata wa sensei dewa arimasen .")
+      ] },
+    { id: "u2l7", type: "dialog", title: "Kennenlernen", teach: ["hajimemashite","yoroshiku","nan","onamae"],
+      lines: [
+        ["Hanna", wegS("Freut mich. Wie heißen Sie?", "hajimemashite . onamae wa nan desu ka .")],
+        ["Tanaka", wegS("Freut mich. Ich bin Tanaka.", "hajimemashite . watashi wa tanaka desu .")],
+        ["Hanna", wegS("Ich bin Hanna. Auf gute Zusammenarbeit.", "watashi wa hanna desu . yoroshiku .")],
+        ["Tanaka", wegS("Ist Hanna Studentin?", "hanna san wa gakusei desu ka .")],
+        ["Hanna", wegS("Ja, ich bin Studentin.", "hai , gakusei desu .")],
+        ["Tanaka", wegS("Auf gute Zusammenarbeit.", "yoroshiku .")]
+      ] },
+    { id: "u2l8", type: "check", title: "Checkpoint" }
+  ] }
+];
+
+// Alle geplanten Einheiten (Inhalte folgen in den nächsten Etappen)
+const WEG_SECTIONS = [
+  { title: "Abschnitt 1 · Ankommen", units: [1, 2, 3, 4, 5], exam: "Prüfung 1" },
+  { title: "Abschnitt 2 · Alltag", units: [6, 7, 8, 9, 10, 11], exam: "Prüfung 2" },
+  { title: "Abschnitt 3 · Unterwegs", units: [12, 13, 14, 15, 16, 17], exam: "Prüfung 3" },
+  { title: "Abschnitt 4 · Erleben", units: [18, 19, 20, 21, 22, 23], exam: "Abschlussprüfung N5" },
+  { title: "Abschnitt 5 · Locker sprechen (N4)", units: [24, 25, 26, 27, 28, 29], exam: "Prüfung 5" },
+  { title: "Abschnitt 6 · Beschreiben und erklären (N4)", units: [30, 31, 32, 33, 34, 35], exam: "Prüfung 6" },
+  { title: "Abschnitt 7 · Höflich und selbstständig (N4)", units: [36, 37, 38, 39, 40], exam: "Abschlussprüfung N4" }
+];
+const WEG_OUTLINE = {
+  1: ["Hallo!", "Ich kann grüßen, mich verabschieden und danken."],
+  2: ["Ich bin …", "Ich kann mich vorstellen und nach dem Namen fragen."],
+  3: ["Zahlen", "Ich kann zählen, Alter und Telefonnummer sagen."],
+  4: ["Menschen und Familie", "Ich kann über Familie und Freunde sprechen."],
+  5: ["Dinge und Orte", "Ich kann fragen „Was ist das?“ und „Wo ist …?“."],
+  6: ["Zeit und Tage", "Ich kann Uhrzeit, Wochentage und Datum nennen."],
+  7: ["Essen und Trinken", "Ich kann sagen, was ich esse und mag."],
+  8: ["Mein Tag", "Ich kann meinen Tagesablauf erzählen."],
+  9: ["Einkaufen", "Ich kann nach dem Preis fragen und etwas kaufen."],
+  10: ["Im Restaurant", "Ich kann bestellen und bezahlen."],
+  11: ["Zuhause", "Ich kann beschreiben, was wo steht."],
+  12: ["Den Weg fragen", "Ich kann nach dem Weg fragen und Antworten verstehen."],
+  13: ["Verkehr", "Ich kann Bahn und Bus nutzen."],
+  14: ["Verabreden", "Ich kann jemanden einladen, zu- und absagen."],
+  15: ["Gestern und Wochenende", "Ich kann von der Vergangenheit erzählen."],
+  16: ["Hobbys und Können", "Ich kann sagen, was ich gut kann und gern mache."],
+  17: ["Wetter und Jahreszeiten", "Ich kann über das Wetter sprechen."],
+  18: ["Bitten", "Ich kann höflich um etwas bitten."],
+  19: ["Gerade jetzt", "Ich kann sagen, was ich gerade mache und wo ich wohne."],
+  20: ["Gesundheit", "Ich kann beim Arzt sagen, was weh tut."],
+  21: ["Reisen", "Ich kann eine Reise und eine Unterkunft planen."],
+  22: ["Gründe und Meinungen", "Ich kann etwas begründen."],
+  23: ["Feste und Kultur", "Ich kann japanische Feste und Bräuche verstehen."],
+  24: ["Lockere Sprache", "Ich kann mit Freunden ungezwungen reden."],
+  25: ["Meinungen", "Ich kann sagen, was ich denke."],
+  26: ["Erfahrungen", "Ich kann von Erlebnissen erzählen."],
+  27: ["Pflichten und Erlaubnis", "Ich kann sagen, was man muss, darf oder nicht darf."],
+  28: ["Können und Möglichkeit", "Ich kann über Fähigkeiten sprechen."],
+  29: ["Pläne und Absichten", "Ich kann Pläne und Vorsätze nennen."],
+  30: ["Vergleichen", "Ich kann Dinge und Personen vergleichen."],
+  31: ["Gründe", "Ich kann etwas begründen und Gegensätze ausdrücken."],
+  32: ["Bedingungen", "Ich kann Wenn-dann-Sätze bilden."],
+  33: ["Beschreiben", "Ich kann Personen und Dinge näher beschreiben."],
+  34: ["Zustände und Ergebnisse", "Ich kann Zustände und Ergebnisse ausdrücken."],
+  35: ["Geben und Nehmen", "Ich kann über Geben und Bekommen sprechen."],
+  36: ["Höflich sprechen", "Ich kann höflich und respektvoll sprechen."],
+  37: ["Passiv", "Ich kann sagen, was mit mir geschieht."],
+  38: ["Lassen und Veranlassen", "Ich kann erlauben und veranlassen."],
+  39: ["Vermutungen", "Ich kann etwas vermuten und beschreiben."],
+  40: ["Alltag meistern", "Ich kann telefonieren, Formulare ausfüllen und über Arbeit sprechen."]
+};
+
+function wegUnit(id){ return WEG_UNITS.find(u => u.id === id) || null; }
+function wegLesson(unitId, idx){ const u = wegUnit(unitId); return u ? u.lessons[idx] || null : null; }
+
+// ---------- Fortschritt ----------
+let _knownKana = null;
+function wegDone(){ return (loadPath().weg || {}); }
+function lessonDone(id){ const w = wegDone()[id]; return !!(w && w.done); }
+function lessonBest(id){ const w = wegDone()[id]; return w ? (w.best || 0) : null; }
+function markWegLesson(id, pct, passed){
+  const p = loadPath();
+  p.weg = p.weg || {};
+  const prev = p.weg[id] || { best: 0, done: false };
+  p.weg[id] = { best: Math.max(prev.best || 0, pct), done: !!(prev.done || passed), at: Date.now() };
+  savePath(p);
+  _knownKana = null;
+}
+function unitDone(unitId){
+  const u = wegUnit(unitId);
+  return !!u && u.lessons.every(l => lessonDone(l.id));
+}
+function unitUnlocked(unitId){
+  if (!wegUnit(unitId)) return false;
+  if (unitId === 1) return true;
+  return unitDone(unitId - 1);
+}
+function lessonUnlocked(unitId, idx){
+  if (!unitUnlocked(unitId)) return false;
+  if (idx === 0) return true;
+  return lessonDone(wegUnit(unitId).lessons[idx - 1].id);
+}
+// Nächste offene Lektion auf dem Weg
+function wegNext(){
+  for (const u of WEG_UNITS) {
+    for (let i = 0; i < u.lessons.length; i++) {
+      if (!lessonDone(u.lessons[i].id)) return lessonUnlocked(u.id, i) ? { unit: u, idx: i, lesson: u.lessons[i] } : null;
+    }
+  }
+  return null;
+}
+
+// ---------- Tagesziel und Serie ----------
+function dayKey(d){
+  d = d || new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function dailyGoal(){ const g = (loadPath().daily || {}).goal; return (g >= 1 && g <= 3) ? g : 1; }
+function setDailyGoal(n){
+  const p = loadPath();
+  p.daily = p.daily || { goal: 1, log: {} };
+  p.daily.goal = Math.max(1, Math.min(3, Number(n) || 1));
+  savePath(p);
+}
+function dailyAdd(n){
+  const p = loadPath();
+  p.daily = p.daily || { goal: 1, log: {} };
+  p.daily.log = p.daily.log || {};
+  const k = dayKey();
+  p.daily.log[k] = (p.daily.log[k] || 0) + (n || 1);
+  savePath(p);
+}
+function dailyToday(){ return ((loadPath().daily || {}).log || {})[dayKey()] || 0; }
+// Serie: zusammenhängende Tage mit mindestens einer Lektion; läuft weiter, solange heute noch Zeit ist
+function dailyStreak(){
+  const log = (loadPath().daily || {}).log || {};
+  const d = new Date();
+  if (!log[dayKey(d)]) d.setDate(d.getDate() - 1);
+  let n = 0;
+  while (log[dayKey(d)] > 0) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+// ---------- Anzeige von Text (Schrift-Schalter) ----------
+const KANA_CH = /[ぁ-ゖァ-ヺ]/;
+const KANA_SKIP = "ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮー";
+function knownKana(){
+  if (_knownKana) return _knownKana;
+  const set = new Set();
+  ["hiragana", "katakana"].forEach(sc => KANA[sc].groups.forEach(g => {
+    if (!g.words && isKanaPassed(sc, g.id)) g.items.forEach(([k]) => [...k].forEach(c => set.add(c)));
+  }));
+  WEG_UNITS.forEach(u => u.lessons.forEach(l => {
+    if (l.type === "kana" && lessonDone(l.id)) l.chars.forEach(([k]) => [...k].forEach(c => set.add(c)));
+  }));
+  _knownKana = set;
+  return set;
+}
+function needsHint(ja){
+  const known = knownKana();
+  return [...String(ja)].some(c => KANA_CH.test(c) && !KANA_SKIP.includes(c) && !known.has(c));
+}
+function wegJoin(toks, field){
+  let out = "";
+  toks.forEach((t, i) => {
+    const txt = t[field];
+    if (i === 0) { out += txt; return; }
+    const prev = toks[i - 1];
+    if (field === "ja") {
+      if (t.attach || prev.kind === "punct") out += txt; else out += " " + txt;
+    } else {
+      if (t.kind === "punct" || t.kind === "suffix") out += txt; else out += " " + txt;
+    }
+  });
+  return out;
+}
+function tokObjs(ids){ return ids.map(id => TOK[id]).filter(Boolean); }
+// HTML für einen Satz oder ein Wort, je nach Schrift-Schalter
+function wegHtml(ids, o){
+  const toks = Array.isArray(ids) && typeof ids[0] === "object" ? ids : tokObjs(ids);
+  const ja = wegJoin(toks, "ja"), ro = wegJoin(toks, "ro"), mode = scriptMode();
+  if (mode === "kana") return `<span class="w-ja">${escapeHTML(ja)}</span>`;
+  if (mode === "romaji") return `<span class="w-ro-main">${escapeHTML(ro)}</span>` + (o && o.noSub ? "" : `<span class="w-ja-sub">${escapeHTML(ja)}</span>`);
+  return `<span class="w-ja">${escapeHTML(ja)}</span>` + (needsHint(ja) ? `<span class="w-ro">${escapeHTML(ro)}</span>` : "");
+}
+function wegJa(ids){ return wegJoin(tokObjs(ids), "ja"); }
+
+// ---------- Aufgaben ----------
+const wegEsc = escapeHTML;
+// Texte können Funktionen sein: sie werden erst beim Anzeigen ausgewertet, damit der Schrift-Schalter sofort wirkt
+function hv(x){ return typeof x === "function" ? x() : x; }
+function tokSrs(t){ return { key: "t:" + t.id, t: "tok", d: { id: t.id } }; }
+
+// Bausteine, die bis (ausschließlich) Lektion idx von Einheit unitId eingeführt wurden
+function tokenPos(){
+  const map = {};
+  WEG_UNITS.forEach((u, ui) => u.lessons.forEach((l, li) => (l.teach || []).forEach(id => { if (!(id in map)) map[id] = [u.id, li]; })));
+  return map;
+}
+function posLE(a, b){ return a[0] < b[0] || (a[0] === b[0] && a[1] <= b[1]); }
+function introducedTokens(unitId, idx, strict){
+  const map = tokenPos();
+  return Object.keys(map).filter(id => {
+    const p = map[id];
+    const t = TOK[id];
+    if (!t || t.kind === "punct") return false;
+    return strict ? (p[0] < unitId || (p[0] === unitId && p[1] < idx)) : posLE(p, [unitId, idx]);
+  }).map(id => TOK[id]);
+}
+
+function uniqueJa(list){
+  const seen = new Set(), out = [];
+  list.forEach(t => { if (!seen.has(t.ja)) { seen.add(t.ja); out.push(t); } });
+  return out;
+}
+function exMc(o){ return Object.assign({ kind: "mc", big: true, options: [], optionsBig: false }, o); }
+
+function exTokJa2De(t, pool){
+  const wrong = pickDistractors(t.de, pool.map(x => x.de), 3);
+  return exMc({ promptHtml: () => wegHtml([t.id]), sub: "Was bedeutet das?", say: t.ja,
+    options: shuffle([t.de, ...wrong]).map(d => ({ k: d, h: wegEsc(d) })), answerK: t.de, srs: tokSrs(t) });
+}
+function exTokDe2Ja(t, pool){
+  const others = uniqueJa(shuffle(pool.filter(x => x.id !== t.id && x.ja !== t.ja))).slice(0, 3);
+  return exMc({ big: false, promptHtml: `<span class="w-de">${wegEsc(t.de)}</span>`, sub: "Wie sagt man das auf Japanisch?",
+    options: shuffle([t, ...others]).map(x => ({ k: x.id, h: () => wegHtml([x.id]) })), optionsBig: true, answerK: t.id, srs: tokSrs(t) });
+}
+function exTokHear(t, pool){
+  const others = uniqueJa(shuffle(pool.filter(x => x.id !== t.id && x.ja !== t.ja))).slice(0, 3);
+  return { kind: "hear", say: t.ja, sub: "Was hörst du?",
+    options: shuffle([t, ...others]).map(x => ({ k: x.id, h: () => wegHtml([x.id]) })), optionsBig: true, answerK: t.id, srs: tokSrs(t) };
+}
+function exTokMatch(list){
+  return { kind: "match", pairs: list.map(t => ({ id: t.id, l: () => wegHtml([t.id], { noSub: true }), r: wegEsc(t.de), say: t.ja })) };
+}
+
+function exKanaRead(k, r, pool){
+  return exMc({ promptHtml: `<span class="w-ja">${wegEsc(k)}</span>`, sub: "Wie liest man das?", say: k,
+    options: shuffle([r, ...pickDistractors(r, pool.map(x => x[1]), 3)]).map(x => ({ k: x, h: wegEsc(x) })), answerK: r,
+    srs: { key: "k:" + k, t: "kana", d: { k, r } } });
+}
+function exKanaFind(k, r, pool){
+  return exMc({ promptHtml: `<span class="w-ja">${wegEsc(r)}</span>`, sub: "Welches Zeichen ist das?",
+    options: shuffle([k, ...pickDistractors(k, pool.map(x => x[0]), 3)]).map(x => ({ k: x, h: wegEsc(x) })), optionsBig: true, answerK: k,
+    srs: { key: "k:" + k, t: "kana", d: { k, r } } });
+}
+function exKanaHear(k, r, pool){
+  return { kind: "hear", say: k, sub: "Welches Zeichen hörst du?",
+    options: shuffle([k, ...pickDistractors(k, pool.map(x => x[0]), 3)]).map(x => ({ k: x, h: wegEsc(x) })), optionsBig: true, answerK: k,
+    srs: { key: "k:" + k, t: "kana", d: { k, r } } };
+}
+function exKanaMatch(chars){
+  return { kind: "match", pairs: chars.map(([k, r]) => ({ id: k, l: wegEsc(k), r: wegEsc(r), say: k })) };
+}
+
+function exBuild(sent, pool){
+  const answer = sent.ids.filter(id => TOK[id] && TOK[id].kind !== "punct");
+  const extra = shuffle(pool.filter(t => !answer.includes(t.id) && t.kind !== "phrase")).slice(0, 2).map(t => t.id);
+  return { kind: "build", de: sent.de, answerIds: answer, fullIds: sent.ids, bank: shuffle([...answer, ...extra]), say: wegJa(sent.ids) };
+}
+function exSentJa2De(sent, allSent){
+  const wrong = pickDistractors(sent.de, allSent.map(s => s.de), 3);
+  return exMc({ big: false, promptHtml: () => wegHtml(sent.ids), say: wegJa(sent.ids), sub: "Was bedeutet der Satz?",
+    options: shuffle([sent.de, ...wrong]).map(d => ({ k: d, h: wegEsc(d) })), answerK: sent.de });
+}
+function exFill(sent, focusId, pool){
+  const toks = tokObjs(sent.ids).map(t => t.id === focusId ? { ja: "＿＿", ro: "___", attach: t.attach, kind: "word", blank: true } : t);
+  const focus = TOK[focusId];
+  const same = uniqueJa(shuffle(pool.filter(t => t.id !== focusId && t.ja !== focus.ja && (t.kind === focus.kind))));
+  const rest = uniqueJa(shuffle(pool.filter(t => t.id !== focusId && t.ja !== focus.ja && !same.includes(t) && t.kind !== "punct")));
+  const wrong = [...same, ...rest].slice(0, 3);
+  return exMc({ big: false, promptHtml: () => wegHtml(toks) + `<span class="w-de-sub">${wegEsc(sent.de)}</span>`, sub: "Was fehlt?",
+    options: shuffle([focus, ...wrong]).map(x => ({ k: x.id, h: () => wegHtml([x.id]) })), optionsBig: true, answerK: focusId });
+}
+function qToMc(q){
+  return exMc({ big: !!q.big, promptHtml: q.promptHtml || wegEsc(q.prompt), sub: q.sub, say: q.say,
+    options: q.options.map(o => ({ k: o, h: wegEsc(o) })), optionsBig: !!q.optionsBig, answerK: q.answer, srs: q.srs, review: true });
+}
+
+function kanaPoolFor(lesson, unitId, idx){
+  const chars = lesson.chars.map(c => c);
+  const known = [];
+  WEG_UNITS.forEach(u => u.lessons.forEach((l, li) => {
+    if (l.type === "kana" && l.script === lesson.script && (u.id < unitId || (u.id === unitId && li < idx))) l.chars.forEach(c => known.push(c));
+  }));
+  let pool = [...chars, ...known];
+  if (pool.length < 6) {
+    const extra = KANA[lesson.script].groups.filter(g => !g.words).flatMap(g => g.items).filter(it => !pool.some(p => p[0] === it[0]));
+    pool = pool.concat(shuffle(extra).slice(0, 6 - pool.length));
+  }
+  return pool;
+}
+
+// Wiederholungsfragen aus früheren Lektionen (fällige Karten zuerst)
+function reviewExercises(unitId, idx, n, lesson){
+  const out = [];
+  if (!(unitId === 1 && idx === 0)) {
+    srsDueItems().forEach(item => {
+      if (out.length >= n) return;
+      const q = srsQuestion(item);
+      if (q) out.push(qToMc(q));
+    });
+    if (out.length < n) {
+      const pool = introducedTokens(unitId, idx, true);
+      shuffle(pool).slice(0, n - out.length).forEach(t => {
+        out.push(Math.random() < 0.5 ? exTokJa2De(t, pool) : exTokDe2Ja(t, pool));
+      });
+    }
+    if (out.length < n && lesson && lesson.type === "kana") {
+      const prev = [];
+      WEG_UNITS.forEach(u => u.lessons.forEach((l, li) => {
+        if (l.type === "kana" && l.script === lesson.script && (u.id < unitId || (u.id === unitId && li < idx))) l.chars.forEach(c => prev.push(c));
+      }));
+      shuffle(prev).slice(0, n - out.length).forEach(([k, r]) => out.push(Math.random() < 0.5 ? exKanaRead(k, r, prev.concat(lesson.chars)) : exKanaFind(k, r, prev.concat(lesson.chars))));
+    }
+  }
+  out.forEach(e => { e.review = true; });
+  return out.slice(0, n);
+}
+
+// Aufgaben einer Lektion (ohne Wiederholung)
+function lessonCore(unit, idx){
+  const lesson = unit.lessons[idx];
+  const pool = introducedTokens(unit.id, idx, false).filter(t => t.kind !== "part" && t.kind !== "aux" && t.kind !== "suffix");
+  const poolAll = introducedTokens(unit.id, idx, false);
+  const teachToks = (lesson.teach || []).map(id => TOK[id]).filter(Boolean);
+  const exs = [];
+  if (lesson.type === "kana") {
+    const kp = kanaPoolFor(lesson, unit.id, idx);
+    exs.push({ kind: "intro", title: `Neue Zeichen: ${lesson.title}`,
+      cards: lesson.chars.map(([k, r]) => ({ big: wegEsc(k), sub: wegEsc(r), say: k })),
+      note: "Tippe ein Zeichen an, um es zu hören." });
+    const body = [];
+    lesson.chars.forEach(([k, r]) => { body.push(exKanaRead(k, r, kp)); body.push(exKanaFind(k, r, kp)); });
+    shuffle(lesson.chars).slice(0, 2).forEach(([k, r]) => body.push(exKanaHear(k, r, kp)));
+    body.push(exKanaMatch(lesson.chars));
+    exs.push(...shuffle(body));
+  } else if (lesson.type === "words") {
+    exs.push({ kind: "intro", title: lesson.title,
+      cards: teachToks.map(t => ({ big: () => wegHtml([t.id], { noSub: true }), sub: wegEsc(t.de), say: t.ja })),
+      note: lesson.reading ? "Lies die Wörter laut mit. Die Kana kennst du schon." : "Tippe ein Wort an, um es zu hören." });
+    const body = [];
+    teachToks.forEach(t => { body.push(exTokJa2De(t, pool)); body.push(exTokDe2Ja(t, pool)); });
+    shuffle(teachToks).slice(0, 3).forEach(t => body.push(exTokHear(t, pool)));
+    body.push(exTokMatch(teachToks.slice(0, 5)));
+    (lesson.scenes || []).forEach(([q, id]) => {
+      const t = TOK[id];
+      const others = uniqueJa(shuffle(pool.filter(x => x.id !== id && x.ja !== t.ja))).slice(0, 3);
+      body.push(exMc({ big: false, promptHtml: `<span class="w-de">${wegEsc(q)}</span>`, sub: "Was passt?",
+        options: shuffle([t, ...others]).map(x => ({ k: x.id, h: () => wegHtml([x.id]) })), optionsBig: true, answerK: id, srs: tokSrs(t) }));
+    });
+    exs.push(...shuffle(body));
+  } else if (lesson.type === "grammar") {
+    exs.push({ kind: "intro", title: lesson.title,
+      explain: lesson.explain,
+      examples: lesson.sentences.map(s => ({ html: () => wegHtml(s.ids), de: wegEsc(s.de), say: wegJa(s.ids) })) });
+    const body = [];
+    lesson.sentences.forEach(s => body.push(exBuild(s, poolAll)));
+    lesson.sentences.slice(0, 3).forEach(s => body.push(exSentJa2De(s, lesson.sentences)));
+    if (lesson.focus) lesson.sentences.slice(0, 2).forEach(s => { if (s.ids.includes(lesson.focus)) body.push(exFill(s, lesson.focus, poolAll)); });
+    exs.push(...shuffle(body));
+  } else if (lesson.type === "dialog") {
+    const sents = lesson.lines.map(l => l[1]);
+    exs.push({ kind: "intro", title: lesson.title, dialog: lesson.lines.map(([who, s]) => ({ who, html: () => wegHtml(s.ids), de: wegEsc(s.de), say: wegJa(s.ids) })),
+      note: "Höre dir das Gespräch an und lies mit." });
+    const body = [];
+    teachToks.forEach(t => body.push(exTokJa2De(t, poolAll.filter(x => x.kind !== "punct"))));
+    sents.forEach(s => body.push(exSentJa2De(s, sents)));
+    sents.filter(s => s.ids.filter(id => TOK[id] && TOK[id].kind !== "punct").length >= 3).slice(0, 3).forEach(s => body.push(exBuild(s, poolAll)));
+    exs.push(...shuffle(body));
+  }
+  return exs;
+}
+
+function lessonExercises(unit, idx){
+  const lesson = unit.lessons[idx];
+  if (lesson.type === "check") {
+    const all = [];
+    unit.lessons.slice(0, idx).forEach((l, i) => { if (l.type !== "check") lessonCore(unit, i).forEach(e => { if (e.kind !== "intro") all.push(e); }); });
+    return shuffle(all).slice(0, 14);
+  }
+  const core = lessonCore(unit, idx);
+  const review = reviewExercises(unit.id, idx, 3, lesson);
+  const intro = core.filter(e => e.kind === "intro");
+  const body = core.filter(e => e.kind !== "intro");
+  // Wiederholungsfragen nach den ersten Aufgaben mischen
+  review.forEach((r, i) => body.splice(Math.min(body.length, 2 + i * 3), 0, r));
+  return [...intro, ...body];
+}
+
+// ---------- Lektions-Player ----------
+function playLesson(mount, cfg){
+  const exs = cfg.exs;
+  const queue = exs.slice();
+  const scored = exs.filter(e => e.kind !== "intro").length || 1;
+  let pos = 0, right = 0;
+  const test = !!window.__wegTest;
+
+  function chrome(inner){
+    const pct = Math.round(100 * pos / Math.max(queue.length, 1));
+    mount.innerHTML = `
+      <div class="lesson">
+        <div class="lesson-top">
+          <button type="button" class="mini" id="lQuit" aria-label="Beenden" style="width:auto;">✕</button>
+          <div class="progress" style="flex:1;"><div style="width:${pct}%;"></div></div>
+          <select id="lScript" aria-label="Schrift">
+            <option value="auto"${scriptMode() === "auto" ? " selected" : ""}>Auto</option>
+            <option value="romaji"${scriptMode() === "romaji" ? " selected" : ""}>Romaji</option>
+            <option value="kana"${scriptMode() === "kana" ? " selected" : ""}>Kana</option>
+          </select>
+        </div>
+        <div class="card lesson-card" id="lBody">${inner}</div>
+        <div id="lFoot" class="lesson-foot"></div>
+      </div>`;
+    $("#lQuit").onclick = () => { if (confirm("Lektion beenden? Dein Fortschritt in dieser Lektion geht verloren.")) goto("weg"); };
+    $("#lScript").onchange = (e) => { setScriptMode(e.target.value); show(); };
+  }
+  function foot(html){ $("#lFoot").innerHTML = html; }
+  function bindSay(root){ $$("[data-say]", root).forEach(el => { el.onclick = () => speak(el.dataset.say); }); }
+
+  function advance(){ pos++; show(); }
+
+  function settle(ex, ok, firstTry){
+    if (firstTry) {
+      if (ok) right++;
+      if (ex.srs) { try { srsRecord(ex.srs, ok); } catch(e){} }
+      if (!ok) queue.push(Object.assign({}, ex, { retry: true }));
+    }
+    const msg = ok ? "Richtig!" : "Das war leider nicht richtig.";
+    foot(`<div class="feedback-bar ${ok ? "ok" : "bad"}"><div id="lMsg">${msg}</div><button type="button" class="primary" id="lNext">Weiter</button></div>`);
+    $("#lNext").onclick = advance;
+    $("#lNext").focus();
+  }
+
+  function show(){
+    if (pos >= queue.length) return finish();
+    const ex = queue[pos];
+    const firstTry = !ex.retry;
+    if (test) window.__wegCur = ex;
+    if (ex.kind === "intro") return showIntro(ex);
+    if (ex.kind === "mc" || ex.kind === "hear") return showChoice(ex, firstTry);
+    if (ex.kind === "match") return showMatch(ex, firstTry);
+    if (ex.kind === "build") return showBuild(ex, firstTry);
+    advance();
+  }
+
+  function showIntro(ex){
+    let inner = `<h3>${wegEsc(ex.title || "")}</h3>`;
+    if (ex.explain) inner += `<p>${ex.explain}</p>`;
+    if (ex.cards) inner += `<div class="intro-grid">${ex.cards.map(c => `
+      <button type="button" class="intro-card" data-say="${wegEsc(c.say || "")}"><span class="intro-big">${hv(c.big)}</span><span class="intro-sub">${c.sub || ""}</span></button>`).join("")}</div>`;
+    if (ex.examples) inner += `<div class="intro-list">${ex.examples.map(e => `
+      <div class="intro-ex"><button type="button" class="mini" data-say="${wegEsc(e.say)}" aria-label="Vorlesen" style="width:auto;">🔊</button>
+        <div><div class="intro-ja">${hv(e.html)}</div><div class="hint">${e.de}</div></div></div>`).join("")}</div>`;
+    if (ex.dialog) inner += `<div class="intro-list">${ex.dialog.map(l => `
+      <div class="intro-ex"><button type="button" class="mini" data-say="${wegEsc(l.say)}" aria-label="Vorlesen" style="width:auto;">🔊</button>
+        <div><div class="hint"><b>${wegEsc(l.who)}</b></div><div class="intro-ja">${hv(l.html)}</div><div class="hint">${l.de}</div></div></div>`).join("")}</div>`;
+    if (ex.note) inner += `<p class="hint">${wegEsc(ex.note)}</p>`;
+    chrome(inner);
+    bindSay($("#lBody"));
+    foot(`<div class="feedback-bar"><div></div><button type="button" class="primary" id="lNext">Los geht’s</button></div>`);
+    $("#lNext").onclick = advance;
+  }
+
+  function showChoice(ex, firstTry){
+    const isHear = ex.kind === "hear";
+    let inner = "";
+    if (isHear) {
+      inner += `<div class="hear-wrap"><button type="button" class="hear-btn" id="lHear" aria-label="Anhören">🔊</button></div>`;
+    } else {
+      inner += `<div class="${ex.big ? "big-kana" : "quiz-prompt"}">${hv(ex.promptHtml)}</div>`;
+    }
+    inner += `<div class="hint" style="text-align:center;">${wegEsc(ex.sub || "")}${ex.review ? " · Wiederholung" : ""}</div>`;
+    if (!isHear && ex.say) inner += `<div style="text-align:center; margin-top:.4rem;"><button type="button" class="mini" id="lSay" aria-label="Vorlesen" style="width:auto;">🔊</button></div>`;
+    inner += `<div class="kana-opts${ex.optionsBig ? " kana-opts-big" : ""}" id="lOpts"></div>`;
+    chrome(inner);
+    const say = $("#lSay"); if (say) say.onclick = () => speak(ex.say);
+    const hear = $("#lHear"); if (hear) { hear.onclick = () => speak(ex.say); setTimeout(() => speak(ex.say), 250); }
+    const box = $("#lOpts");
+    ex.options.forEach(o => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "w-opt";
+      b.innerHTML = hv(o.h);
+      if (test && o.k === ex.answerK) b.dataset.ok = "1";
+      b.onclick = () => {
+        const ok = o.k === ex.answerK;
+        $$("#lOpts button").forEach(x => { x.disabled = true; });
+        $$("#lOpts button").forEach((x, i) => { if (ex.options[i].k === ex.answerK) x.classList.add("ok"); });
+        if (!ok) b.classList.add("bad");
+        if (ex.say) speak(ex.say);
+        settle(ex, ok, firstTry);
+        if (!ok) { const m = $("#lMsg"); if (m) m.innerHTML = "Richtig ist: " + hv(ex.options.find(x => x.k === ex.answerK).h); }
+      };
+      box.appendChild(b);
+    });
+  }
+
+  function showMatch(ex, firstTry){
+    let inner = `<h3 style="text-align:center;">Ordne die Paare zu</h3>
+      <div class="match2"><div id="mL"></div><div id="mR"></div></div>`;
+    chrome(inner);
+    const L = shuffle(ex.pairs), R = shuffle(ex.pairs);
+    let selL = null, mistakes = 0, matched = 0;
+    const mk = (p, side) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "w-opt"; b.innerHTML = hv(side === "l" ? p.l : p.r); b.dataset.id = p.id;
+      return b;
+    };
+    L.forEach(p => { const b = mk(p, "l"); b.onclick = () => { if (b.disabled) return; $$("#mL button").forEach(x => x.classList.remove("sel")); selL = b; b.classList.add("sel"); speak(p.say); }; $("#mL").appendChild(b); });
+    R.forEach(p => { const b = mk(p, "r"); b.onclick = () => {
+      if (b.disabled || !selL) return;
+      if (selL.dataset.id === p.id) {
+        selL.classList.remove("sel"); selL.classList.add("ok"); b.classList.add("ok");
+        selL.disabled = true; b.disabled = true; selL = null; matched++;
+        if (matched === ex.pairs.length) settle(ex, mistakes <= 1, firstTry);
+      } else {
+        mistakes++; b.classList.add("bad"); setTimeout(() => b.classList.remove("bad"), 500);
+      }
+    }; if (test) b.dataset.pair = p.id; $("#mR").appendChild(b); });
+    if (test) $$("#mL button").forEach(b => { b.dataset.pair = b.dataset.id; });
+  }
+
+  function showBuild(ex, firstTry){
+    chrome(`<div class="hint" style="text-align:center;">Übersetze in Japanisch</div>
+      <div class="quiz-prompt"><span class="w-de">${wegEsc(ex.de)}</span></div>
+      <div class="chips-answer" id="bAns"></div>
+      <div class="chips-bank" id="bBank"></div>`);
+    const bank = ex.bank.map((id, i) => ({ uid: i, id }));
+    let ans = [];
+    const draw = () => {
+      $("#bAns").innerHTML = ""; $("#bBank").innerHTML = "";
+      ans.forEach(c => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.innerHTML = wegHtml([c.id], { noSub: true }); b.onclick = () => { ans = ans.filter(x => x !== c); draw(); }; $("#bAns").appendChild(b); });
+      bank.filter(c => !ans.includes(c)).forEach(c => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.innerHTML = wegHtml([c.id], { noSub: true }); b.dataset.id = c.id; b.onclick = () => { ans.push(c); draw(); }; $("#bBank").appendChild(b); });
+      foot(`<div class="feedback-bar"><div></div><button type="button" class="primary" id="bCheck"${ans.length ? "" : " disabled"}>Prüfen</button></div>`);
+      $("#bCheck").onclick = check;
+    };
+    const check = () => {
+      const got = ans.map(c => c.id).join(" ");
+      const ok = got === ex.answerIds.join(" ");
+      $$("#bBank button, #bAns button").forEach(b => { b.disabled = true; });
+      speak(ex.say);
+      settle(ex, ok, firstTry);
+      if (!ok) { const m = $("#lMsg"); if (m) m.innerHTML = "Richtig ist: " + wegHtml(ex.fullIds); }
+    };
+    draw();
+  }
+
+  function finish(){
+    const pct = Math.round(100 * right / scored);
+    const passed = cfg.passPct ? pct >= cfg.passPct : true;
+    try { cfg.onDone(pct, passed); } catch(e){}
+    const btns = cfg.buttons(pct, passed).map(b => `<button type="button"${b.primary ? ' class="primary"' : ""} onclick="goto('${b.route}')">${wegEsc(b.label)}</button>`).join("");
+    mount.innerHTML = `
+      <div class="lesson">
+        <div class="card lesson-card">
+          <h2>${passed ? "Geschafft!" : "Noch nicht geschafft"}</h2>
+          <p>Richtig beim ersten Versuch: <b>${right} von ${scored}</b> (${pct} %)</p>
+          ${cfg.passPct ? (passed ? `<p><span class="badge">Bestanden</span> Die nächste Einheit ist freigeschaltet.</p>`
+                                  : `<p><span class="badge">Noch nicht bestanden</span> Du brauchst mindestens ${cfg.passPct} %. Wiederhole die Lektionen der Einheit und versuche es erneut.</p>`) : ""}
+          ${cfg.extra ? cfg.extra() : ""}
+          <div class="actions" style="margin-top:.75rem;">${btns}</div>
+        </div>
+      </div>`;
+  }
+
+  show();
+}
+
+// ---------- Seiten ----------
+function renderLektion(mount, parts){
+  const unitId = Number(parts[0]), idx = Number(parts[1]);
+  const unit = wegUnit(unitId), lesson = wegLesson(unitId, idx);
+  if (!unit || !lesson || !lessonUnlocked(unitId, idx)) { goto("weg"); return; }
+  _knownKana = null;
+  const isCheck = lesson.type === "check";
+  const nextIdx = idx + 1 < unit.lessons.length ? idx + 1 : -1;
+  playLesson(mount, {
+    exs: lessonExercises(unit, idx),
+    passPct: isCheck ? PASS_PCT : 0,
+    onDone: (pct, passed) => {
+      markWegLesson(lesson.id, pct, passed);
+      dailyAdd(1);
+    },
+    buttons: (pct, passed) => {
+      const b = [];
+      if (passed && nextIdx >= 0) b.push({ label: "Nächste Lektion", route: `lektion/${unitId}/${nextIdx}`, primary: true });
+      else if (passed && unitUnlocked(unitId + 1) && wegUnit(unitId + 1)) b.push({ label: "Nächste Einheit", route: `lektion/${unitId + 1}/0`, primary: true });
+      else if (!passed) b.push({ label: "Nochmal", route: `lektion/${unitId}/${idx}`, primary: true });
+      b.push({ label: "Zum Weg", route: "weg", primary: !b.length });
+      return b;
+    },
+    extra: () => {
+      const g = dailyGoal(), t = dailyToday();
+      return `<p class="hint">Heute: ${t} / ${g} Lektion${g === 1 ? "" : "en"} · Serie: ${dailyStreak()} Tag${dailyStreak() === 1 ? "" : "e"}</p>`;
+    }
+  });
+}
+
+function wegNodeIcon(l){
+  return ({ kana: "あ", words: "語", grammar: "文", dialog: "話", check: "★" })[l.type] || "•";
+}
+
+function renderWeg(mount){
+  _knownKana = null;
+  const goal = dailyGoal(), today = dailyToday(), streak = dailyStreak();
+  const next = wegNext();
+  const sectionHtml = WEG_SECTIONS.map(sec => `
+    <h3 class="weg-section">${wegEsc(sec.title)}</h3>
+    ${sec.units.map(uid => {
+      const u = wegUnit(uid), o = WEG_OUTLINE[uid] || ["Einheit " + uid, ""];
+      if (!u) return `
+        <div class="card weg-unit step-locked">
+          <div class="weg-head"><b>Einheit ${uid} · ${wegEsc(o[0])}</b><div class="hint">${wegEsc(o[1])}</div></div>
+          <div class="hint">🔒 In Arbeit</div>
+        </div>`;
+      const open = unitUnlocked(uid);
+      return `
+        <div class="card weg-unit${open ? "" : " step-locked"}">
+          <div class="weg-head"><b>Einheit ${uid} · ${wegEsc(o[0])}</b><div class="hint">${wegEsc(o[1])}</div></div>
+          <div class="weg-nodes">
+            ${u.lessons.map((l, i) => {
+              const done = lessonDone(l.id), cur = next && next.lesson.id === l.id, unlocked = lessonUnlocked(uid, i);
+              const cls = done ? "done" : (cur ? "current" : "locked");
+              const best = lessonBest(l.id);
+              return `
+              <button type="button" class="weg-node ${cls} pos${i % 4}${l.type === "check" ? " check" : ""}" ${unlocked ? `onclick="goto('lektion/${uid}/${i}')"` : "disabled"}>
+                <span class="weg-circle">${done ? "✓" : wegNodeIcon(l)}</span>
+                <span class="weg-label">${wegEsc(l.title)}${done && best != null ? ` · ${best} %` : ""}</span>
+              </button>`;
+            }).join("")}
+          </div>
+        </div>`;
+    }).join("")}
+    <div class="card weg-unit step-locked"><div class="hint">🔒 ${wegEsc(sec.exam)} (folgt)</div></div>
+  `).join("");
+  mount.innerHTML = `
+    <h2>Weg <span class="badge">neu</span></h2>
+    <div class="card weg-top">
+      <div class="daily-row">
+        <div class="daily-pill">🔥 <b>${streak}</b> ${streak === 1 ? "Tag" : "Tage"} Serie</div>
+        <div class="daily-pill">Heute <b>${today}</b> / ${goal}</div>
+      </div>
+      <div class="progress"><div style="width:${Math.min(100, Math.round(100 * today / goal))}%;"></div></div>
+      ${today >= goal ? `<p class="hint">Tagesziel erreicht. 🎉</p>` : `<p class="hint">Noch ${goal - today} Lektion${goal - today === 1 ? "" : "en"} bis zum Tagesziel.</p>`}
+      <div class="weg-settings">
+        <label>Tagesziel
+          <select id="wgGoal">${[1, 2, 3].map(n => `<option value="${n}"${n === goal ? " selected" : ""}>${n} Lektion${n === 1 ? "" : "en"}</option>`).join("")}</select></label>
+        <label>Schrift
+          <select id="wgScript">
+            <option value="auto"${scriptMode() === "auto" ? " selected" : ""}>Auto (Romaji-Hilfe)</option>
+            <option value="romaji"${scriptMode() === "romaji" ? " selected" : ""}>Nur Romaji</option>
+            <option value="kana"${scriptMode() === "kana" ? " selected" : ""}>Nur Kana</option>
+          </select></label>
+      </div>
+      ${next ? `<div class="actions" style="margin-top:.5rem;"><button class="primary" onclick="goto('lektion/${next.unit.id}/${next.idx}')">Weiter: ${wegEsc(next.lesson.title)}</button></div>`
+             : `<p>Alle bisher verfügbaren Lektionen sind geschafft. Neue Einheiten folgen.</p>`}
+    </div>
+    ${sectionHtml}
+    <div class="actions" style="margin-top:1rem;"><button onclick="goto('path')">Zum bisherigen Lernpfad</button></div>`;
+  $("#wgGoal").onchange = (e) => { setDailyGoal(e.target.value); renderWeg(mount); };
+  $("#wgScript").onchange = (e) => { setScriptMode(e.target.value); renderWeg(mount); };
+}
+
+// ---------- Prüfskript: kommt in einer Lektion etwas vor, das noch nicht gelehrt wurde? ----------
+function checkCurriculum(){
+  const problems = [];
+  const map = tokenPos();
+  const ids = new Set();
+  Object.keys(TOK).forEach(id => {
+    const t = TOK[id];
+    if (!t.ja || !t.ro || !t.de) problems.push(`Baustein ${id}: ja, ro oder de fehlt`);
+  });
+  WEG_UNITS.forEach(u => u.lessons.forEach((l, li) => {
+    if (ids.has(l.id)) problems.push(`Lektions-ID doppelt: ${l.id}`);
+    ids.add(l.id);
+    const used = [];
+    (l.teach || []).forEach(id => { if (!TOK[id]) problems.push(`${l.id}: Baustein ${id} nicht definiert`); });
+    (l.sentences || []).forEach(s => { if (!s.de) problems.push(`${l.id}: Satz ohne Übersetzung`); used.push(...s.ids); });
+    (l.lines || []).forEach(([who, s]) => { if (!s.de) problems.push(`${l.id}: Dialogzeile ohne Übersetzung`); used.push(...s.ids); });
+    (l.scenes || []).forEach(([q, id]) => used.push(id));
+    if (l.type === "words" || l.type === "dialog" || l.type === "grammar") (l.teach || []).forEach(id => used.push(id));
+    used.forEach(id => {
+      const t = TOK[id];
+      if (!t) { problems.push(`${l.id}: Baustein ${id} nicht definiert`); return; }
+      if (t.kind === "punct") return;
+      const p = map[id];
+      if (!p) problems.push(`${l.id}: „${t.ja}“ (${id}) wird nirgends gelehrt`);
+      else if (!posLE(p, [u.id, li])) problems.push(`${l.id}: „${t.ja}“ (${id}) kommt vor, wird aber erst in Einheit ${p[0]}, Lektion ${p[1] + 1} gelehrt`);
+    });
+    if (l.type === "kana" && !(l.chars && l.chars.length)) problems.push(`${l.id}: Kana-Lektion ohne Zeichen`);
+    if (l.type === "grammar" && !(l.sentences && l.sentences.length >= 3)) problems.push(`${l.id}: weniger als 3 Beispielsätze`);
+    if (l.type === "grammar" && l.focus && !l.sentences.some(s => s.ids.includes(l.focus))) problems.push(`${l.id}: Schwerpunkt „${l.focus}“ kommt in keinem Satz vor`);
+  }));
+  return problems;
 }
 
 // ---------- Reihenfolge des Lernpfads ----------
