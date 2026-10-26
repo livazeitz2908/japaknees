@@ -2150,6 +2150,10 @@ nav {
 .story-text-ja ruby rt, ruby rt { font-size:.5em; color:var(--muted); }
 .furi-toggle { display:inline-flex; align-items:center; gap:.4rem; font-size:.9rem; color:var(--muted); margin-bottom:.4rem; }
 .furi-toggle input { width:auto; }
+.kanji-card { display:flex; gap:1rem; align-items:flex-start; }
+.kanji-big { font-size:3.2rem; line-height:1.1; min-width:4.2rem; text-align:center; }
+.kanji-words { list-style:none; padding:0; margin:.3rem 0 0; }
+.kanji-words li { margin:.25rem 0; }
 </style>
 
   
@@ -2174,6 +2178,7 @@ nav {
     <button data-route="chats">Chats</button>
     <button data-route="write">Schreibübung</button>
     <button data-route="grammar">Grammatik</button>
+    <button data-route="kanji">Kanji</button>
     <button data-route="clock-game">Uhrenspiel</button>
     <button data-route="menu-game">Menükarte</button>
     <button data-route="calendar-game">Kalenderspiel</button>
@@ -4069,6 +4074,7 @@ const m = $("#app");
   if (state.route === "levels") return renderLevels(m);
   if (state.route === "path") return renderPath(m);
   if (state.route === "review") return renderReview(m);
+  if (state.route === "kanji" || state.route.startsWith("kanji/")) return renderKanjiRoute(m, state.route.split("/").slice(1));
   if (state.route === "kana" || state.route.startsWith("kana/")) return renderKanaRoute(m, state.route.split("/").slice(1));
   if (state.route.startsWith("level/test/")) return renderLevelTest(m, state.route.split("/")[2]);
 
@@ -7647,6 +7653,26 @@ function renderLevelTest(mount, id){
 }
 
 // ---------- Lernpfad-Übersicht ----------
+// Grundreihenfolge aus CURRICULUM; nach jeder Stufe folgen Kanji-Gruppen (zwei in den ersten Stufen, danach je eine)
+function fullCurriculum(){
+  const out = [];
+  let j = 1;
+  const takeKanji = () => (j <= KANJI_DB.length ? "j:" + (j++) : null);
+  CURRICULUM.forEach(item => {
+    out.push(item);
+    if (item.startsWith("l:")) for (let n = 0; n < 2; n++) { const x = takeKanji(); if (x) out.push(x); }
+  });
+  contentLevels().forEach(l => {
+    if (!CURRICULUM.includes("l:" + l.level)) {
+      out.push("l:" + l.level);
+      const x = takeKanji();
+      if (x) out.push(x);
+    }
+  });
+  while (j <= KANJI_DB.length) out.push("j:" + (j++));
+  return out;
+}
+
 function nextStep(){
   const hira = KANA.hiragana.groups.find(g => !isKanaPassed("hiragana", g.id));
   if (hira) return { label: `Hiragana, Gruppe ${hira.id}: ${hira.head} – ${hira.label}`,
@@ -7655,7 +7681,7 @@ function nextStep(){
   const levelStep = (lvl) => ({ label: `Stufe ${lvl.level}: ${lvl.title}`,
                      desc: "Story lesen, Vokabeln lernen und den Vokabeltest bestehen.", route: `level/read/${lvl.id}` });
   const used = new Set();
-  for (const item of CURRICULUM) {
+  for (const item of fullCurriculum()) {
     if (item === "K") {
       const kata = KANA.katakana.groups.find(g => !isKanaPassed("katakana", g.id));
       if (kata && kataUnlocked()) return { label: `Katakana, Gruppe ${kata.id}: ${kata.head} – ${kata.label}`,
@@ -7664,6 +7690,10 @@ function nextStep(){
       const g = GRAMMAR_SEED.find(x => x.id === item.slice(2));
       if (g && !isGrammarPassed(g.id)) return { label: `Grammatik ${g.title}`,
                      desc: "Erklärung lesen und die Übungen mit mindestens " + PASS_PCT + " % bestehen.", route: `grammar/view/${g.id}` };
+    } else if (item.startsWith("j:")) {
+      const g = kanjiGroup(Number(item.slice(2)));
+      if (g && !isKanjiPassed(g.id)) return { label: `Kanji ${g.id}: ${g.title} (${g.items.map(i => i.k).join(" ")})`,
+                     desc: "Kanji mit Wörtern lernen und den Test bestehen.", route: `kanji/${g.id}` };
     } else if (item.startsWith("l:")) {
       const lvl = levels.find(l => l.level === Number(item.slice(2)));
       if (lvl) { used.add(lvl.id); if (!isLevelPassed(lvl)) return levelStep(lvl); }
@@ -7680,6 +7710,7 @@ function renderPath(mount){
   const lvlDone = levels.filter(isLevelPassed).length;
   const step = nextStep();
   const gr = grammarStats();
+  const kj = kanjiStats();
   const sr = srsStats();
   const stage = (nr, title, text, done, total, route, extra, disabled) => `
     <div class="card${disabled ? " step-locked" : ""}">
@@ -7720,7 +7751,7 @@ function renderPath(mount){
       ${stage(2, "Katakana", "Die Schrift für Fremdwörter und Namen." + (kataUnlocked() ? "" : " Wird nach Hiragana-Gruppen 1–10 freigeschaltet."), k.passed, k.total, "kana/katakana", "", !kataUnlocked())}
       ${stage(3, "Grammatik", "Kurze Lektionen mit Erklärung, Beispielen und Übungen. Sie bauen aufeinander auf.", gr.passed, gr.total, "grammar")}
       ${stage(4, "Stufen: Geschichten & Wortschatz", "Kurze Geschichten, Vokabeln und ein Test pro Stufe. Hinweis: Die Texte enthalten schon Kanji.", lvlDone, levels.length, "levels")}
-      ${stage(5, "Kanji", "In Vorbereitung.", 0, 0, "", "", true)}
+      ${stage(5, "Kanji", `${KANJI_DB.reduce((a, g) => a + g.items.length, 0)} Kanji in kleinen Gruppen, mit Lesungen, Wörtern und Test.`, kj.passed, kj.total, "kanji", "", !kanjiUnlocked())}
     </div>
     <h3 style="margin-top:1rem;">Zum Üben nebenbei</h3>
     <div class="actions">
@@ -7978,6 +8009,7 @@ function srsQuestion(item){
     const g = KANA[scriptOfKana(d.k)].groups.find(x => x.words);
     return wordQuestion(dir ? "k2de" : "de2k", [d.k, d.r, d.de], g ? g.items : [[d.k, d.r, d.de]]);
   }
+  if (item.t === "kanji" || item.t === "kword") return srsKanjiQuestion(item);
   if (item.t === "vocab") {
     return vocabQuestion({ de: d.de, kana: d.kana, romaji: d.romaji }, allVocabPool(), dir ? "de2ja" : "ja2de");
   }
@@ -8012,6 +8044,335 @@ function renderReview(mount){
       return b;
     }
   });
+}
+
+// =========================================================
+// Kanji-Kurs (Phase 3c-2): 95 Kanji in 22 Gruppen
+// Kanji: [Zeichen, Bedeutung, On-Lesung, Kun-Lesung, [[Wort, Lesung, Deutsch], …]]
+// Routen: kanji | kanji/<gruppe> | kanji/<gruppe>/practice | kanji/<gruppe>/test
+// =========================================================
+const KANJI_GROUPS = [
+  { id:1, title:"Zahlen 1–5", note:"Die Zahlen haben zwei Lesungen: die chinesische (on) in Zählungen wie 三月, die japanische (kun) beim Zählen von Dingen wie 三つ.", kanji:[
+    ["一","eins","イチ","ひと(つ)",[["一つ","ひとつ","ein(s)"],["一月","いちがつ","Januar"]]],
+    ["二","zwei","ニ","ふた(つ)",[["二つ","ふたつ","zwei (Stück)"],["二月","にがつ","Februar"]]],
+    ["三","drei","サン","みっ(つ)",[["三つ","みっつ","drei (Stück)"],["三月","さんがつ","März"]]],
+    ["四","vier","シ","よん・よっ(つ)",[["四つ","よっつ","vier (Stück)"],["四月","しがつ","April"]]],
+    ["五","fünf","ゴ","いつ(つ)",[["五つ","いつつ","fünf (Stück)"],["五月","ごがつ","Mai"]]]] },
+  { id:2, title:"Zahlen 6–10", note:"Merkhilfe: 四 wird oft „yon“ gelesen, 七 meist „nana“. Beide haben noch eine zweite Lesung (shi, shichi), die in festen Wörtern wie 四月 und 七月 vorkommt.", kanji:[
+    ["六","sechs","ロク","むっ(つ)",[["六つ","むっつ","sechs (Stück)"],["六月","ろくがつ","Juni"]]],
+    ["七","sieben","シチ","なな(つ)",[["七つ","ななつ","sieben (Stück)"],["七月","しちがつ","Juli"]]],
+    ["八","acht","ハチ","やっ(つ)",[["八つ","やっつ","acht (Stück)"],["八月","はちがつ","August"]]],
+    ["九","neun","キュウ・ク","ここの(つ)",[["九つ","ここのつ","neun (Stück)"],["九月","くがつ","September"]]],
+    ["十","zehn","ジュウ","とお",[["十","とお","zehn (Stück)"],["十月","じゅうがつ","Oktober"]]]] },
+  { id:3, title:"Große Zahlen und Yen", note:"Bei 三百 und 六百 ändert sich der Anfangslaut (さんびゃく, ろっぴゃく): Das gibt es bei vielen Zahlen mit 百 und 千.", kanji:[
+    ["百","hundert","ヒャク","",[["百円","ひゃくえん","100 Yen"],["三百","さんびゃく","dreihundert"]]],
+    ["千","tausend","セン","ち",[["千円","せんえん","1000 Yen"],["二千","にせん","zweitausend"]]],
+    ["万","zehntausend","マン","",[["一万円","いちまんえん","10.000 Yen"],["三万","さんまん","30.000"]]],
+    ["円","Yen","エン","まる(い)",[["円","えん","Yen"],["五百円","ごひゃくえん","500 Yen"]]]] },
+  { id:4, title:"Tage und Elemente 1", note:"日 und 月 stehen für Sonne und Mond und zugleich für „Tag“ und „Monat“.", kanji:[
+    ["日","Tag; Sonne","ニチ・ジツ","ひ・か",[["日曜日","にちようび","Sonntag"],["今日","きょう","heute"]]],
+    ["月","Mond; Monat","ゲツ・ガツ","つき",[["月曜日","げつようび","Montag"],["今月","こんげつ","diesen Monat"]]],
+    ["火","Feuer","カ","ひ",[["火曜日","かようび","Dienstag"],["火","ひ","Feuer"]]],
+    ["水","Wasser","スイ","みず",[["水曜日","すいようび","Mittwoch"],["水","みず","Wasser"]]]] },
+  { id:5, title:"Tage und Elemente 2", note:"Die Wochentage heißen nach den Elementen: Mond, Feuer, Wasser, Holz, Gold, Erde, Sonne. Das Wort 曜日 bedeutet „Wochentag“.", kanji:[
+    ["木","Baum","モク","き",[["木曜日","もくようび","Donnerstag"],["木","き","Baum"]]],
+    ["金","Gold; Geld","キン","かね",[["金曜日","きんようび","Freitag"],["お金","おかね","Geld"]]],
+    ["土","Erde","ド・ト","つち",[["土曜日","どようび","Samstag"],["土","つち","Erde"]]],
+    ["曜","Wochentag","ヨウ","",[["曜日","ようび","Wochentag"],["何曜日","なんようび","welcher Wochentag"]]]] },
+  { id:6, title:"Menschen", note:"人 liest man als Einzelwort „hito“, in Zusammensetzungen oft „jin“ (日本人) oder „nin“ (三人).", kanji:[
+    ["人","Mensch","ジン・ニン","ひと",[["人","ひと","Mensch"],["日本人","にほんじん","Japaner/in"]]],
+    ["男","Mann","ダン・ナン","おとこ",[["男の人","おとこのひと","Mann"],["男の子","おとこのこ","Junge"]]],
+    ["女","Frau","ジョ","おんな",[["女の人","おんなのひと","Frau"],["女の子","おんなのこ","Mädchen"]]],
+    ["子","Kind","シ","こ",[["子ども","こども","Kind"],["子犬","こいぬ","Welpe"]]]] },
+  { id:7, title:"Familie und Freunde", note:"Für die eigene Familie sagt man 父 (ちち) und 母 (はは), für die Familie anderer お父さん und お母さん.", kanji:[
+    ["父","Vater","フ","ちち",[["父","ちち","(mein) Vater"],["お父さん","おとうさん","Vater (Anrede)"]]],
+    ["母","Mutter","ボ","はは",[["母","はは","(meine) Mutter"],["お母さん","おかあさん","Mutter (Anrede)"]]],
+    ["友","Freund","ユウ","とも",[["友だち","ともだち","Freund/in"],["友人","ゆうじん","Freund/in (schriftlich)"]]],
+    ["私","ich","シ","わたし・わたくし",[["私","わたし","ich"],["私立","しりつ","privat (z. B. Schule)"]]]] },
+  { id:8, title:"Natur 1", note:"Viele Kanji sind alte Bilder: 山 zeigt drei Gipfel, 川 drei Wasserläufe, 田 ein Feld mit Wegen.", kanji:[
+    ["山","Berg","サン","やま",[["山","やま","Berg"],["富士山","ふじさん","Berg Fuji"]]],
+    ["川","Fluss","セン","かわ",[["川","かわ","Fluss"],["小川","おがわ","Bach"]]],
+    ["田","Reisfeld","デン","た",[["田んぼ","たんぼ","Reisfeld"],["田中","たなか","Tanaka (Name)"]]],
+    ["花","Blume","カ","はな",[["花","はな","Blume"],["花見","はなみ","Kirschblütenschau"]]]] },
+  { id:9, title:"Natur 2: Wetter", note:"Wetter und Himmel: 雨 (Regen), 風 (Wind), 空 (Himmel) und 海 (Meer).", kanji:[
+    ["雨","Regen","ウ","あめ",[["雨","あめ","Regen"],["大雨","おおあめ","Starkregen"]]],
+    ["風","Wind","フウ","かぜ",[["風","かぜ","Wind"],["台風","たいふう","Taifun"]]],
+    ["空","Himmel","クウ","そら・あ(く)",[["空","そら","Himmel"],["空気","くうき","Luft"]]],
+    ["海","Meer","カイ","うみ",[["海","うみ","Meer"],["海外","かいがい","Ausland (Übersee)"]]]] },
+  { id:10, title:"Größe und Richtung 1", note:"Gegensatzpaare lernt man am besten zusammen: 大 und 小, 上 und 下.", kanji:[
+    ["大","groß","ダイ・タイ","おお(きい)",[["大きい","おおきい","groß"],["大学","だいがく","Universität"]]],
+    ["小","klein","ショウ","ちい(さい)・こ",[["小さい","ちいさい","klein"],["小学校","しょうがっこう","Grundschule"]]],
+    ["上","oben","ジョウ","うえ",[["上","うえ","oben"],["上手","じょうず","geschickt, gut in etwas"]]],
+    ["下","unten","カ・ゲ","した・くだ(さい)",[["下","した","unten"],["下手","へた","ungeschickt"]]]] },
+  { id:11, title:"Richtung 2", note:"午前 und 午後 heißen „vormittags“ und „nachmittags“ (午 = Mittag).", kanji:[
+    ["中","Mitte; innen","チュウ","なか",[["中","なか","Inneres"],["中学校","ちゅうがっこう","Mittelschule"]]],
+    ["前","vorn; vor","ゼン","まえ",[["前","まえ","vorn; vor"],["午前","ごぜん","vormittags"]]],
+    ["後","hinten; nach","ゴ・コウ","うし(ろ)・あと",[["後ろ","うしろ","hinten"],["午後","ごご","nachmittags"]]],
+    ["右","rechts","ウ・ユウ","みぎ",[["右","みぎ","rechts"],["右手","みぎて","rechte Hand"]]],
+    ["左","links","サ","ひだり",[["左","ひだり","links"],["左手","ひだりて","linke Hand"]]]] },
+  { id:12, title:"Körper", note:"Kanji für Körperteile sind meist einfache Bilder: 目 (Auge, hochkant), 口 (Mund als Viereck).", kanji:[
+    ["目","Auge","モク","め",[["目","め","Auge"],["目的","もくてき","Ziel"]]],
+    ["耳","Ohr","ジ","みみ",[["耳","みみ","Ohr"]]],
+    ["口","Mund","コウ・ク","くち",[["口","くち","Mund"],["入口","いりぐち","Eingang"]]],
+    ["手","Hand","シュ","て",[["手","て","Hand"],["手紙","てがみ","Brief"]]],
+    ["足","Fuß; Bein","ソク","あし・た(りる)",[["足","あし","Fuß; Bein"],["足りる","たりる","genügen"]]]] },
+  { id:13, title:"Schule", note:"学生 (Student/in) und 先生 (Lehrer/in) sind Wörter, die du jeden Tag brauchst.", kanji:[
+    ["学","lernen","ガク","まな(ぶ)",[["学生","がくせい","Student/in"],["大学","だいがく","Universität"]]],
+    ["校","Schule","コウ","",[["学校","がっこう","Schule"],["高校","こうこう","Oberschule"]]],
+    ["先","vorher; voraus","セン","さき",[["先生","せんせい","Lehrer/in"],["先月","せんげつ","letzten Monat"]]],
+    ["生","Leben; geboren","セイ・ショウ","い(きる)・う(まれる)・なま",[["生まれる","うまれる","geboren werden"],["生徒","せいと","Schüler/in"]]]] },
+  { id:14, title:"Sprache und Bücher", note:"日本語 = Japanisch, 英語 = Englisch: 語 steht für „Sprache“.", kanji:[
+    ["本","Buch","ホン","もと",[["本","ほん","Buch"],["日本","にほん","Japan"]]],
+    ["語","Sprache","ゴ","かた(る)",[["日本語","にほんご","Japanisch"],["英語","えいご","Englisch"]]],
+    ["話","sprechen","ワ","はな(す)・はなし",[["話す","はなす","sprechen"],["電話","でんわ","Telefon"]]],
+    ["読","lesen","ドク","よ(む)",[["読む","よむ","lesen"],["読書","どくしょ","Lesen (als Hobby)"]]],
+    ["書","schreiben","ショ","か(く)",[["書く","かく","schreiben"],["辞書","じしょ","Wörterbuch"]]]] },
+  { id:15, title:"Verben 1", note:"Bei Verben steht der Kanji-Teil vorn, der Rest wird in Hiragana geschrieben (Okurigana): 食べる, 飲む.", kanji:[
+    ["見","sehen","ケン","み(る)・み(せる)",[["見る","みる","sehen"],["見せる","みせる","zeigen"]]],
+    ["聞","hören","ブン","き(く)",[["聞く","きく","hören; fragen"],["新聞","しんぶん","Zeitung"]]],
+    ["食","essen","ショク","た(べる)",[["食べる","たべる","essen"],["食事","しょくじ","Mahlzeit"]]],
+    ["飲","trinken","イン","の(む)",[["飲む","のむ","trinken"],["飲み物","のみもの","Getränk"]]]] },
+  { id:16, title:"Verben 2: Bewegung", note:"出口 (Ausgang) und 入口 (Eingang) siehst du auf Schildern in Bahnhöfen und Geschäften.", kanji:[
+    ["行","gehen","コウ・ギョウ","い(く)・おこな(う)",[["行く","いく","gehen"],["旅行","りょこう","Reise"]]],
+    ["来","kommen","ライ","く(る)",[["来る","くる","kommen"],["来週","らいしゅう","nächste Woche"]]],
+    ["帰","heimkehren","キ","かえ(る)",[["帰る","かえる","heimkehren"],["帰り","かえり","Heimweg"]]],
+    ["出","hinausgehen","シュツ","で(る)・だ(す)",[["出る","でる","hinausgehen"],["出口","でぐち","Ausgang"]]],
+    ["入","eintreten","ニュウ","い(れる)・はい(る)",[["入る","はいる","eintreten"],["入口","いりぐち","Eingang"]]]] },
+  { id:17, title:"Zeit 1", note:"今年 liest man ことし – eine Ausnahme, die man einfach als Wort lernt.", kanji:[
+    ["今","jetzt","コン","いま",[["今","いま","jetzt"],["今日","きょう","heute"]]],
+    ["年","Jahr","ネン","とし",[["今年","ことし","dieses Jahr"],["来年","らいねん","nächstes Jahr"]]],
+    ["毎","jeder","マイ","",[["毎日","まいにち","jeden Tag"],["毎朝","まいあさ","jeden Morgen"]]],
+    ["週","Woche","シュウ","",[["毎週","まいしゅう","jede Woche"],["今週","こんしゅう","diese Woche"]]]] },
+  { id:18, title:"Tageszeiten", note:"Mit 時 nennst du die Uhrzeit: 三時 = drei Uhr.", kanji:[
+    ["朝","Morgen","チョウ","あさ",[["朝","あさ","Morgen"],["毎朝","まいあさ","jeden Morgen"]]],
+    ["昼","Mittag","チュウ","ひる",[["昼","ひる","Mittag"],["昼ご飯","ひるごはん","Mittagessen"]]],
+    ["夜","Nacht","ヤ","よる",[["夜","よる","Nacht; Abend"],["今夜","こんや","heute Nacht"]]],
+    ["時","Zeit; Uhr","ジ","とき",[["時間","じかん","Zeit; Stunde"],["三時","さんじ","drei Uhr"]]]] },
+  { id:19, title:"Verkehr und Läden", note:"電車 (Zug) besteht aus 電 (Elektrizität) und 車 (Wagen).", kanji:[
+    ["車","Auto","シャ","くるま",[["車","くるま","Auto"],["自転車","じてんしゃ","Fahrrad"]]],
+    ["電","Elektrizität","デン","",[["電車","でんしゃ","Zug"],["電話","でんわ","Telefon"]]],
+    ["駅","Bahnhof","エキ","",[["駅","えき","Bahnhof"],["駅前","えきまえ","vor dem Bahnhof"]]],
+    ["店","Laden","テン","みせ",[["店","みせ","Laden"],["店員","てんいん","Verkäufer/in"]]]] },
+  { id:20, title:"Land, Name, Befinden", note:"気 steckt in vielen Wörtern für Stimmung und Wetter: 天気, 元気, 気持ち.", kanji:[
+    ["国","Land","コク","くに",[["国","くに","Land"],["外国","がいこく","Ausland"]]],
+    ["外","außen","ガイ・ゲ","そと",[["外","そと","draußen"],["外国人","がいこくじん","Ausländer/in"]]],
+    ["気","Geist; Luft","キ・ケ","",[["天気","てんき","Wetter"],["元気","げんき","gesund; munter"]]],
+    ["名","Name","メイ","な",[["名前","なまえ","Name"],["有名","ゆうめい","berühmt"]]]] },
+  { id:21, title:"Farben", note:"Alle vier Farben sind い-Adjektive: 白い, 赤い, 青い, 黒い. 青 deckt auch Grün ab (青信号 = grüne Ampel).", kanji:[
+    ["白","weiß","ハク","しろ(い)",[["白い","しろい","weiß"],["面白い","おもしろい","interessant"]]],
+    ["赤","rot","セキ","あか(い)",[["赤い","あかい","rot"],["赤ちゃん","あかちゃん","Baby"]]],
+    ["青","blau","セイ","あお(い)",[["青い","あおい","blau"],["青空","あおぞら","blauer Himmel"]]],
+    ["黒","schwarz","コク","くろ(い)",[["黒い","くろい","schwarz"],["黒板","こくばん","Tafel"]]]] },
+  { id:22, title:"Adjektive", note:"Auch hier steht das Kanji vorn und das い dahinter: 新しい, 古い, 高い, 安い, 長い.", kanji:[
+    ["新","neu","シン","あたら(しい)",[["新しい","あたらしい","neu"],["新聞","しんぶん","Zeitung"]]],
+    ["古","alt","コ","ふる(い)",[["古い","ふるい","alt"],["中古","ちゅうこ","gebraucht"]]],
+    ["高","hoch; teuer","コウ","たか(い)",[["高い","たかい","hoch; teuer"],["高校生","こうこうせい","Oberschüler/in"]]],
+    ["安","billig","アン","やす(い)",[["安い","やすい","billig"],["安心","あんしん","Beruhigung"]]],
+    ["長","lang","チョウ","なが(い)",[["長い","ながい","lang"],["校長","こうちょう","Schulleiter/in"]]]] }
+];
+
+const KANJI_DB = KANJI_GROUPS.map(g => ({
+  id: g.id, title: g.title, note: g.note,
+  items: g.kanji.map(([k, m, on, kun, words]) => ({ k, m, on, kun, words, gid: g.id }))
+}));
+
+function kanjiGroup(gid){ return KANJI_DB.find(g => g.id === gid); }
+// alle Kanji bis einschließlich Gruppe maxGid
+function kanjiPool(maxGid){
+  return KANJI_DB.filter(g => g.id <= maxGid).flatMap(g => g.items);
+}
+
+// ---------- Fortschritt ----------
+function isKanjiPassed(gid){
+  const k = (loadPath().kanji || {})[gid];
+  return !!(k && k.passed);
+}
+function kanjiBest(gid){
+  const k = (loadPath().kanji || {})[gid];
+  return k ? (k.best || 0) : null;
+}
+function kanjiStats(){
+  return { passed: KANJI_DB.filter(g => isKanjiPassed(g.id)).length, total: KANJI_DB.length };
+}
+function kanjiUnlocked(){ return hiraBasicDone() || !!loadPath().forceKanji; }
+function isKanjiOpen(gid){
+  if (!kanjiUnlocked()) return false;
+  return gid === 1 || isKanjiPassed(gid - 1) || isKanjiPassed(gid);
+}
+function saveKanjiResult(gid, pct, passed){
+  const p = loadPath();
+  p.kanji = p.kanji || {};
+  const prev = p.kanji[gid] || { best: 0, passed: false };
+  p.kanji[gid] = { best: Math.max(prev.best || 0, pct), passed: !!(prev.passed || passed), at: Date.now() };
+  savePath(p);
+}
+function unlockKanji(){
+  const p = loadPath();
+  p.forceKanji = true;
+  savePath(p);
+  goto("kanji");
+}
+
+// ---------- Fragen ----------
+// kind: "k2m" Kanji → Bedeutung | "m2k" Bedeutung → Kanji | "w2r" Wort → Lesung
+function kanjiQuestion(kind, it, pool, wordIdx){
+  if (kind === "k2m") {
+    return { prompt: it.k, big: true, sub: "Was bedeutet dieses Kanji?", answer: it.m,
+             options: shuffle([it.m, ...pickDistractors(it.m, pool.map(x => x.m), 3)]),
+             label: `${it.k} = ${it.m}`, srs: { key: "j:" + it.k, t: "kanji", d: { k: it.k, m: it.m } } };
+  }
+  if (kind === "m2k") {
+    return { prompt: it.m, big: false, sub: "Welches Kanji ist das?", answer: it.k,
+             options: shuffle([it.k, ...pickDistractors(it.k, pool.map(x => x.k), 3)]), optionsBig: true,
+             label: `${it.m} = ${it.k}`, srs: { key: "j:" + it.k, t: "kanji", d: { k: it.k, m: it.m } } };
+  }
+  const words = it.words || [];
+  const w = words[wordIdx != null ? wordIdx : Math.floor(Math.random() * words.length)];
+  if (!w) return kanjiQuestion("k2m", it, pool);
+  const allReadings = pool.flatMap(x => x.words.map(y => y[1]));
+  return { prompt: w[0], big: true, say: w[1], sub: `Wie liest man das? (${w[2]})`, answer: w[1],
+           options: shuffle([w[1], ...pickDistractors(w[1], allReadings, 3)]),
+           label: `${w[0]} = ${w[1]} (${w[2]})`, srs: { key: "jw:" + w[0], t: "kword", d: { w: w[0], r: w[1], de: w[2] } } };
+}
+
+// mode: "practice" (alle drei Fragearten je Kanji) | "test" (zwei zufällige Arten je Kanji + 3 Wiederholungen)
+function buildKanjiQuestions(gid, mode){
+  const g = kanjiGroup(gid);
+  if (!g) return [];
+  const pool = kanjiPool(gid);
+  const kinds = ["k2m", "m2k", "w2r"];
+  let qs = [];
+  g.items.forEach(it => {
+    const use = mode === "test" ? shuffle(kinds).slice(0, 2) : kinds;
+    use.forEach(kind => qs.push(kanjiQuestion(kind, it, pool)));
+  });
+  qs = shuffle(qs);
+  if (mode === "test" && gid > 1) {
+    shuffle(kanjiPool(gid - 1)).slice(0, 3).forEach(it => {
+      const q = kanjiQuestion(shuffle(kinds)[0], it, pool);
+      q.review = true;
+      qs.splice(Math.floor(Math.random() * (qs.length + 1)), 0, q);
+    });
+  }
+  return qs;
+}
+
+// Eintrag aus dem Wiederholungssystem wieder zur Frage machen
+function srsKanjiQuestion(item){
+  const d = item.d || {};
+  const all = kanjiPool(99);
+  if (item.t === "kanji") {
+    const it = all.find(x => x.k === d.k);
+    return it ? kanjiQuestion(Math.random() < 0.5 ? "k2m" : "m2k", it, all) : null;
+  }
+  const it = all.find(x => x.words.some(y => y[0] === d.w));
+  if (!it) return null;
+  return kanjiQuestion("w2r", it, all, it.words.findIndex(y => y[0] === d.w));
+}
+
+// ---------- Seiten ----------
+function renderKanjiRoute(mount, parts){
+  if (parts[0] === undefined) return renderKanjiHome(mount);
+  const gid = Number(parts[0]);
+  const g = kanjiGroup(gid);
+  if (!g || !isKanjiOpen(gid)) return renderKanjiHome(mount);
+  if (parts[1] === "practice" || parts[1] === "test") return renderKanjiQuiz(mount, g, parts[1]);
+  return renderKanjiGroup(mount, g);
+}
+
+function renderKanjiHome(mount){
+  const st = kanjiStats();
+  const locked = !kanjiUnlocked();
+  mount.innerHTML = `
+    <h2>Kanji</h2>
+    <div class="card">
+      <div class="hint">${st.passed} / ${st.total} Gruppen bestanden · ${KANJI_DB.reduce((a, g) => a + g.items.length, 0)} Kanji</div>
+      <div class="progress"><div style="width:${Math.round(100 * st.passed / st.total)}%;"></div></div>
+      <p class="hint" style="margin-top:.5rem;">Kanji sind Schriftzeichen mit Bedeutung. Jedes hat meist zwei Lesungen: on (aus dem Chinesischen) und kun (japanisch). Lerne sie am besten als Wörter, nicht einzeln.</p>
+    </div>
+    ${locked ? `
+      <div class="card">
+        <h3>Noch gesperrt</h3>
+        <p>Der Kanji-Kurs wird freigeschaltet, sobald die Hiragana-Gruppen 1–10 bestanden sind. In den Lesetexten helfen dir bis dahin die Furigana.</p>
+        <div class="actions">
+          <button class="primary" onclick="goto('kana/hiragana')">Zu Hiragana</button>
+          <button onclick="unlockKanji()">Trotzdem freischalten</button>
+        </div>
+      </div>` : `
+    <div class="grid" style="margin-top:.75rem;">
+      ${KANJI_DB.map(g => {
+        const open = isKanjiOpen(g.id), done = isKanjiPassed(g.id), best = kanjiBest(g.id);
+        return `
+        <div class="card${open ? "" : " step-locked"}">
+          <h3>${g.id}. ${escapeHTML(g.title)}</h3>
+          <div class="kana-preview">${escapeHTML(g.items.map(i => i.k).join(" "))}</div>
+          ${done ? `<span class="badge">Bestanden${best != null ? " · " + best + " %" : ""}</span>`
+                 : (open ? `<span class="badge">Als Nächstes</span>` : `<span class="hint">🔒 Zuerst Gruppe ${g.id - 1} bestehen</span>`)}
+          <div class="actions" style="margin-top:.5rem;">
+            ${open ? `<button class="primary" onclick="goto('kanji/${g.id}')">${done ? "Wiederholen" : "Lernen"}</button>` : ""}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>`}
+    <div class="actions" style="margin-top:1rem;"><button onclick="goto('path')">Zurück zum Lernpfad</button></div>`;
+}
+
+function renderKanjiGroup(mount, g){
+  const done = isKanjiPassed(g.id);
+  mount.innerHTML = `
+    <h2>${g.id}. ${escapeHTML(g.title)}</h2>
+    <p class="hint">Tippe ein Wort an, um es anzuhören.</p>
+    ${g.items.map(it => `
+      <div class="card kanji-card">
+        <div class="kanji-big">${escapeHTML(it.k)}</div>
+        <div>
+          <h3 style="margin:0;">${escapeHTML(it.m)}</h3>
+          <div class="hint">on: ${escapeHTML(it.on || "–")} · kun: ${escapeHTML(it.kun || "–")}</div>
+          <ul class="kanji-words">${it.words.map(w => `
+            <li><button type="button" class="mini" data-say="${escapeHTML(w[1])}" aria-label="Vorlesen" style="width:auto;">🔊</button>
+              <strong>${escapeHTML(w[0])}</strong> <span class="hint">${escapeHTML(w[1])} – ${escapeHTML(w[2])}</span></li>`).join("")}
+          </ul>
+        </div>
+      </div>`).join("")}
+    <div class="card"><strong>Gut zu wissen</strong><p style="margin:.3rem 0 0;">${escapeHTML(g.note || "")}</p></div>
+    <div class="actions" style="margin-top:.75rem;">
+      <button onclick="goto('kanji/${g.id}/practice')">Üben (zählt nicht)</button>
+      <button onclick="kanjiWrite(${g.id})">Schreiben üben</button>
+      <button class="primary" onclick="goto('kanji/${g.id}/test')">Test (mind. ${PASS_PCT} %)</button>
+    </div>
+    <div class="actions" style="margin-top:.5rem;">
+      ${done && g.id < KANJI_DB.length ? `<button onclick="goto('kanji/${g.id + 1}')">Weiter zu Gruppe ${g.id + 1}</button>` : ""}
+      <button onclick="goto('kanji')">Zur Übersicht</button>
+    </div>`;
+  bindSay(mount);
+}
+
+function renderKanjiQuiz(mount, g, mode){
+  const graded = (mode === "test");
+  runQuizSession(mount, {
+    title: `Kanji ${g.id}: ${graded ? "Test" : "Übung"}`,
+    questions: buildKanjiQuestions(g.id, mode),
+    graded, passPct: PASS_PCT,
+    backRoute: `kanji/${g.id}`,
+    onFinish: (pct, passed) => { if (graded) saveKanjiResult(g.id, pct, passed); },
+    buttons: (pct, passed) => {
+      const b = [{ label: "Nochmal", route: `kanji/${g.id}/${mode}` }];
+      if (passed && g.id < KANJI_DB.length) b.unshift({ label: `Weiter zu Gruppe ${g.id + 1}`, route: `kanji/${g.id + 1}`, primary: true });
+      b.push({ label: "Zur Gruppe", route: `kanji/${g.id}` });
+      return b;
+    }
+  });
+}
+
+// Schreibübung mit den Kanji einer Gruppe vorbefüllen
+function kanjiWrite(gid){
+  const g = kanjiGroup(gid);
+  if (!g) return;
+  state.write = {
+    items: g.items.map(it => ({ de: it.m, romaji: it.kun || it.on, kana: it.words[0] ? it.words[0][1] : "", kanji: it.k })),
+    i: 0, target: "kanji"
+  };
+  goto("write");
 }
 
 // ---------- Reihenfolge des Lernpfads ----------
