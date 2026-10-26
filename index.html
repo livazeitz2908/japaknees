@@ -2161,6 +2161,7 @@ nav {
 
   <nav>
     <button data-route="path">Lernpfad</button>
+    <button data-route="review">Wiederholen</button>
     <button data-route="home">Meine Sets</button>
     <button data-route="new-set">Neues Set</button>
     <button data-route="stats">Statistik</button>
@@ -4056,6 +4057,7 @@ const m = $("#app");
   if (state.route === "stats") return renderStats(m);
   if (state.route === "levels") return renderLevels(m);
   if (state.route === "path") return renderPath(m);
+  if (state.route === "review") return renderReview(m);
   if (state.route === "kana" || state.route.startsWith("kana/")) return renderKanaRoute(m, state.route.split("/").slice(1));
   if (state.route.startsWith("level/test/")) return renderLevelTest(m, state.route.split("/")[2]);
 
@@ -7236,20 +7238,24 @@ function kanaPool(script, maxGid){
 function kanaQuestion(dir, it, pool){
   if (dir === "k2r") {
     return { prompt: it.k, big: true, say: it.k, sub: "Wie liest man das?", answer: it.r,
-             options: shuffle([it.r, ...pickDistractors(it.r, pool.map(x => x.r), 3)]), label: `${it.k} = ${it.r}` };
+             options: shuffle([it.r, ...pickDistractors(it.r, pool.map(x => x.r), 3)]), label: `${it.k} = ${it.r}`,
+             srs: { key: "k:" + it.k, t: "kana", d: { k: it.k, r: it.r } } };
   }
   return { prompt: it.r, big: true, sub: "Welches Zeichen ist das?", answer: it.k,
-           options: shuffle([it.k, ...pickDistractors(it.k, pool.map(x => x.k), 3)]), optionsBig: true, label: `${it.r} = ${it.k}` };
+           options: shuffle([it.k, ...pickDistractors(it.k, pool.map(x => x.k), 3)]), optionsBig: true, label: `${it.r} = ${it.k}`,
+           srs: { key: "k:" + it.k, t: "kana", d: { k: it.k, r: it.r } } };
 }
 
 function wordQuestion(dir, w, words){
   const [k, r, de] = w;
   if (dir === "k2de") {
     return { prompt: k, big: true, say: k, sub: "Was bedeutet das?", answer: de,
-             options: shuffle([de, ...pickDistractors(de, words.map(x => x[2]), 3)]), label: `${k} (${r}) = ${de}` };
+             options: shuffle([de, ...pickDistractors(de, words.map(x => x[2]), 3)]), label: `${k} (${r}) = ${de}`,
+             srs: { key: "w:" + k, t: "word", d: { k, r, de } } };
   }
   return { prompt: de, big: false, sub: "Wie schreibt man das?", answer: k,
-           options: shuffle([k, ...pickDistractors(k, words.map(x => x[0]), 3)]), optionsBig: true, label: `${de} = ${k} (${r})` };
+           options: shuffle([k, ...pickDistractors(k, words.map(x => x[0]), 3)]), optionsBig: true, label: `${de} = ${k} (${r})`,
+           srs: { key: "w:" + k, t: "word", d: { k, r, de } } };
 }
 
 // mode: "practice" (nur die Gruppe) | "test" (Gruppe + 3 Wiederholungen aus früheren Gruppen)
@@ -7332,6 +7338,7 @@ function runQuizSession(mount, cfg){
     const q = qs[i];
     const ok = opt === q.answer;
     if (ok) right++; else wrong.push(q);
+    if (q.srs) { try { srsRecord(q.srs, ok); } catch(e){} }
     $$("#qOpts button").forEach(b => {
       b.disabled = true;
       if (b.textContent === q.answer) b.classList.add("ok");
@@ -7360,7 +7367,7 @@ function runQuizSession(mount, cfg){
           ? (passed
               ? `<p><span class="badge">Bestanden</span> Stark! Der nächste Schritt ist freigeschaltet.</p>`
               : `<p><span class="badge">Noch nicht bestanden</span> Du brauchst mindestens ${cfg.passPct} %. Schau dir die Zeichen noch einmal an und versuche es erneut.</p>`)
-          : `<p class="hint">Das war eine Übung, sie zählt nicht für den Fortschritt.</p>`}
+          : `<p class="hint">${escapeHTML(cfg.ungradedNote || "Das war eine Übung, sie zählt nicht für den Fortschritt.")}</p>`}
         ${wrong.length
           ? `<h3>Zum Wiederholen</h3><ul>${wrong.map(q => `<li>${escapeHTML(q.label || (q.prompt + " → " + q.answer))}</li>`).join("")}</ul>`
           : `<p>Keine Fehler. 🎉</p>`}
@@ -7591,16 +7598,21 @@ function buildLevelTest(lvl){
   const near = contentLevels().filter(l => l.id !== lvl.id && Math.abs(l.level - lvl.level) <= 3)
     .flatMap(l => l.vocab.filter(usable));
   const pool = [...own, ...near];
-  return shuffle(own).slice(0, 10).map(v => {
-    if (Math.random() < 0.5) {
-      return { prompt: v.de, big: false, sub: "Wie sagt man das auf Japanisch?", answer: v.kana,
-               options: shuffle([v.kana, ...pickDistractors(v.kana, pool.map(x => x.kana), 3)]), optionsBig: true,
-               label: `${v.de} = ${v.kana}${v.romaji ? " (" + v.romaji + ")" : ""}` };
-    }
-    return { prompt: v.kana, big: true, say: v.kana, sub: v.romaji || "Was bedeutet das?", answer: v.de,
-             options: shuffle([v.de, ...pickDistractors(v.de, pool.map(x => x.de), 3)]),
-             label: `${v.kana}${v.romaji ? " (" + v.romaji + ")" : ""} = ${v.de}` };
-  });
+  return shuffle(own).slice(0, 10).map(v => vocabQuestion(v, pool));
+}
+
+// dir: "de2ja" (Deutsch → Japanisch) oder "ja2de"; ohne Angabe zufällig
+function vocabQuestion(v, pool, dir){
+  dir = dir || (Math.random() < 0.5 ? "de2ja" : "ja2de");
+  const srs = { key: "v:" + v.de + "|" + v.kana, t: "vocab", d: { de: v.de, kana: v.kana, romaji: v.romaji || "" } };
+  if (dir === "de2ja") {
+    return { prompt: v.de, big: false, sub: "Wie sagt man das auf Japanisch?", answer: v.kana,
+             options: shuffle([v.kana, ...pickDistractors(v.kana, pool.map(x => x.kana), 3)]), optionsBig: true,
+             label: `${v.de} = ${v.kana}${v.romaji ? " (" + v.romaji + ")" : ""}`, srs };
+  }
+  return { prompt: v.kana, big: true, say: v.kana, sub: v.romaji || "Was bedeutet das?", answer: v.de,
+           options: shuffle([v.de, ...pickDistractors(v.de, pool.map(x => x.de), 3)]),
+           label: `${v.kana}${v.romaji ? " (" + v.romaji + ")" : ""} = ${v.de}`, srs };
 }
 
 function renderLevelTest(mount, id){
@@ -7657,6 +7669,7 @@ function renderPath(mount){
   const lvlDone = levels.filter(isLevelPassed).length;
   const step = nextStep();
   const gr = grammarStats();
+  const sr = srsStats();
   const stage = (nr, title, text, done, total, route, extra, disabled) => `
     <div class="card${disabled ? " step-locked" : ""}">
       <h3>${nr}. ${title}</h3>
@@ -7674,6 +7687,14 @@ function renderPath(mount){
         <li>Immer nur der nächste Schritt. Der große Knopf unten bringt dich dorthin.</li>
         <li>Ein Schritt zählt erst, wenn du den Test mit mindestens ${PASS_PCT} % bestanden hast.</li>
       </ol>
+    </div>
+    <div class="card" style="margin-top:.75rem;">
+      <h3>Wiederholung</h3>
+      ${sr.due
+        ? `<p><strong>${sr.due} ${sr.due === 1 ? "Karte ist" : "Karten sind"} fällig.</strong><br><span class="hint">Kurz wiederholen, bevor du Neues lernst.</span></p>
+           <div class="actions"><button class="primary" onclick="goto('review')">Jetzt wiederholen</button></div>`
+        : `<p>${sr.total ? "Heute ist nichts fällig. 🎉" : "Noch nichts zu wiederholen. Nach den ersten Tests erscheinen hier deine Karten."}</p>
+           ${sr.total ? `<p class="hint">${sr.total} Karten im System, ${sr.solid} schon sicher.</p>` : ""}`}
     </div>
     <div class="card" style="margin-top:.75rem;">
       <h3>Als Nächstes</h3>
@@ -7697,6 +7718,115 @@ function renderPath(mount){
       <button onclick="goto('write')">Schreibübung</button>
       <button onclick="goto('home')">Meine Sets</button>
     </div>`;
+}
+
+// =========================================================
+// Wiederholungssystem (Phase 3b): Leitner-Boxen
+// Jede geübte Karte (Kana, Wort, Vokabel) landet in einer Box 1–6.
+// Richtig: eine Box höher, falsch: zurück in Box 1. Je höher die Box, desto länger die Pause.
+// =========================================================
+const SRS_DAYS = [1, 2, 4, 8, 16, 32];   // Abstand je Box in Tagen
+const SRS_DAY_MS = 24 * 60 * 60 * 1000;
+const SRS_SESSION = 15;                  // Karten pro Wiederholung
+
+function scriptOfKana(k){ return /[゠-ヿ]/.test(k) ? "katakana" : "hiragana"; }
+
+function srsRecord(meta, ok){
+  if (!meta || !meta.key) return;
+  const p = loadPath();
+  p.srs = p.srs || {};
+  const now = Date.now();
+  let it = p.srs[meta.key];
+  if (!it) {
+    it = { t: meta.t, d: meta.d, box: ok ? 2 : 1, seen: 0, lapses: 0 };
+  } else if (!ok) {
+    it.box = 1;
+  } else if (!it.last || now - it.last > 60 * 60 * 1000) {
+    // zweimal richtig in derselben Stunde (z. B. beide Richtungen in einem Test) zählt nur einmal
+    it.box = Math.min(SRS_DAYS.length, (it.box || 1) + 1);
+  }
+  if (!ok) it.lapses = (it.lapses || 0) + 1;
+  it.seen = (it.seen || 0) + 1;
+  it.last = now;
+  it.due = now + SRS_DAYS[it.box - 1] * SRS_DAY_MS;
+  p.srs[meta.key] = it;
+  savePath(p);
+}
+
+function srsDueItems(){
+  const now = Date.now();
+  const all = loadPath().srs || {};
+  return Object.entries(all).filter(([k, it]) => it && it.due <= now)
+    .sort((a, b) => a[1].due - b[1].due).map(([k, it]) => ({ key: k, ...it }));
+}
+function srsStats(){
+  const all = Object.values(loadPath().srs || {});
+  return { total: all.length, due: srsDueItems().length, solid: all.filter(it => it.box >= 5).length };
+}
+function srsNextDue(){
+  const all = Object.values(loadPath().srs || {});
+  if (!all.length) return null;
+  return Math.min(...all.map(it => it.due));
+}
+function srsWhen(ts){
+  const d = ts - Date.now();
+  if (d <= 0) return "jetzt";
+  const h = Math.round(d / 3600000);
+  if (h < 24) return h <= 1 ? "in etwa einer Stunde" : `in ${h} Stunden`;
+  const days = Math.round(d / SRS_DAY_MS);
+  return days === 1 ? "morgen" : `in ${days} Tagen`;
+}
+
+function allVocabPool(){
+  return contentLevels().flatMap(l => (l.vocab || []).filter(v => v && v.de && v.kana));
+}
+
+// Aus einem gespeicherten Eintrag wieder eine Frage machen
+function srsQuestion(item){
+  const d = item.d || {};
+  const dir = Math.random() < 0.5;
+  if (item.t === "kana") {
+    const pool = kanaPool(scriptOfKana(d.k), 99);
+    return kanaQuestion(dir ? "k2r" : "r2k", { k: d.k, r: d.r }, pool);
+  }
+  if (item.t === "word") {
+    const g = KANA[scriptOfKana(d.k)].groups.find(x => x.words);
+    return wordQuestion(dir ? "k2de" : "de2k", [d.k, d.r, d.de], g ? g.items : [[d.k, d.r, d.de]]);
+  }
+  if (item.t === "vocab") {
+    return vocabQuestion({ de: d.de, kana: d.kana, romaji: d.romaji }, allVocabPool(), dir ? "de2ja" : "ja2de");
+  }
+  return null;
+}
+
+function renderReview(mount){
+  const due = srsDueItems().slice(0, SRS_SESSION);
+  const qs = due.map(srsQuestion).filter(Boolean);
+  if (!qs.length) {
+    const st = srsStats();
+    const nxt = srsNextDue();
+    mount.innerHTML = `
+      <h2>Wiederholung</h2>
+      <div class="card">
+        <p>${st.total ? "Heute ist nichts fällig. 🎉" : "Hier erscheinen Zeichen, Wörter und Vokabeln, sobald du Tests oder Übungen gemacht hast."}</p>
+        ${st.total ? `<p class="hint">${st.total} Karten im System, ${st.solid} davon schon sicher. Die nächste Karte ist ${srsWhen(nxt)} dran.</p>` : ""}
+        <div class="actions"><button class="primary" onclick="goto('path')">Zum Lernpfad</button></div>
+      </div>`;
+    return;
+  }
+  runQuizSession(mount, {
+    title: "Wiederholung",
+    questions: qs,
+    graded: false,
+    ungradedNote: "Deine Karten wurden neu eingeordnet: Richtiges kommt später wieder, Falsches früher.",
+    backRoute: "path",
+    buttons: () => {
+      const more = srsDueItems().length;
+      const b = [{ label: "Zum Lernpfad", route: "path", primary: !more }];
+      if (more) b.unshift({ label: `Weiter (${more} fällig)`, route: "review", primary: true });
+      return b;
+    }
+  });
 }
 
 // ---------- Reihenfolge des Lernpfads ----------
