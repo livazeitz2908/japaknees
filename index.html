@@ -2129,7 +2129,24 @@ nav {
 }
 
 }
-  </style>
+  
+/* ===== Lernpfad & Kana (Phase 2) ===== */
+.kana-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:.5rem; margin:.5rem 0; }
+.kana-tile { display:flex; flex-direction:column; align-items:center; gap:.1rem; padding:.55rem .3rem; text-align:center; }
+.kana-tile .kana { font-size:2rem; line-height:1.15; color:var(--ink); }
+.kana-tile .rom { font-size:.9rem; color:var(--muted); }
+.kana-tile .de { font-size:.75rem; color:var(--muted); }
+.kana-preview { font-size:1.4rem; letter-spacing:.15em; margin:.2rem 0 .4rem; }
+.big-kana { font-size:clamp(3.5rem, 18vw, 6rem); text-align:center; line-height:1.2; margin:.5rem 0 .2rem; }
+.quiz-prompt { font-size:1.5rem; text-align:center; margin:1rem 0 .4rem; }
+.kana-opts { display:grid; grid-template-columns:repeat(2, 1fr); gap:.6rem; margin-top:.6rem; }
+.kana-opts button { font-size:1.15rem; padding:.8rem .5rem; }
+.kana-opts-big button { font-size:1.7rem; }
+.kana-opts button.ok { background:rgba(127,182,133,.35); border-color:var(--matcha); color:var(--ink); }
+.kana-opts button.bad { background:rgba(233,138,165,.35); border-color:var(--lavender); color:var(--ink); }
+.step-locked { opacity:.55; }
+#qSay { width:auto; min-width:4rem; padding:.3rem 1.2rem; }
+</style>
 
   
   <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
@@ -2143,7 +2160,8 @@ nav {
   </button>
 
   <nav>
-    <button data-route="home">Start</button>
+    <button data-route="path">Lernpfad</button>
+    <button data-route="home">Meine Sets</button>
     <button data-route="new-set">Neues Set</button>
     <button data-route="stats">Statistik</button>
     <button data-route="stories">Lesegeschichten</button>
@@ -2200,7 +2218,7 @@ const $ = (sel, el=document) => el.querySelector(sel);
 const $$ = (sel, el=document) => [...el.querySelectorAll(sel)];
 
 // -------- Routing --------
-const state = { route: "home", sets: [], search: "" };
+const state = { route: "path", sets: [], search: "" };
 
 // Navigation-Buttons (Routen) + Burger-Menü
 $$("nav [data-route]").forEach(b => b.addEventListener("click", () => {
@@ -3009,7 +3027,7 @@ function ensureSeedLevels(){
         {de:"Ich heiße …",kana:"わたしは…です",romaji:"watashi wa … desu"},
         {de:"Name",kana:"なまえ",kanji:"名前",romaji:"namae"},
         {de:"Student/in",kana:"がくせい",kanji:"学生",romaji:"gakusei"},
-        {de:"aus … kommen",kana:"…から来ました",kanji:"来ました",romaji:"… kara kimashita"},
+        {de:"aus … kommen",kana:"…からきました",kanji:"来ました",romaji:"… kara kimashita"},
         {de:"Deutschland",kana:"ドイツ",romaji:"Doitsu"},
         {de:"Tschüss",kana:"さようなら",romaji:"sayōnara"},
         {de:"Bis später",kana:"またね",romaji:"mata ne"}
@@ -3039,7 +3057,7 @@ function ensureSeedLevels(){
         {de:"jüngere Schwester",kana:"いもうと",kanji:"妹",romaji:"imōto"},
         {de:"Haus",kana:"いえ",kanji:"家",romaji:"ie"},
         {de:"Zimmer",kana:"へや",kanji:"部屋",romaji:"heya"},
-        {de:"klein (Dinge)",kana:"小さい",kanji:"小さい",romaji:"chiisai"},
+        {de:"klein (Dinge)",kana:"ちいさい",kanji:"小さい",romaji:"chiisai"},
         {de:"Haustier",kana:"ペット",romaji:"petto"},
         {de:"Hund",kana:"いぬ",kanji:"犬",romaji:"inu"},
         {de:"Name",kana:"なまえ",kanji:"名前",romaji:"namae"}
@@ -3067,9 +3085,9 @@ function ensureSeedLevels(){
         {de:"essen (Speise)",kana:"たべる",kanji:"食べる",romaji:"taberu"},
         {de:"trinken",kana:"のむ",kanji:"飲む",romaji:"nomu"},
         {de:"gehen/fahren",kana:"いく",kanji:"行く",romaji:"iku"},
-        {de:"Schule",kana:"学校",romaji:"gakkō"},
+        {de:"Schule",kana:"がっこう",kanji:"学校",romaji:"gakkō"},
         {de:"Freund/in",kana:"ともだち",kanji:"友達",romaji:"tomodachi"},
-        {de:"Uhrzeit ～Uhr",kana:"～時",romaji:"~ji"},
+        {de:"Uhrzeit ～Uhr",kana:"～じ",kanji:"時",romaji:"~ji"},
         {de:"Frühstück",kana:"あさごはん",kanji:"朝ご飯",romaji:"asagohan"},
         {de:"Zeit",kana:"じかん",kanji:"時間",romaji:"jikan"}
       ]
@@ -3097,7 +3115,7 @@ function ensureSeedLevels(){
         {de:"Curry",kana:"カレー",romaji:"karē"},
         {de:"Abendessen",kana:"ゆうごはん",kanji:"夕ご飯",romaji:"yūgohan"},
         {de:"lecker",kana:"おいしい",romaji:"oishii"},
-        {de:"mögen/lieben",kana:"好き",romaji:"suki"},
+        {de:"mögen/lieben",kana:"すき",kanji:"好き",romaji:"suki"},
         {de:"trinken",kana:"のむ",kanji:"飲む",romaji:"nomu"},
         {de:"essen",kana:"たべる",kanji:"食べる",romaji:"taberu"}
       ]
@@ -3121,7 +3139,7 @@ function ensureSeedLevels(){
         {de:"Yakisoba",kana:"やきそば",romaji:"yakisoba"},
         {de:"Yukata (leichter Kimono)",kana:"ゆかた",kanji:"浴衣",romaji:"yukata"},
         {de:"tanzen",kana:"おどる",kanji:"踊る",romaji:"odoru"},
-        {de:"sehen/anschauen",kana:"見る",romaji:"miru"},
+        {de:"sehen/anschauen",kana:"みる",kanji:"見る",romaji:"miru"},
         {de:"hören",kana:"きく",kanji:"聞く",romaji:"kiku"},
         {de:"Spaß",kana:"たのしい",kanji:"楽しい",romaji:"tanoshii"},
         {de:"Nacht",kana:"よる",kanji:"夜",romaji:"yoru"},
@@ -3168,7 +3186,7 @@ function ensureSeedLevels(){
       [
         {de:"Bahnhof",kana:"えき",kanji:"駅",romaji:"eki"},
         {de:"Weg/Straße",kana:"みち",kanji:"道",romaji:"michi"},
-        {de:"rechts/links abbiegen",kana:"右/左にまがる",kanji:"右/左に曲がる",romaji:"migi/hidari ni magaru"},
+        {de:"rechts/links abbiegen",kana:"みぎ/ひだりにまがる",kanji:"右/左に曲がる",romaji:"migi/hidari ni magaru"},
         {de:"geradeaus",kana:"まっすぐ",romaji:"massugu"},
         {de:"Ecke",kana:"かど",kanji:"角",romaji:"kado"},
         {de:"Karte/Plan",kana:"ちず",kanji:"地図",romaji:"chizu"},
@@ -3178,7 +3196,7 @@ function ensureSeedLevels(){
         {de:"Konbini",kana:"コンビニ",romaji:"konbini"},
         {de:"da/dort drüben",kana:"あちら",romaji:"achira"},
         {de:"wo?",kana:"どこ",romaji:"doko"},
-        {de:"zeigen",kana:"見せる",romaji:"miseru"}
+        {de:"zeigen",kana:"みせる",kanji:"見せる",romaji:"miseru"}
       ]
     ),
 
@@ -3200,11 +3218,11 @@ function ensureSeedLevels(){
         {de:"Manga",kana:"まんが",kanji:"漫画",romaji:"manga"},
         {de:"Film",kana:"えいが",kanji:"映画",romaji:"eiga"},
         {de:"Kino",kana:"えいがかん",kanji:"映画館",romaji:"eigakan"},
-        {de:"lesen",kana:"読む",romaji:"yomu"},
-        {de:"ansehen",kana:"見る",romaji:"miru"},
-        {de:"jeden Woche",kana:"毎週",romaji:"maishū"},
+        {de:"lesen",kana:"よむ",kanji:"読む",romaji:"yomu"},
+        {de:"ansehen",kana:"みる",kanji:"見る",romaji:"miru"},
+        {de:"jeden Woche",kana:"まいしゅう",kanji:"毎週",romaji:"maishū"},
         {de:"Wochenende",kana:"しゅうまつ",kanji:"週末",romaji:"shūmatsu"},
-        {de:"mögen",kana:"好き",romaji:"suki"}
+        {de:"mögen",kana:"すき",kanji:"好き",romaji:"suki"}
       ]
     ),
 
@@ -3231,7 +3249,7 @@ function ensureSeedLevels(){
         {de:"winter",kana:"ふゆ",kanji:"冬",romaji:"fuyu"},
         {de:"Regenschirm",kana:"かさ",kanji:"傘",romaji:"kasa"},
         {de:"schön/hübsch",kana:"きれい",romaji:"kirei"},
-        {de:"mitnehmen",kana:"持っていく",romaji:"motte iku"}
+        {de:"mitnehmen",kana:"もっていく",kanji:"持っていく",romaji:"motte iku"}
       ]
     ),
 
@@ -3252,9 +3270,9 @@ function ensureSeedLevels(){
         {de:"Schrein",kana:"じんじゃ",kanji:"神社",romaji:"jinja"},
         {de:"erster Schreinbesuch",kana:"はつもうで",kanji:"初詣",romaji:"hatsumōde"},
         {de:"Neujahrskarte",kana:"ねんがじょう",kanji:"年賀状",romaji:"nengajō"},
-        {de:"schreiben",kana:"書く",romaji:"kaku"},
-        {de:"gehen",kana:"行く",romaji:"iku"},
-        {de:"essen",kana:"食べる",romaji:"taberu"},
+        {de:"schreiben",kana:"かく",kanji:"書く",romaji:"kaku"},
+        {de:"gehen",kana:"いく",kanji:"行く",romaji:"iku"},
+        {de:"essen",kana:"たべる",kanji:"食べる",romaji:"taberu"},
         {de:"Jahr",kana:"とし",kanji:"年",romaji:"toshi"},
         {de:"Glückwunsch!",kana:"あけましておめでとう",romaji:"akemashite omedetō"}
       ]
@@ -3846,22 +3864,10 @@ L(32,"Sporttag（スポーツの日）",
 
 
 function addProgressIfFlawless(n=1){
-  const levels = loadLevels();
-  if (!levels.length) return;
+  // Zählt nur fehlerfreie Übungen. Eine Stufe wird über den Vokabeltest abgeschlossen (siehe markLevelResult).
   const prog = loadProgress();
-  const curr = levels.find(l => l.level === prog.currentLevel);
-  if (!curr) return;
-  prog.levelProgress += n;
-  if (prog.levelProgress >= curr.tasksRequired){
-    prog.completedLevels = Array.isArray(prog.completedLevels) ? prog.completedLevels : [];
-    if (!prog.completedLevels.includes(curr.level)) prog.completedLevels.push(curr.level);
-    prog.currentLevel = Math.min(100, curr.level + 1);
-    prog.levelProgress = 0;
-    saveProgress(prog);
-    try{ alert(`🎉 Stufe ${curr.level} abgeschlossen! Willkommen in Stufe ${prog.currentLevel}.`); }catch(e){}
-  } else {
-    saveProgress(prog);
-  }
+  prog.levelProgress = (prog.levelProgress || 0) + n;
+  saveProgress(prog);
 }
 
 
@@ -4049,6 +4055,9 @@ const m = $("#app");
   if (state.route === "stories") return renderStories(m);
   if (state.route === "stats") return renderStats(m);
   if (state.route === "levels") return renderLevels(m);
+  if (state.route === "path") return renderPath(m);
+  if (state.route === "kana" || state.route.startsWith("kana/")) return renderKanaRoute(m, state.route.split("/").slice(1));
+  if (state.route.startsWith("level/test/")) return renderLevelTest(m, state.route.split("/")[2]);
 
   // ✨ neu: eigenständiges Schreib-Feature
   if (state.route === "write") return renderWriteStandalone(m);
@@ -7029,6 +7038,626 @@ localStorage.removeItem("quizcards_chats_v2"); // neuer Key
   });
 }
 
+// =========================================================
+// Lernpfad, Kana-Kurs und Stufentests (Phase 2)
+// Routen: path | kana | kana/<schrift> | kana/<schrift>/<gruppe>[/practice|/test]
+//         kana/<schrift>/test (Einstufung) | level/test/<id>
+// =========================================================
+const PATH_KEY = "quizcards_path_v1";
+const PASS_PCT = 80;        // Bestehensgrenze für Gruppen- und Stufentests
+const PLACEMENT_PCT = 90;   // Bestehensgrenze für den Einstufungstest
+
+function loadPath(){
+  try {
+    const o = JSON.parse(lsGet(PATH_KEY) || "{}");
+    return (o && typeof o === "object") ? o : {};
+  } catch(e){ return {}; }
+}
+function savePath(o){ lsSet(PATH_KEY, JSON.stringify(o || {})); }
+
+// ---------- Kana-Daten ----------
+function toKata(str){
+  return [...String(str)].map(ch => {
+    const c = ch.codePointAt(0);
+    return (c >= 0x3041 && c <= 0x3096) ? String.fromCodePoint(c + 0x60) : ch;
+  }).join("");
+}
+
+// items: [Kana, Romaji] – bei Wortgruppen [Kana, Romaji, Deutsch]
+const HIRA_GROUPS = [
+  { id:1,  head:"あ", label:"Vokale", items:[["あ","a"],["い","i"],["う","u"],["え","e"],["お","o"]],
+    note:"Fünf Vokale: a, i, u, e, o. Sie sind immer kurz und klar, ungefähr wie in „Mama“, „Biene“, „Mut“, „Bett“, „Oma“. Das う spricht man mit entspannten, nicht gerundeten Lippen." },
+  { id:2,  head:"か", label:"k", items:[["か","ka"],["き","ki"],["く","ku"],["け","ke"],["こ","ko"]],
+    note:"Jedes Zeichen ist eine Silbe: Konsonant + Vokal." },
+  { id:3,  head:"さ", label:"s", items:[["さ","sa"],["し","shi"],["す","su"],["せ","se"],["そ","so"]],
+    note:"し wird „shi“ gesprochen (wie „sch“ + i), nicht „si“." },
+  { id:4,  head:"た", label:"t", items:[["た","ta"],["ち","chi"],["つ","tsu"],["て","te"],["と","to"]],
+    note:"ち wird „chi“ (wie „tsch“ + i), つ wird „tsu“ (ts + u) gesprochen." },
+  { id:5,  head:"な", label:"n", items:[["な","na"],["に","ni"],["ぬ","nu"],["ね","ne"],["の","no"]],
+    note:"Achtung, leicht zu verwechseln: ぬ und め, ね und れ und わ." },
+  { id:6,  head:"は", label:"h", items:[["は","ha"],["ひ","hi"],["ふ","fu"],["へ","he"],["ほ","ho"]],
+    note:"ふ klingt zwischen „f“ und „h“ (Lippen locker, kein Zahn auf der Lippe). Als Partikel wird は „wa“ und へ „e“ gelesen – dazu später mehr." },
+  { id:7,  head:"ま", label:"m", items:[["ま","ma"],["み","mi"],["む","mu"],["め","me"],["も","mo"]],
+    note:"Leicht zu verwechseln: め (me) und ぬ (nu)." },
+  { id:8,  head:"や", label:"y", items:[["や","ya"],["ゆ","yu"],["よ","yo"]],
+    note:"Nur drei Zeichen: „yi“ und „ye“ gibt es im modernen Japanisch nicht." },
+  { id:9,  head:"ら", label:"r", items:[["ら","ra"],["り","ri"],["る","ru"],["れ","re"],["ろ","ro"]],
+    note:"Das japanische r liegt zwischen r, l und d: Die Zungenspitze tippt nur kurz an den Gaumen, ohne zu rollen." },
+  { id:10, head:"わ", label:"w + ん", items:[["わ","wa"],["を","wo"],["ん","n"]],
+    note:"を wird „o“ gesprochen und nur als Partikel für das Objekt benutzt. ん ist der einzige Laut ohne Vokal; er steht am Silbenende und klingt je nach Nachbarlaut wie n, m oder ng." },
+  { id:11, head:"が", label:"g + z (stimmhaft)", items:[["が","ga"],["ぎ","gi"],["ぐ","gu"],["げ","ge"],["ご","go"],["ざ","za"],["じ","ji"],["ず","zu"],["ぜ","ze"],["ぞ","zo"]],
+    note:"Zwei kleine Striche (゛, „Dakuten“) machen den Konsonanten stimmhaft: か → が, さ → ざ. じ klingt wie „dschi“." },
+  { id:12, head:"だ", label:"d", items:[["だ","da"],["で","de"],["ど","do"]],
+    extra:[["ぢ","ji"],["づ","zu"]], extraNote:"ぢ und づ klingen wie じ und ず und kommen nur in wenigen Wörtern vor. Du musst sie jetzt nur wiedererkennen.",
+    note:"Auch だ, で, ど entstehen durch゛: た → だ. Ein „di“ oder „du“ gibt es im Japanischen nicht." },
+  { id:13, head:"ば", label:"b", items:[["ば","ba"],["び","bi"],["ぶ","bu"],["べ","be"],["ぼ","bo"]],
+    note:"Mit゛wird aus dem h-Zeichen ein b-Zeichen: は → ば." },
+  { id:14, head:"ぱ", label:"p", items:[["ぱ","pa"],["ぴ","pi"],["ぷ","pu"],["ぺ","pe"],["ぽ","po"]],
+    note:"Mit dem kleinen Kreis (゜, „Handakuten“) wird aus dem h-Zeichen ein p-Zeichen: は → ぱ." },
+  { id:15, head:"きゃ", label:"Kombinationen 1 (ky, sh, ch)",
+    items:[["きゃ","kya"],["きゅ","kyu"],["きょ","kyo"],["しゃ","sha"],["しゅ","shu"],["しょ","sho"],["ちゃ","cha"],["ちゅ","chu"],["ちょ","cho"]],
+    note:"Ein kleines ゃ, ゅ oder ょ verschmilzt mit dem Zeichen davor zu EINER Silbe: き + ゃ = きゃ („kya“), nicht „ki-ya“." },
+  { id:16, head:"にゃ", label:"Kombinationen 2 (ny, hy, my, ry)",
+    items:[["にゃ","nya"],["にゅ","nyu"],["にょ","nyo"],["ひゃ","hya"],["ひゅ","hyu"],["ひょ","hyo"],["みゃ","mya"],["みゅ","myu"],["みょ","myo"],["りゃ","rya"],["りゅ","ryu"],["りょ","ryo"]],
+    note:"Gleiches Prinzip wie in der letzten Gruppe." },
+  { id:17, head:"ぎゃ", label:"Kombinationen 3 (gy, j, by, py)",
+    items:[["ぎゃ","gya"],["ぎゅ","gyu"],["ぎょ","gyo"],["じゃ","ja"],["じゅ","ju"],["じょ","jo"],["びゃ","bya"],["びゅ","byu"],["びょ","byo"],["ぴゃ","pya"],["ぴゅ","pyu"],["ぴょ","pyo"]],
+    note:"Auch hier gilt: kleines ゃゅょ = eine Silbe. じゃ, じゅ, じょ klingen „ja, ju, jo“ (dsch)." },
+  { id:18, head:"っ", label:"Sonderzeichen & erste Wörter", words:true,
+    items:[["きって","kitte","Briefmarke"],["がっこう","gakkō","Schule"],["ざっし","zasshi","Zeitschrift"],["おばあさん","obāsan","Großmutter"],
+           ["おじいさん","ojīsan","Großvater"],["とうきょう","Tōkyō","Tokio"],["せんせい","sensei","Lehrer/in"],["ありがとう","arigatō","Danke"]],
+    note:"Kleines っ verdoppelt den folgenden Konsonanten (きって = kit-te, eine kurze Pause vor dem t). Lange Vokale werden mit einem zusätzlichen Vokalzeichen geschrieben: おばあさん (aa), おじいさん (ii), とうきょう und ありがとう (ou → ō), せんせい (ei → ē). Lange Vokale sind wirklich doppelt so lang – das ändert die Bedeutung!" }
+];
+
+const KATA_WORDS = [
+  ["コーヒー","kōhī","Kaffee"],["ビール","bīru","Bier"],["ケーキ","kēki","Kuchen"],["パーティー","pātī","Party"],
+  ["テレビ","terebi","Fernseher"],["ホテル","hoteru","Hotel"],["サッカー","sakkā","Fußball"],["ドイツ","doitsu","Deutschland"]
+];
+const KATA_EXTRA = [
+  ["ファ","fa"],["フィ","fi"],["フェ","fe"],["フォ","fo"],["ティ","ti"],["ディ","di"],
+  ["ウィ","wi"],["ウェ","we"],["ウォ","wo"],["シェ","she"],["ジェ","je"],["チェ","che"]
+];
+
+const KATA_GROUPS = HIRA_GROUPS.map(g => {
+  const k = {
+    id: g.id, head: toKata(g.head), label: g.label, words: !!g.words, note: g.note,
+    items: g.words ? KATA_WORDS : g.items.map(([a,b]) => [toKata(a), b])
+  };
+  if (g.extra) { k.extra = g.extra.map(([a,b]) => [toKata(a), b]); k.extraNote = g.extraNote; }
+  if (g.id === 1) k.note = "Katakana stehen für Fremdwörter, Namen und Lautmalerei (z. B. コーヒー, ドイツ). Sie haben dieselben Laute wie Hiragana, sehen aber eckiger aus. " + g.note;
+  if (g.id === 18) {
+    k.head = "ー";
+    k.extra = KATA_EXTRA;
+    k.extraNote = "Diese Lautkombinationen gibt es nur in Katakana (für Fremdwörter). Du musst sie jetzt nur wiedererkennen.";
+    k.note = "In Katakana wird ein langer Vokal mit dem Dehnungsstrich ー geschrieben (コーヒー = kōhī). Das kleine ッ verdoppelt wie in Hiragana den folgenden Konsonanten (サッカー = sak-kā).";
+  }
+  return k;
+});
+
+const KANA = {
+  hiragana: { name: "Hiragana", groups: HIRA_GROUPS },
+  katakana: { name: "Katakana", groups: KATA_GROUPS }
+};
+
+function kanaGroupTitle(script, g){
+  return `${g.id}. ${g.head} – ${g.label}`;
+}
+
+// ---------- Kana-Fortschritt ----------
+function kanaKey(script, gid){ return script + "-" + gid; }
+function isKanaPassed(script, gid){
+  const k = (loadPath().kana || {})[kanaKey(script, gid)];
+  return !!(k && k.passed);
+}
+function kanaBest(script, gid){
+  const k = (loadPath().kana || {})[kanaKey(script, gid)];
+  return k ? (k.best || 0) : null;
+}
+function kanaStats(script){
+  const groups = KANA[script].groups;
+  const passed = groups.filter(g => isKanaPassed(script, g.id)).length;
+  return { passed, total: groups.length };
+}
+function hiraBasicDone(){
+  for (let i = 1; i <= 10; i++) if (!isKanaPassed("hiragana", i)) return false;
+  return true;
+}
+function kataUnlocked(){
+  return hiraBasicDone() || !!loadPath().forceKata;
+}
+function isKanaOpen(script, gid){
+  if (script === "katakana" && !kataUnlocked()) return false;
+  return gid === 1 || isKanaPassed(script, gid - 1) || isKanaPassed(script, gid);
+}
+function saveKanaResult(script, gid, pct, passed){
+  const p = loadPath();
+  p.kana = p.kana || {};
+  const key = kanaKey(script, gid);
+  const prev = p.kana[key] || { best: 0, passed: false };
+  p.kana[key] = { best: Math.max(prev.best || 0, pct), passed: !!(prev.passed || passed), at: Date.now() };
+  savePath(p);
+}
+function markScriptPassed(script, pct){
+  const p = loadPath();
+  p.kana = p.kana || {};
+  KANA[script].groups.forEach(g => {
+    const key = kanaKey(script, g.id);
+    const prev = p.kana[key] || { best: 0 };
+    p.kana[key] = { best: Math.max(prev.best || 0, pct), passed: true, at: Date.now() };
+  });
+  savePath(p);
+}
+
+// ---------- Fragen bauen ----------
+function pickDistractors(correct, candidates, n){
+  const seen = new Set([correct]);
+  const out = [];
+  for (const c of shuffle(candidates)) {
+    if (seen.has(c)) continue;
+    seen.add(c);
+    out.push(c);
+    if (out.length >= n) break;
+  }
+  return out;
+}
+
+// alle abfragbaren Einzelzeichen einer Schrift bis einschließlich Gruppe maxGid
+function kanaPool(script, maxGid){
+  return KANA[script].groups
+    .filter(g => !g.words && g.id <= maxGid)
+    .flatMap(g => g.items.map(([k, r]) => ({ k, r, gid: g.id })));
+}
+
+function kanaQuestion(dir, it, pool){
+  if (dir === "k2r") {
+    return { prompt: it.k, big: true, say: it.k, sub: "Wie liest man das?", answer: it.r,
+             options: shuffle([it.r, ...pickDistractors(it.r, pool.map(x => x.r), 3)]), label: `${it.k} = ${it.r}` };
+  }
+  return { prompt: it.r, big: true, sub: "Welches Zeichen ist das?", answer: it.k,
+           options: shuffle([it.k, ...pickDistractors(it.k, pool.map(x => x.k), 3)]), optionsBig: true, label: `${it.r} = ${it.k}` };
+}
+
+function wordQuestion(dir, w, words){
+  const [k, r, de] = w;
+  if (dir === "k2de") {
+    return { prompt: k, big: true, say: k, sub: "Was bedeutet das?", answer: de,
+             options: shuffle([de, ...pickDistractors(de, words.map(x => x[2]), 3)]), label: `${k} (${r}) = ${de}` };
+  }
+  return { prompt: de, big: false, sub: "Wie schreibt man das?", answer: k,
+           options: shuffle([k, ...pickDistractors(k, words.map(x => x[0]), 3)]), optionsBig: true, label: `${de} = ${k} (${r})` };
+}
+
+// mode: "practice" (nur die Gruppe) | "test" (Gruppe + 3 Wiederholungen aus früheren Gruppen)
+function buildKanaQuestions(script, gid, mode){
+  const g = KANA[script].groups.find(x => x.id === gid);
+  if (!g) return [];
+  let qs = [];
+  if (g.words) {
+    g.items.forEach(w => {
+      qs.push(wordQuestion("k2de", w, g.items));
+      qs.push(wordQuestion("de2k", w, g.items));
+    });
+    return shuffle(qs);
+  }
+  const known = kanaPool(script, gid);
+  g.items.forEach(([k, r]) => {
+    const it = { k, r, gid };
+    qs.push(kanaQuestion("k2r", it, known));
+    qs.push(kanaQuestion("r2k", it, known));
+  });
+  qs = shuffle(qs);
+  if (mode === "test" && gid > 1) {
+    const earlier = kanaPool(script, gid - 1);
+    shuffle(earlier).slice(0, 3).forEach(it => {
+      const q = kanaQuestion(Math.random() < 0.5 ? "k2r" : "r2k", it, known);
+      q.review = true;
+      qs.splice(Math.floor(Math.random() * (qs.length + 1)), 0, q);
+    });
+  }
+  return qs;
+}
+
+function buildPlacementQuestions(script){
+  const all = kanaPool(script, 99);
+  return shuffle(all).slice(0, 20).map(it => kanaQuestion(Math.random() < 0.5 ? "k2r" : "r2k", it, all));
+}
+
+// ---------- Quiz-Ablauf (Kana-Tests und Stufentests) ----------
+// cfg: { title, questions, graded, passPct, backRoute, onFinish(pct, passed), buttons(pct, passed) -> [{label, route, primary}] }
+function runQuizSession(mount, cfg){
+  const qs = cfg.questions;
+  if (!qs || !qs.length) {
+    mount.innerHTML = `<h2>${escapeHTML(cfg.title)}</h2><div class="card"><p>Dafür gibt es noch nicht genug Material.</p>
+      <div class="actions"><button onclick="goto('${cfg.backRoute}')">Zurück</button></div></div>`;
+    return;
+  }
+  let i = 0, right = 0;
+  const wrong = [];
+
+  function show(){
+    const q = qs[i];
+    mount.innerHTML = `
+      <h2>${escapeHTML(cfg.title)}</h2>
+      <div class="card">
+        <div class="hint">Frage ${i + 1} / ${qs.length}${q.review ? " · Wiederholung" : ""}</div>
+        <div class="progress"><div style="width:${Math.round(100 * i / qs.length)}%;"></div></div>
+        <div class="${q.big ? "big-kana" : "quiz-prompt"}">${escapeHTML(q.prompt)}</div>
+        ${q.sub ? `<div class="hint" style="text-align:center;">${escapeHTML(q.sub)}</div>` : ""}
+        ${q.say ? `<div style="text-align:center; margin-top:.4rem;"><button class="mini" id="qSay" type="button" aria-label="Vorlesen">🔊</button></div>` : ""}
+        <div class="kana-opts${q.optionsBig ? " kana-opts-big" : ""}" id="qOpts"></div>
+        <div id="qFeed" class="hint" style="min-height:1.6em; text-align:center; margin-top:.5rem;"></div>
+        <div class="actions" style="margin-top:.5rem;">
+          <button id="qNext" class="primary" style="display:none;"></button>
+          <button onclick="goto('${cfg.backRoute}')">Abbrechen</button>
+        </div>
+      </div>`;
+    const say = $("#qSay");
+    if (say) say.onclick = () => speak(q.say);
+    const opts = $("#qOpts");
+    q.options.forEach(opt => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = opt;
+      b.onclick = () => answer(opt, b);
+      opts.appendChild(b);
+    });
+  }
+
+  function answer(opt, btn){
+    const q = qs[i];
+    const ok = opt === q.answer;
+    if (ok) right++; else wrong.push(q);
+    $$("#qOpts button").forEach(b => {
+      b.disabled = true;
+      if (b.textContent === q.answer) b.classList.add("ok");
+    });
+    if (!ok) btn.classList.add("bad");
+    $("#qFeed").textContent = ok ? "Richtig!" : `Leider falsch. Richtig ist: ${q.answer}`;
+    if (q.say) speak(q.say);
+    const next = $("#qNext");
+    next.textContent = (i < qs.length - 1) ? "Weiter" : "Ergebnis";
+    next.style.display = "";
+    next.onclick = () => { i++; if (i < qs.length) show(); else finish(); };
+    next.focus();
+  }
+
+  function finish(){
+    const pct = Math.round(100 * right / qs.length);
+    const passed = cfg.graded ? pct >= cfg.passPct : null;
+    if (cfg.onFinish) { try { cfg.onFinish(pct, passed); } catch(e){} }
+    const btns = (cfg.buttons ? cfg.buttons(pct, passed) : [])
+      .map(b => `<button${b.primary ? ' class="primary"' : ""} onclick="goto('${b.route}')">${escapeHTML(b.label)}</button>`).join("");
+    mount.innerHTML = `
+      <h2>${escapeHTML(cfg.title)}</h2>
+      <div class="card">
+        <h3>Ergebnis: ${right} / ${qs.length} (${pct} %)</h3>
+        ${cfg.graded
+          ? (passed
+              ? `<p><span class="badge">Bestanden</span> Stark! Der nächste Schritt ist freigeschaltet.</p>`
+              : `<p><span class="badge">Noch nicht bestanden</span> Du brauchst mindestens ${cfg.passPct} %. Schau dir die Zeichen noch einmal an und versuche es erneut.</p>`)
+          : `<p class="hint">Das war eine Übung, sie zählt nicht für den Fortschritt.</p>`}
+        ${wrong.length
+          ? `<h3>Zum Wiederholen</h3><ul>${wrong.map(q => `<li>${escapeHTML(q.label || (q.prompt + " → " + q.answer))}</li>`).join("")}</ul>`
+          : `<p>Keine Fehler. 🎉</p>`}
+        <div class="actions" style="margin-top:.5rem;">${btns}</div>
+      </div>`;
+  }
+
+  show();
+}
+
+// ---------- Kachel-Darstellung ----------
+function kanaTiles(items, withMeaning){
+  return `<div class="kana-grid">${items.map(([k, r, de]) => `
+    <button type="button" class="kana-tile" data-say="${escapeHTML(k)}" title="Anhören">
+      <span class="kana">${escapeHTML(k)}</span>
+      <span class="rom">${escapeHTML(r)}</span>
+      ${withMeaning && de ? `<span class="de">${escapeHTML(de)}</span>` : ""}
+    </button>`).join("")}</div>`;
+}
+function bindSay(root){
+  $$("[data-say]", root).forEach(el => { el.onclick = () => speak(el.dataset.say); });
+}
+
+// ---------- Seiten: Kana ----------
+function renderKanaRoute(mount, parts){
+  const script = parts[0];
+  if (!KANA[script]) return renderKanaHome(mount);
+  if (parts[1] === undefined) return renderKanaScript(mount, script);
+  if (parts[1] === "test") return renderKanaPlacement(mount, script);
+  const gid = Number(parts[1]);
+  const g = KANA[script].groups.find(x => x.id === gid);
+  if (!g) return renderKanaScript(mount, script);
+  if (!isKanaOpen(script, gid)) return renderKanaScript(mount, script);
+  if (parts[2] === "practice" || parts[2] === "test") return renderKanaGroupQuiz(mount, script, g, parts[2]);
+  return renderKanaGroup(mount, script, g);
+}
+
+function renderKanaHome(mount){
+  const h = kanaStats("hiragana"), k = kanaStats("katakana");
+  mount.innerHTML = `
+    <h2>Kana</h2>
+    <p class="hint">Kana sind die beiden Silbenschriften des Japanischen. Beginne mit Hiragana, sie kommt in jedem Satz vor.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Hiragana (ひらがな)</h3>
+        <div class="hint">${h.passed} / ${h.total} Gruppen bestanden</div>
+        <div class="progress"><div style="width:${Math.round(100 * h.passed / h.total)}%;"></div></div>
+        <div class="actions" style="margin-top:.5rem;"><button class="primary" onclick="goto('kana/hiragana')">Öffnen</button></div>
+      </div>
+      <div class="card">
+        <h3>Katakana (カタカナ)</h3>
+        <div class="hint">${k.passed} / ${k.total} Gruppen bestanden${kataUnlocked() ? "" : " · gesperrt, bis Hiragana-Gruppen 1–10 bestanden sind"}</div>
+        <div class="progress"><div style="width:${Math.round(100 * k.passed / k.total)}%;"></div></div>
+        <div class="actions" style="margin-top:.5rem;"><button class="primary" onclick="goto('kana/katakana')">Öffnen</button></div>
+      </div>
+    </div>
+    <div class="actions" style="margin-top:1rem;"><button onclick="goto('path')">Zurück zum Lernpfad</button></div>`;
+}
+
+function renderKanaScript(mount, script){
+  const S = KANA[script];
+  const st = kanaStats(script);
+  const locked = (script === "katakana" && !kataUnlocked());
+  mount.innerHTML = `
+    <h2>${S.name}</h2>
+    <div class="card">
+      <div class="hint">${st.passed} / ${st.total} Gruppen bestanden</div>
+      <div class="progress"><div style="width:${Math.round(100 * st.passed / st.total)}%;"></div></div>
+      <p class="hint" style="margin-top:.5rem;">Lerne eine Gruppe nach der anderen: Zeichen ansehen, anhören, üben, dann den Test (mindestens ${PASS_PCT} %) bestehen.</p>
+    </div>
+    ${locked ? `
+      <div class="card">
+        <h3>Noch gesperrt</h3>
+        <p>Katakana wird freigeschaltet, sobald die Hiragana-Gruppen 1–10 bestanden sind.</p>
+        <div class="actions">
+          <button class="primary" onclick="goto('kana/hiragana')">Zu Hiragana</button>
+          <button onclick="unlockKatakana()">Trotzdem freischalten</button>
+        </div>
+      </div>` : `
+    <div class="grid" style="margin-top:.75rem;">
+      ${S.groups.map(g => {
+        const open = isKanaOpen(script, g.id);
+        const done = isKanaPassed(script, g.id);
+        const best = kanaBest(script, g.id);
+        return `
+        <div class="card${open ? "" : " step-locked"}">
+          <h3>${escapeHTML(kanaGroupTitle(script, g))}</h3>
+          <div class="kana-preview">${escapeHTML(g.items.slice(0, 5).map(i => i[0]).join(" "))}${g.items.length > 5 ? " …" : ""}</div>
+          ${done ? `<span class="badge">Bestanden${best != null ? " · " + best + " %" : ""}</span>`
+                 : (open ? `<span class="badge">Als Nächstes</span>` : `<span class="hint">🔒 Zuerst Gruppe ${g.id - 1} bestehen</span>`)}
+          <div class="actions" style="margin-top:.5rem;">
+            ${open ? `<button class="primary" onclick="goto('kana/${script}/${g.id}')">${done ? "Wiederholen" : "Lernen"}</button>` : ""}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="card" style="margin-top:.75rem;">
+      <h3>Kennst du ${S.name} schon?</h3>
+      <p class="hint">Der Einstufungstest hat 20 Fragen über alle Zeichen. Mit mindestens ${PLACEMENT_PCT} % werden alle Gruppen als bestanden markiert.</p>
+      <div class="actions"><button onclick="goto('kana/${script}/test')">Einstufungstest starten</button></div>
+    </div>
+    <details class="card" style="margin-top:.75rem;">
+      <summary><strong>Gesamte Zeichentabelle ansehen</strong></summary>
+      ${S.groups.filter(g => !g.words).map(g => `<h3>${escapeHTML(kanaGroupTitle(script, g))}</h3>${kanaTiles(g.items)}`).join("")}
+    </details>`}
+    <div class="actions" style="margin-top:1rem;"><button onclick="goto('path')">Zurück zum Lernpfad</button></div>`;
+  bindSay(mount);
+}
+
+function unlockKatakana(){
+  const p = loadPath();
+  p.forceKata = true;
+  savePath(p);
+  goto("kana/katakana");
+}
+
+function renderKanaGroup(mount, script, g){
+  const done = isKanaPassed(script, g.id);
+  const nextOpen = g.id < KANA[script].groups.length;
+  mount.innerHTML = `
+    <h2>${escapeHTML(kanaGroupTitle(script, g))}</h2>
+    <p class="hint">Tippe ein Zeichen an, um es anzuhören.</p>
+    ${kanaTiles(g.items, !!g.words)}
+    ${g.extra ? `<h3>Zum Wiedererkennen</h3><p class="hint">${escapeHTML(g.extraNote || "")}</p>${kanaTiles(g.extra)}` : ""}
+    <div class="card" style="margin-top:.75rem;"><strong>Gut zu wissen</strong><p style="margin:.3rem 0 0;">${escapeHTML(g.note || "")}</p></div>
+    <div class="actions" style="margin-top:.75rem;">
+      <button onclick="goto('kana/${script}/${g.id}/practice')">Üben (zählt nicht)</button>
+      ${g.words ? "" : `<button onclick="kanaWrite('${script}', ${g.id})">Schreiben üben</button>`}
+      <button class="primary" onclick="goto('kana/${script}/${g.id}/test')">Test (mind. ${PASS_PCT} %)</button>
+    </div>
+    <div class="actions" style="margin-top:.5rem;">
+      ${done && nextOpen ? `<button onclick="goto('kana/${script}/${g.id + 1}')">Weiter zu Gruppe ${g.id + 1}</button>` : ""}
+      <button onclick="goto('kana/${script}')">Zur Übersicht</button>
+    </div>`;
+  bindSay(mount);
+}
+
+function renderKanaGroupQuiz(mount, script, g, mode){
+  const graded = (mode === "test");
+  const total = KANA[script].groups.length;
+  runQuizSession(mount, {
+    title: `${KANA[script].name} ${g.id}: ${graded ? "Test" : "Übung"}`,
+    questions: buildKanaQuestions(script, g.id, mode),
+    graded, passPct: PASS_PCT,
+    backRoute: `kana/${script}/${g.id}`,
+    onFinish: (pct, passed) => { if (graded) saveKanaResult(script, g.id, pct, passed); },
+    buttons: (pct, passed) => {
+      const b = [{ label: "Nochmal", route: `kana/${script}/${g.id}/${mode}` }];
+      if (passed && g.id < total) b.unshift({ label: `Weiter zu Gruppe ${g.id + 1}`, route: `kana/${script}/${g.id + 1}`, primary: true });
+      b.push({ label: "Zur Gruppe", route: `kana/${script}/${g.id}` });
+      return b;
+    }
+  });
+}
+
+function renderKanaPlacement(mount, script){
+  if (script === "katakana" && !kataUnlocked()) { goto("kana/katakana"); return; }
+  runQuizSession(mount, {
+    title: `${KANA[script].name}: Einstufungstest`,
+    questions: buildPlacementQuestions(script),
+    graded: true, passPct: PLACEMENT_PCT,
+    backRoute: `kana/${script}`,
+    onFinish: (pct, passed) => { if (passed) markScriptPassed(script, pct); },
+    buttons: (pct, passed) => passed
+      ? [{ label: "Zum Lernpfad", route: "path", primary: true }, { label: "Zur Übersicht", route: `kana/${script}` }]
+      : [{ label: "Nochmal versuchen", route: `kana/${script}/test` }, { label: "Von vorn lernen", route: `kana/${script}`, primary: true }]
+  });
+}
+
+// Schreibübung mit den Zeichen einer Gruppe vorbefüllen
+function kanaWrite(script, gid){
+  const g = KANA[script].groups.find(x => x.id === gid);
+  if (!g) return;
+  state.write = {
+    items: g.items.map(([k, r]) => ({ de: r, romaji: r, kana: k, kanji: "" })),
+    i: 0, target: "kana"
+  };
+  goto("write");
+}
+
+// ---------- Stufen: Vokabeltest ----------
+function contentLevels(){
+  ensureSeedLevels();
+  return loadLevels().filter(l =>
+    Array.isArray(l.vocab) && l.vocab.length && !String(l.story_ja || "").startsWith("（準備中）"));
+}
+function isLevelPassed(lvl){
+  const t = (loadPath().levelTests || {})[lvl.id];
+  return !!((t && t.passed) || (loadProgress().completedLevels || []).includes(lvl.level));
+}
+function levelBest(lvl){
+  const t = (loadPath().levelTests || {})[lvl.id];
+  return t ? (t.best || 0) : null;
+}
+// currentLevel = erste Stufe mit Inhalt, deren Test noch nicht bestanden ist
+function syncLevelProgress(){
+  const levels = contentLevels();
+  if (!levels.length) return null;
+  const prog = loadProgress();
+  const first = levels.find(l => !isLevelPassed(l)) || levels[levels.length - 1];
+  if (prog.currentLevel !== first.level) {
+    prog.currentLevel = first.level;
+    saveProgress(prog);
+  }
+  return first;
+}
+function markLevelResult(lvl, pct){
+  const p = loadPath();
+  p.levelTests = p.levelTests || {};
+  const prev = p.levelTests[lvl.id] || { best: 0, passed: false };
+  const passed = prev.passed || pct >= PASS_PCT;
+  p.levelTests[lvl.id] = { best: Math.max(prev.best || 0, pct), passed, at: Date.now() };
+  savePath(p);
+  if (passed) {
+    const prog = loadProgress();
+    prog.completedLevels = Array.isArray(prog.completedLevels) ? prog.completedLevels : [];
+    if (!prog.completedLevels.includes(lvl.level)) prog.completedLevels.push(lvl.level);
+    saveProgress(prog);
+    syncLevelProgress();
+  }
+}
+
+function buildLevelTest(lvl){
+  const usable = v => v && v.de && v.kana;
+  const own = (lvl.vocab || []).filter(usable);
+  if (own.length < 4) return [];
+  // Zusatz-Falschantworten aus den Nachbarstufen
+  const near = contentLevels().filter(l => l.id !== lvl.id && Math.abs(l.level - lvl.level) <= 3)
+    .flatMap(l => l.vocab.filter(usable));
+  const pool = [...own, ...near];
+  return shuffle(own).slice(0, 10).map(v => {
+    if (Math.random() < 0.5) {
+      return { prompt: v.de, big: false, sub: "Wie sagt man das auf Japanisch?", answer: v.kana,
+               options: shuffle([v.kana, ...pickDistractors(v.kana, pool.map(x => x.kana), 3)]), optionsBig: true,
+               label: `${v.de} = ${v.kana}${v.romaji ? " (" + v.romaji + ")" : ""}` };
+    }
+    return { prompt: v.kana, big: true, say: v.kana, sub: v.romaji || "Was bedeutet das?", answer: v.de,
+             options: shuffle([v.de, ...pickDistractors(v.de, pool.map(x => x.de), 3)]),
+             label: `${v.kana}${v.romaji ? " (" + v.romaji + ")" : ""} = ${v.de}` };
+  });
+}
+
+function renderLevelTest(mount, id){
+  const lvl = loadLevels().find(l => l.id === id);
+  if (!lvl) { mount.innerHTML = `<p>Level nicht gefunden.</p>`; return; }
+  const levels = contentLevels();
+  const idx = levels.findIndex(l => l.id === lvl.id);
+  const next = idx >= 0 ? levels[idx + 1] : null;
+  runQuizSession(mount, {
+    title: `Stufe ${lvl.level}: Vokabeltest`,
+    questions: buildLevelTest(lvl),
+    graded: true, passPct: PASS_PCT,
+    backRoute: `level/read/${lvl.id}`,
+    onFinish: (pct) => markLevelResult(lvl, pct),
+    buttons: (pct, passed) => {
+      const b = [{ label: "Nochmal", route: `level/test/${lvl.id}` }, { label: "Zur Stufe", route: `level/read/${lvl.id}` }];
+      if (passed && next) b.unshift({ label: `Weiter zu Stufe ${next.level}`, route: `level/read/${next.id}`, primary: true });
+      return b;
+    }
+  });
+}
+
+// ---------- Lernpfad-Übersicht ----------
+function nextStep(){
+  const hira = KANA.hiragana.groups.find(g => !isKanaPassed("hiragana", g.id));
+  if (hira) return { label: `Hiragana, Gruppe ${hira.id}: ${hira.head} – ${hira.label}`,
+                     desc: "Zeichen ansehen, üben und den Test bestehen.", route: `kana/hiragana/${hira.id}` };
+  const kata = KANA.katakana.groups.find(g => !isKanaPassed("katakana", g.id));
+  if (kata && kataUnlocked()) return { label: `Katakana, Gruppe ${kata.id}: ${kata.head} – ${kata.label}`,
+                     desc: "Die Schrift für Fremdwörter und Namen.", route: `kana/katakana/${kata.id}` };
+  const lvl = syncLevelProgress();
+  if (lvl && !isLevelPassed(lvl)) return { label: `Stufe ${lvl.level}: ${lvl.title}`,
+                     desc: "Story lesen, Vokabeln lernen und den Vokabeltest bestehen.", route: `level/read/${lvl.id}` };
+  return null;
+}
+
+function renderPath(mount){
+  const h = kanaStats("hiragana"), k = kanaStats("katakana");
+  const levels = contentLevels();
+  const lvlDone = levels.filter(isLevelPassed).length;
+  const step = nextStep();
+  const stage = (nr, title, text, done, total, route, extra, disabled) => `
+    <div class="card${disabled ? " step-locked" : ""}">
+      <h3>${nr}. ${title}</h3>
+      <p class="hint">${text}</p>
+      ${total ? `<div class="hint">${done} / ${total} abgeschlossen</div>
+      <div class="progress"><div style="width:${Math.round(100 * done / total)}%;"></div></div>` : ""}
+      <div class="actions" style="margin-top:.5rem;">${route ? `<button onclick="goto('${route}')">Öffnen</button>` : ""}${extra || ""}</div>
+    </div>`;
+  mount.innerHTML = `
+    <h2>Lernpfad</h2>
+    <div class="card">
+      <h3>So lernst du</h3>
+      <ol>
+        <li>Jeden Tag kurz: zuerst Altes wiederholen, dann etwas Neues lernen, am Ende üben.</li>
+        <li>Immer nur der nächste Schritt. Der große Knopf unten bringt dich dorthin.</li>
+        <li>Ein Schritt zählt erst, wenn du den Test mit mindestens ${PASS_PCT} % bestanden hast.</li>
+      </ol>
+    </div>
+    <div class="card" style="margin-top:.75rem;">
+      <h3>Als Nächstes</h3>
+      ${step
+        ? `<p><strong>${escapeHTML(step.label)}</strong><br><span class="hint">${escapeHTML(step.desc)}</span></p>
+           <div class="actions"><button class="primary" onclick="goto('${step.route}')">Weiter</button></div>`
+        : `<p>Du hast alle bisher verfügbaren Schritte geschafft. Neue Stufen folgen, bis dahin helfen Sets, Chats und Spiele beim Wiederholen.</p>`}
+    </div>
+    <h3 style="margin-top:1rem;">Alle Etappen</h3>
+    <div class="grid">
+      ${stage(1, "Hiragana", "Die erste Silbenschrift. Ohne sie geht nichts.", h.passed, h.total, "kana/hiragana")}
+      ${stage(2, "Katakana", "Die Schrift für Fremdwörter und Namen." + (kataUnlocked() ? "" : " Wird nach Hiragana-Gruppen 1–10 freigeschaltet."), k.passed, k.total, "kana/katakana", "", !kataUnlocked())}
+      ${stage(3, "Stufen: Geschichten & Wortschatz", "Kurze Geschichten, Vokabeln und ein Test pro Stufe. Hinweis: Die Texte enthalten schon Kanji.", lvlDone, levels.length, "levels")}
+      ${stage(4, "Grammatik & Kanji", "In Vorbereitung.", 0, 0, "", "", true)}
+    </div>
+    <h3 style="margin-top:1rem;">Zum Üben nebenbei</h3>
+    <div class="actions">
+      <button onclick="goto('kana')">Kana-Tabelle</button>
+      <button onclick="goto('chats')">Chats</button>
+      <button onclick="goto('write')">Schreibübung</button>
+      <button onclick="goto('home')">Meine Sets</button>
+    </div>`;
+}
+
 // Init
 load();
 if (!state.sets.length) ensureSeedSets();   // nur beim ersten Start, damit die Startseite nicht leer ist (gelöschte Sets kommen so nicht zurück)
@@ -7078,6 +7707,7 @@ function levelsToStories(levels){
 
       // Nur Storys mit japanischem Text aufnehmen
       if (!ja) return null;
+      if (String(ja).startsWith("（準備中）")) return null;   // Platzhalter-Stufen nicht anzeigen
 
       return {
         id: "lvl-"+(lvl.id ?? lvlNo ?? title),   // stabile ID aus ID/Level/Titel
@@ -7562,46 +8192,53 @@ function ensureFocusScroll(selector){
 
 function renderLevels(mount){
   ensureSeedLevels();
-  const levels = loadLevels();
+  const levels = contentLevels();
+  const curr = syncLevelProgress();
   const prog = loadProgress();
 
-  // ✅ Sicherheitsnetz: falls aus irgendeinem Grund noch leer
-  if (!levels.length) {
+  if (!levels.length || !curr) {
     mount.innerHTML = `<h2>Level-Modus</h2>
       <div class="card"><p>Keine Leveldaten gefunden. Seeds wurden initialisiert. Öffne den Level-Modus erneut.</p></div>`;
     return;
   }
 
-  const curr = levels.find(l => l.level === prog.currentLevel) || levels[0];
-
+  const doneCount = levels.filter(isLevelPassed).length;
   mount.innerHTML = `
     <h2>Level-Modus</h2>
+    ${hiraBasicDone() ? "" : `
+    <div class="card">
+      <p><strong>Tipp:</strong> Die Geschichten sind auf Japanisch geschrieben. Lerne zuerst Hiragana im Lernpfad, dann verstehst du viel mehr.</p>
+      <div class="actions"><button class="primary" onclick="goto('path')">Zum Lernpfad</button></div>
+    </div>`}
     <div class="card level-card">
-      <h3>Aktuelle Stufe: ${prog.currentLevel} – ${escapeHTML((curr && curr.title) || "")}</h3>
-      <div>Aufgaben: ${prog.levelProgress} / ${curr.tasksRequired}</div>
-      <div class="progress"><div style="width:${Math.min(100, Math.floor(100*prog.levelProgress/curr.tasksRequired))}%;"></div></div>
+      <h3>Aktuelle Stufe: ${curr.level} – ${escapeHTML(curr.title || "")}</h3>
+      <div>Stufen abgeschlossen: ${doneCount} / ${levels.length}</div>
+      <div class="progress"><div style="width:${Math.round(100 * doneCount / levels.length)}%;"></div></div>
+      <div class="hint">Zum Abschluss der Stufe: Vokabeltest mit mindestens ${PASS_PCT} %.</div>
       <div class="actions" style="margin-top:.5rem;">
         <button class="primary" onclick="goto('level/read/${curr.id}')">Story & Vokabeln öffnen</button>
+        <button onclick="goto('level/test/${curr.id}')">Vokabeltest</button>
         <button onclick="goto('home')">Training starten (Sets/Quiz/Match…)</button>
       </div>
     </div>
     <h3>Alle Stufen</h3>
     <div class="grid">
-      ${levels.slice(0,100).map(l => {
-        const done = (prog.completedLevels||[]).includes(l.level);
-        const isCurr = l.level === prog.currentLevel;
+      ${levels.map(l => {
+        const done = isLevelPassed(l);
+        const best = levelBest(l);
+        const isCurr = l.level === curr.level;
         return `
           <div class="card level-card">
-            <h3>${l.level}. ${escapeHTML(l.title||"")}</h3>
-            <div class="hint">Ziel: ${l.tasksRequired} Aufgaben</div>
-            ${isCurr ? `<div class="badge">Aktiv</div>` : (done ? `<div class="badge">Abgeschlossen</div>`:"")}
+            <h3>${l.level}. ${escapeHTML(l.title || "")}</h3>
+            <div class="hint">${(l.vocab || []).length} Vokabeln</div>
+            ${done ? `<div class="badge">Bestanden${best != null ? " · " + best + " %" : ""}</div>` : (isCurr ? `<div class="badge">Aktiv</div>` : "")}
             <div class="actions" style="margin-top:.5rem;">
               <button onclick="goto('level/read/${l.id}')">Ansehen</button>
             </div>
-          </div>
-        `;
+          </div>`;
       }).join("")}
     </div>
+    <p class="hint" style="margin-top:1rem;">Weitere Stufen folgen.</p>
   `;
 }
 
@@ -7655,11 +8292,12 @@ ${
     </div>
 
     <div class="actions">
-      ${isCurr ? `<button class="primary" onclick="goto('levels')">Zur aktiven Stufe</button>` : ``}
+      <button class="primary" onclick="goto('level/test/${lvl.id}')">Vokabeltest (mind. ${PASS_PCT} %)</button>
+      ${isLevelPassed(lvl) ? `<span class="badge">Bestanden · ${levelBest(lvl) != null ? levelBest(lvl) : "–"} %</span>` : ``}
       <button onclick="startTrainingForLevel('${lvl.id}','learn')">Lernen</button>
       <button onclick="startTrainingForLevel('${lvl.id}','quiz')">Quiz</button>
       <button onclick="startTrainingForLevel('${lvl.id}','match')">Match 60s</button>
-      <button class="primary" onclick="startTrainingForLevel('${lvl.id}','spell')">Buchstabieren</button>
+      <button onclick="startTrainingForLevel('${lvl.id}','spell')">Buchstabieren</button>
       <button onclick="goto('levels')">Zurück</button>
     </div>
   `;
