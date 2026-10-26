@@ -2146,6 +2146,10 @@ nav {
 .kana-opts button.bad { background:rgba(233,138,165,.35); border-color:var(--lavender); color:var(--ink); }
 .step-locked { opacity:.55; }
 #qSay { width:auto; min-width:4rem; padding:.3rem 1.2rem; }
+.story-text-ja { line-height:2.1; }
+.story-text-ja ruby rt, ruby rt { font-size:.5em; color:var(--muted); }
+.furi-toggle { display:inline-flex; align-items:center; gap:.4rem; font-size:.9rem; color:var(--muted); margin-bottom:.4rem; }
+.furi-toggle input { width:auto; }
 </style>
 
   
@@ -3028,7 +3032,7 @@ function ensureSeedLevels(){
         {de:"Ich heiße …",kana:"わたしは…です",romaji:"watashi wa … desu"},
         {de:"Name",kana:"なまえ",kanji:"名前",romaji:"namae"},
         {de:"Student/in",kana:"がくせい",kanji:"学生",romaji:"gakusei"},
-        {de:"aus … kommen",kana:"…からきました",kanji:"来ました",romaji:"… kara kimashita"},
+        {de:"aus … kommen",kana:"…からきました",kanji:"…から来ました",romaji:"… kara kimashita"},
         {de:"Deutschland",kana:"ドイツ",romaji:"Doitsu"},
         {de:"Tschüss",kana:"さようなら",romaji:"sayōnara"},
         {de:"Bis später",kana:"またね",romaji:"mata ne"}
@@ -3968,7 +3972,7 @@ function load(){
 }
 
 // Macht japanischen Text klickbar und verbindet ihn mit Story-Vokabeln
-function buildJaWithVocab(textJa, vocab) {
+function buildJaWithVocab(textJa, vocab, furi) {
   if (!textJa) return "";
 
   const safeVocab = Array.isArray(vocab) ? vocab : [];
@@ -3989,6 +3993,12 @@ function buildJaWithVocab(textJa, vocab) {
 
   let html = "";
   let i = 0;
+  let plain = "";   // zusammenhängender Text zwischen Vokabel-Treffern
+  const flush = () => {
+    if (!plain) return;
+    html += furi ? furiAnnotate(plain).html : escapeHTML(plain);
+    plain = "";
+  };
 
   while (i < textJa.length) {
     let matched = null;
@@ -4012,15 +4022,16 @@ function buildJaWithVocab(textJa, vocab) {
       const reading = matched.v.kana || matched.v.kanji || matched.v.romaji || "";
       const de = matched.v.de || "";
 
-      html += `<span class="vocab-token" data-de="${escapeHTML(de)}" data-reading="${escapeHTML(reading)}">${escapeHTML(surface)}</span>`;
+      flush();
+      html += `<span class="vocab-token" data-de="${escapeHTML(de)}" data-reading="${escapeHTML(reading)}">${furi ? furiAnnotate(surface).html : escapeHTML(surface)}</span>`;
       i += matchedLen;
     } else {
-      const ch = textJa[i];
       // Andere Zeichen normal ausgeben (ohne Tooltip)
-      html += escapeHTML(ch);
+      plain += textJa[i];
       i++;
     }
   }
+  flush();
 
   return html;
 }
@@ -7721,6 +7732,180 @@ function renderPath(mount){
 }
 
 // =========================================================
+// Furigana (Phase 3c): Lesehilfe über Kanji
+// Wörterbuch aus den Stufen-Vokabeln (inkl. Wortstämmen für gebeugte Formen) plus FURIGANA_EXTRA.
+// Kanji ohne bekannte Lesung bleiben ohne Hilfe stehen.
+// =========================================================
+const FURIGANA_KEY = "quizcards_furigana";
+// [Schreibweise, Lesung]; Wörter mit Beugung als Stamm (z. B. 見, み), siehe "stem"-Regel unten
+const FURIGANA_EXTRA = [
+  // Zahlen und Zählwörter (Lesung hängt vom Zählwort ab)
+  ["一つ","ひとつ"],["二つ","ふたつ"],["三つ","みっつ"],["四つ","よっつ"],["五つ","いつつ"],
+  ["一人","ひとり"],["二人","ふたり"],["三人","さんにん"],["四人","よにん"],["五人","ごにん"],
+  ["一時","いちじ"],["二時","にじ"],["三時","さんじ"],["四時","よじ"],["五時","ごじ"],["六時","ろくじ"],["七時","しちじ"],
+  ["八時","はちじ"],["九時","くじ"],["十時","じゅうじ"],["十一時","じゅういちじ"],["十二時","じゅうにじ"],
+  ["三時間","さんじかん"],["二時間","にじかん"],["一時間","いちじかん"],["二冊","にさつ"],["三冊","さんさつ"],
+  ["三回","さんかい"],["二回","にかい"],["一回","いっかい"],["二千円","にせんえん"],["千円","せんえん"],["百円","ひゃくえん"],
+  ["一","いち"],["二","に"],["三","さん"],["四","よん"],["五","ご"],["六","ろく"],["七","なな"],["八","はち"],["九","きゅう"],["十","じゅう"],["百","ひゃく"],["千","せん"],
+  ["円","えん"],["一生けんめい","いっしょうけんめい"],
+  // 着る (き) und 着く (つ) unterscheiden: die Formen von 着る stehen hier, 着く läuft über den Stamm
+  ["着ました","きました"],["着ます","きます"],["着て","きて"],["着ている","きている"],["着ない","きない"],["時々","ときどき"],["借り","かり"],
+  // 日・曜日
+  ["日本","にほん"],["日本語","にほんご"],["日曜日","にちようび"],["土曜日","どようび"],["今日","きょう"],["明日","あした"],["毎日","まいにち"],
+  ["毎晩","まいばん"],["毎朝","まいあさ"],["来週","らいしゅう"],["夕方","ゆうがた"],["朝早く","あさはやく"],["昼","ひる"],["朝","あさ"],
+  // 名詞
+  ["初もうで","はつもうで"],["牛乳","ぎゅうにゅう"],["友だち","ともだち"],["京都","きょうと"],["東京","とうきょう"],["渋谷","しぶや"],
+  ["料理","りょうり"],["茶わん","ちゃわん"],["手","て"],["げた箱","げたばこ"],["教室","きょうしつ"],["電話","でんわ"],["語","ご"],
+  ["質問","しつもん"],["気持ち","きもち"],["子ども","こども"],["数学","すうがく"],["英語","えいご"],["活動","かつどう"],["私","わたし"],
+  ["週","しゅう"],["仕事","しごと"],["木","き"],["花","はな"],["写真","しゃしん"],["席","せき"],["最後","さいご"],["前","まえ"],["方","かた"],
+  // 動詞・形容詞の語幹 (stem-Regel: davor kein Kanji, danach Hiragana)
+];
+const FURIGANA_STEMS = [
+  ["話","はな"],["近","ちか"],["入れ","いれ"],["入り","はいり"],["買","か"],["言","い"],["教え","おしえ"],["覚え","おぼえ"],["取","と"],
+  ["新","あたら"],["晴れ","はれ"],["帰","かえ"],["借","か"],["大","おお"]
+];
+
+const FURI_KANJI = /[一-鿿々]/;
+const FURI_KANA = /[ぁ-ゖァ-ヺー]/;
+const FURI_HIRA = /[ぁ-ゖ]/;
+
+let _furiDict = null;
+
+function furiAdd(map, surface, reading, stem){
+  if (!surface || !reading || !FURI_KANJI.test(surface)) return;
+  const cur = map.get(surface);
+  if (!cur || (cur.stem && !stem)) map.set(surface, { r: reading, stem: !!stem });
+}
+
+function buildFuriDict(){
+  const map = new Map();
+  // 1) feste Zusatzliste: vollständige Wörter
+  FURIGANA_EXTRA.forEach(([s, r]) => furiAdd(map, s, r, false));
+  FURIGANA_STEMS.forEach(([s, r]) => furiAdd(map, s, r, true));
+  // 2) Vokabeln aus den Stufen
+  contentLevels().forEach(l => (l.vocab || []).forEach(v => {
+    if (!v.kanji || !v.kana) return;
+    const ks = String(v.kanji).split(/\s*\/\s*/);
+    const as = String(v.kana).split(/\s*\/\s*/);
+    ks.forEach((k0, i) => {
+      const k = k0.replace(/[～~…・\s]/g, "");
+      const a = (as[i] || as[0]).replace(/[～~…・\s]/g, "");
+      if (!k || !a || !FURI_KANJI.test(k)) return;
+      furiAdd(map, k, a, false);
+      // Verb mit する: auch das Nomen allein (勉強する → 勉強)
+      if (k.endsWith("する") && a.endsWith("する") && k.length > 2) furiAdd(map, k.slice(0, -2), a.slice(0, -2), false);
+      // gebeugte Formen: letzte Kana abschneiden, wenn beide Seiten gleich enden (食べる → 食べ, 行く → 行)
+      const lk = k[k.length - 1], la = a[a.length - 1];
+      if (lk === la && FURI_KANA.test(lk) && k.length > 1 && a.length > 1) {
+        furiAdd(map, k.slice(0, -1), a.slice(0, -1), true);
+      }
+    });
+  }));
+  return map;
+}
+function furiDict(){
+  if (!_furiDict) _furiDict = buildFuriDict();
+  return _furiDict;
+}
+function resetFuriDict(){ _furiDict = null; }
+
+// Gemeinsame Kana vorne/hinten abziehen; im Rest bekommt jeder Kanji-Block seine eigene Lesung,
+// Kana in der Mitte (夕ご飯, 遊びに行) bleiben ohne Furigana.
+// Ergebnis: Liste von { t: Text, rt: Lesung oder "" }
+function furiSplit(surface, reading){
+  let a = 0, b = surface.length, ra = 0, rb = reading.length;
+  while (a < b && ra < rb && surface[a] === reading[ra] && FURI_KANA.test(surface[a])) { a++; ra++; }
+  while (b > a && rb > ra && surface[b - 1] === reading[rb - 1] && FURI_KANA.test(surface[b - 1])) { b--; rb--; }
+  const out = [];
+  if (a > 0) out.push({ t: surface.slice(0, a), rt: "" });
+  const base = surface.slice(a, b), rd = reading.slice(ra, rb);
+  const parts = base.match(/[\u4e00-\u9fff\u3005]+|[^\u4e00-\u9fff\u3005]+/g) || [];
+  const hasMid = parts.some(p => !FURI_KANJI.test(p[0]));
+  let done = false;
+  if (hasMid) {
+    // jedem Kanji-Block die Lesung bis zum nächsten Kana-Block zuordnen
+    const tmp = [];
+    let rp = 0, ok = true;
+    for (let i = 0; i < parts.length && ok; i++) {
+      const p = parts[i];
+      if (FURI_KANJI.test(p[0])) {
+        const next = parts[i + 1];
+        if (next) {
+          const j = rd.indexOf(next, rp + 1);
+          if (j < 0) { ok = false; break; }
+          tmp.push({ t: p, rt: rd.slice(rp, j) });
+          rp = j;
+        } else {
+          tmp.push({ t: p, rt: rd.slice(rp) });
+          rp = rd.length;
+        }
+      } else {
+        if (rd.substr(rp, p.length) !== p) { ok = false; break; }
+        tmp.push({ t: p, rt: "" });
+        rp += p.length;
+      }
+    }
+    if (ok && rp === rd.length) { out.push(...tmp); done = true; }
+  }
+  if (!done && base) out.push({ t: base, rt: rd });
+  if (b < surface.length) out.push({ t: surface.slice(b), rt: "" });
+  return out;
+}
+
+// Liefert { html, missing } – missing = Kanji ohne bekannte Lesung
+function furiAnnotate(text){
+  const dict = furiDict();
+  const t = String(text || "");
+  const MAXLEN = 8;
+  let html = "", missing = [], i = 0;
+  while (i < t.length) {
+    let hit = null;
+    if (FURI_KANJI.test(t[i]) || FURI_KANA.test(t[i])) {
+      for (let len = Math.min(MAXLEN, t.length - i); len >= 1; len--) {
+        const s = t.substr(i, len);
+        const e = dict.get(s);
+        if (!e) continue;
+        if (e.stem) {
+          const prev = i > 0 ? t[i - 1] : "";
+          const next = t[i + len] || "";
+          if (FURI_KANJI.test(prev) || !FURI_HIRA.test(next)) continue;
+        }
+        hit = { s, e };
+        break;
+      }
+    }
+    if (hit) {
+      furiSplit(hit.s, hit.e.r).forEach(seg => {
+        html += (seg.rt && FURI_KANJI.test(seg.t))
+          ? `<ruby>${escapeHTML(seg.t)}<rt>${escapeHTML(seg.rt)}</rt></ruby>` : escapeHTML(seg.t);
+      });
+      i += hit.s.length;
+    } else {
+      if (FURI_KANJI.test(t[i])) missing.push(t.slice(Math.max(0, i - 2), i + 3));
+      html += escapeHTML(t[i]);
+      i++;
+    }
+  }
+  return { html, missing };
+}
+
+function furiOn(){
+  const v = lsGet(FURIGANA_KEY);
+  return v === null ? true : v === "1";
+}
+function setFuriOn(on){
+  lsSet(FURIGANA_KEY, on ? "1" : "0");
+  render();
+}
+// Text für die Anzeige: mit Furigana, wenn eingeschaltet
+function furiHTML(text){
+  return furiOn() ? furiAnnotate(text).html : escapeHTML(String(text || ""));
+}
+function furiToggleHTML(custom){
+  return `<label class="furi-toggle"><input type="checkbox" ${furiOn() ? "checked" : ""}${custom ? "" : ' onchange="setFuriOn(this.checked)"'}> Furigana anzeigen</label>`;
+}
+
+// =========================================================
 // Wiederholungssystem (Phase 3b): Leitner-Boxen
 // Jede geübte Karte (Kana, Wort, Vokabel) landet in einer Box 1–6.
 // Richtig: eine Box höher, falsch: zurück in Box 1. Je höher die Box, desto länger die Pause.
@@ -8392,14 +8577,14 @@ const st = getStoryById(id);
         });
       }
     } else if(step === 2){
-  const jaHtml = buildJaWithVocab(st.text_ja || "", st.vocab || []);
+  const isLvl = st.__source === "level";
+  const jaHtml = buildJaWithVocab(st.text_ja || "", st.vocab || [], isLvl && furiOn());
 
   mount.innerHTML = `
     <h2>${escapeHTML(st.title)} ${st.level?`<span class="badge">${st.level}</span>`:""}</h2>
     <div class="card">
-      <div class="story-text-ja" style="white-space:pre-wrap; font-size:1.1rem;">
-        ${jaHtml}
-      </div>
+      ${isLvl ? furiToggleHTML(true) : ""}
+      <div class="story-text-ja" style="white-space:pre-wrap; font-size:1.1rem;">${jaHtml}</div>
 
       <button id="speakStoryBtn" class="mini">🔊 Vorlesen</button>
 
@@ -8416,6 +8601,10 @@ const st = getStoryById(id);
 
   // Übersetzungs-Anzeige aktivieren
   attachVocabClickHandlers(mount);
+
+  // Furigana umschalten, ohne den Lesefortschritt zu verlieren
+  const furiBox = mount.querySelector(".furi-toggle input");
+  if (furiBox) furiBox.onchange = () => { lsSet(FURIGANA_KEY, furiBox.checked ? "1" : "0"); renderStep(); };
 
   document.getElementById("toggleDeBtn").onclick = () => { 
     showDe = !showDe; 
@@ -8681,6 +8870,7 @@ function renderLevelRead(mount, id){
 
     <div class="card">
       <h3>Story (日本語)</h3>
+      ${furiToggleHTML()}
 ${
   (String(lvl.story_ja||"")
     .split(/\r?\n/)
@@ -8688,7 +8878,7 @@ ${
     .filter(Boolean)
     .map((line,i) => `
       <div class="card">
-        <div style="white-space:pre-wrap; font-size:1.05rem;">${escapeHTML(line)}</div>
+        <div class="story-text-ja" style="white-space:pre-wrap; font-size:1.05rem;">${furiHTML(line)}</div>
         <button class="mini speak-line" data-ja="${(line||'').replace(/"/g,'&quot;')}">🔊</button>
       </div>
     `).join("")
