@@ -8684,7 +8684,7 @@ const WEG_SECTIONS = [
   { title: "Abschnitt 4 · Erleben", units: [18, 19, 20, 21, 22, 23], exam: "Abschlussprüfung N5", examId: "exam4" },
   { title: "Abschnitt 5 · Locker sprechen (N4)", units: [24, 25, 26, 27, 28, 29], exam: "Prüfung 5", examId: "exam5" },
   { title: "Abschnitt 6 · Beschreiben und erklären (N4)", units: [30, 31, 32, 33, 34, 35], exam: "Prüfung 6", examId: "exam6" },
-  { title: "Abschnitt 7 · Höflich und selbstständig (N4)", units: [36, 37, 38, 39, 40], exam: "Abschlussprüfung N4" }
+  { title: "Abschnitt 7 · Höflich und selbstständig (N4)", units: [36, 37, 38, 39, 40], exam: "Abschlussprüfung N4", examId: "exam7" }
 ];
 const WEG_OUTLINE = {
   1: ["Hallo!", "Ich kann grüßen, mich verabschieden und danken."],
@@ -11554,6 +11554,250 @@ WEG_UNITS.push(
         ["Hanna", wegS("Das ist schön.", "iidesune .")]
       ] },
     { id: "u35l5", type: "check", title: "Checkpoint" }
+  ] }
+);
+
+// =========================================================
+// Weg, Etappe 5d: Einheiten 36 bis 40 (Höflich sprechen, Passiv, Lassen, Vermutungen, Alltag meistern) und Abschlussprüfung N4
+// =========================================================
+defTokens([
+  // Einheit 36: Höflich sprechen
+  ["irasshaimasu", "いらっしゃいます", "irasshaimasu", "sein; gehen; kommen (ehrerbietig)"], ["meshiagarimasu", "めしあがります", "meshiagarimasu", "essen; trinken (ehrerbietig)"],
+  ["moushimasu", "もうします", "mōshimasu", "heißen; sagen (bescheiden)"], ["mairimasu", "まいります", "mairimasu", "gehen; kommen (bescheiden)"],
+  ["itashimasu", "いたします", "itashimasu", "tun (bescheiden)"], ["gozaimasu", "ございます", "gozaimasu", "es gibt (sehr höflich)"],
+  ["okaeri", "おかえり", "okaeri", "Heimkehr (ehrerbietig)"], ["oyomi", "およみ", "oyomi", "Lesen (ehrerbietig)"], ["omachi", "おまち", "omachi", "Warten (ehrerbietig)"],
+  ["narimasu", "なります", "narimasu", "werden"], ["narimashita", "なりました", "narimashita", "wurde"],
+  ["kashikomarimashita", "かしこまりました", "kashikomarimashita", "Sehr gern; Verstanden", "phrase"], ["shoushou", "しょうしょう", "shōshō", "einen Moment"],
+  ["omatase", "おまたせ", "omatase", "Warten (lassen)"], ["kochira", "こちら", "kochira", "hier; diese Seite (höflich)"],
+  // Einheit 37: Passiv
+  ["homeru", "ほめる", "homeru", "loben (einfache Form)"], ["shikaru", "しかる", "shikaru", "schimpfen (einfache Form)"], ["furu", "ふる", "furu", "fallen (Regen) (einfache Form)"],
+  ["yobu", "よぶ", "yobu", "rufen; einladen (einfache Form)"], ["iu", "いう", "iu", "sagen (einfache Form)"], ["paatii", "パーティー", "pātī", "Party"],
+  ["yomareru", "よまれる", "yomareru", "gelesen werden"], ["kakareru", "かかれる", "kakareru", "geschrieben werden"], ["ikareru", "いかれる", "ikareru", "(Passiv von gehen)"],
+  ["nomareru", "のまれる", "nomareru", "getrunken werden"], ["matareru", "またれる", "matareru", "erwartet werden"], ["hanasareru", "はなされる", "hanasareru", "besprochen werden"],
+  ["homerareru", "ほめられる", "homerareru", "gelobt werden"], ["shikarareru", "しかられる", "shikarareru", "geschimpft werden"], ["yobareru", "よばれる", "yobareru", "gerufen/eingeladen werden"],
+  ["furareru", "ふられる", "furareru", "vom Regen überrascht werden"], ["iwareru", "いわれる", "iwareru", "gesagt bekommen"], ["taberareruP", "たべられる", "taberareru", "gegessen werden"],
+  ["mirareruP", "みられる", "mirareru", "gesehen werden"], ["sareru", "される", "sareru", "gemacht werden"], ["korareru", "こられる", "korareru", "(Passiv von kommen)"],
+  ["homeraremashita", "ほめられました", "homeraremashita", "wurde gelobt"], ["shikararemashita", "しかられました", "shikararemashita", "wurde ausgeschimpft"],
+  ["yobaremashita", "よばれました", "yobaremashita", "wurde eingeladen"], ["furaremashita", "ふられました", "furaremashita", "wurde vom Regen überrascht"],
+  // Einheit 38: Lassen und Veranlassen
+  ["kodomo", "こども", "kodomo", "Kind"], ["seito", "せいと", "seito", "Schüler/in"], ["shachou", "しゃちょう", "shachō", "Chef; Firmenleiter"],
+  ["ikaseru", "いかせる", "ikaseru", "gehen lassen"], ["yomaseru", "よませる", "yomaseru", "lesen lassen"], ["kakaseru", "かかせる", "kakaseru", "schreiben lassen"],
+  ["mataseru", "またせる", "mataseru", "warten lassen"], ["nomaseru", "のませる", "nomaseru", "trinken lassen"], ["hanasaseru", "はなさせる", "hanasaseru", "sprechen lassen"],
+  ["tabesaseru", "たべさせる", "tabesaseru", "essen lassen"], ["misaseru", "みさせる", "misaseru", "sehen lassen"], ["saseru", "させる", "saseru", "machen lassen"], ["kosaseru", "こさせる", "kosaseru", "kommen lassen"],
+  ["tabesasemasu", "たべさせます", "tabesasemasu", "essen lassen"], ["yomasemasu", "よませます", "yomasemasu", "lesen lassen"],
+  ["kakasemashita", "かかせました", "kakasemashita", "schreiben ließ"], ["matasemashita", "またせました", "matasemashita", "warten ließ"],
+  ["yasumasete", "やすませて", "yasumasete", "ausruhen lassen (て-Form)"], ["kaerasete", "かえらせて", "kaerasete", "heimgehen lassen (て-Form)"], ["ikasete", "いかせて", "ikasete", "gehen lassen (て-Form)"],
+  // Einheit 39: Vermutungen
+  ["oishisou", "おいしそう", "oishisō", "lecker aussehend"], ["tanoshisou", "たのしそう", "tanoshisō", "fröhlich aussehend"], ["samusou", "さむそう", "samusō", "kalt aussehend"],
+  ["furisou", "ふりそう", "furisō", "so, als ob es regnet"], ["rashii", "らしい", "rashii", "anscheinend", "aux", true], ["kamoshiremasen", "かもしれません", "kamoshiremasen", "vielleicht", "aux", true],
+  // Einheit 40: Alltag meistern
+  ["denwa", "でんわ", "denwa", "Telefon"], ["rusu", "るす", "rusu", "abwesend"], ["atode", "あとで", "atode", "später"],
+  ["jusho", "じゅうしょ", "jūsho", "Adresse"], ["seinengappi", "せいねんがっぴ", "seinengappi", "Geburtsdatum"], ["kokuseki", "こくせき", "kokuseki", "Staatsangehörigkeit"],
+  ["shokugyou", "しょくぎょう", "shokugyō", "Beruf"], ["doitsu", "ドイツ", "doitsu", "Deutschland", "name"],
+  ["kyuukei", "きゅうけい", "kyūkei", "Pause"], ["zangyou", "ざんぎょう", "zangyō", "Überstunden"], ["yasumi", "やすみ", "yasumi", "freier Tag; Urlaub"], ["meeru", "メール", "mēru", "E-Mail"]
+]);
+
+WEG_UNITS.push(
+  { id: 36, lessons: [
+    { id: "u36l1", type: "words", title: "Höfliche Verben", teach: ["irasshaimasu","meshiagarimasu","moushimasu","mairimasu","itashimasu","gozaimasu"], note: "Diese Verben benutzt du für andere (ehrerbietig) oder für dich selbst (bescheiden)." },
+    { id: "u36l2", type: "grammar", title: "Ehrerbietig sprechen", teach: ["okaeri","oyomi","narimasu","narimashita"], focus: "irasshaimasu",
+      explain: "Um jemandem Respekt zu zeigen, benutzt du für dessen Handlungen <b>besondere Verben</b>: <b>いらっしゃいます</b> (ist da / kommt / geht), <b>めしあがります</b> (isst, trinkt). Außerdem gibt es das Muster <b>お〜に なります</b>: <b>おかえりに なりました</b> = „… ist nach Hause gegangen.“",
+      sentences: [
+        wegS("Der Lehrer kommt morgen.", "sensei wa ashita irasshaimasu ."),
+        wegS("Was möchten Sie essen?", "nani o meshiagarimasu ka ."),
+        wegS("Herr Tanaka ist nach Hause gegangen.", "tanaka san wa okaeri ni narimashita ."),
+        wegS("Der Lehrer liest ein Buch.", "sensei wa hon o oyomi ni narimasu .")
+      ] },
+    { id: "u36l3", type: "grammar", title: "Bescheiden sprechen", teach: [], focus: "moushimasu",
+      explain: "Über dich selbst sprichst du <b>bescheiden</b>: <b>もうします</b> (ich heiße), <b>まいります</b> (ich komme/gehe), <b>いたします</b> (ich mache), <b>ございます</b> (es gibt).",
+      sentences: [
+        wegS("Ich heiße Hanna.", "hanna to moushimasu ."),
+        wegS("Ich komme morgen.", "ashita mairimasu ."),
+        wegS("Ich mache das.", "watashi ga itashimasu ."),
+        wegS("Hier ist die Speisekarte.", "menyuu ga gozaimasu .")
+      ] },
+    { id: "u36l4", type: "grammar", title: "Im Geschäft und im Restaurant", teach: ["kashikomarimashita","shoushou","omatase","omachi","kochira"], focus: "kashikomarimashita",
+      explain: "Im Service hörst du feste Wendungen: <b>かしこまりました</b> („sehr gern“), <b>しょうしょう おまち ください</b> („einen Moment bitte“), <b>おまたせ しました</b> („danke fürs Warten“).",
+      sentences: [
+        wegS("Sehr gern.", "kashikomarimashita ."),
+        wegS("Einen Moment bitte.", "shoushou omachi kudasai ."),
+        wegS("Danke fürs Warten.", "omatase shimashita .")
+      ] },
+    { id: "u36l5", type: "dialog", title: "Im Restaurant (höflich)", teach: [],
+      lines: [
+        ["Kellner", wegS("Willkommen.", "irasshaimase .")],
+        ["Hanna", wegS("Zwei Personen.", "futari desu .")],
+        ["Kellner", wegS("Hier entlang, bitte. Was möchten Sie essen?", "kochira e douzo . nani o meshiagarimasu ka .")],
+        ["Hanna", wegS("Sushi, bitte.", "sushi o onegai .")],
+        ["Kellner", wegS("Sehr gern. Einen Moment bitte.", "kashikomarimashita . shoushou omachi kudasai .")]
+      ] },
+    { id: "u36l6", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 37, lessons: [
+    { id: "u37l1", type: "words", title: "Verben für das Passiv", teach: ["homeru","shikaru","furu","yobu","iu","paatii"] },
+    { id: "u37l2", type: "conj", form: "Passiv", title: "Passiv 1: う-Verben", teach: ["yomareru","kakareru","ikareru","nomareru","matareru","hanasareru"],
+      pairs: [
+        ["yomu", "yomareru", [["よみられる", "yomirareru"], ["よまれた", "yomareta"]]],
+        ["kaku", "kakareru", [["かきられる", "kakirareru"], ["かかれた", "kakareta"]]],
+        ["iku", "ikareru", [["いきられる", "ikirareru"], ["いかれた", "ikareta"]]],
+        ["nomu", "nomareru", [["のみられる", "nomirareru"], ["のまれた", "nomareta"]]],
+        ["matsu", "matareru", [["まちられる", "machirareru"], ["またれた", "matareta"]]],
+        ["hanasu", "hanasareru", [["はなしられる", "hanashirareru"], ["はなされた", "hanasareta"]]]
+      ],
+      explain: "Das <b>Passiv</b> sagt, was <b>mit jemandem geschieht</b>. Bei <b>う-Verben</b> wird der letzte Laut zum <b>あ-Laut</b>, dazu kommt <b>れる</b>: よむ → <b>よまれる</b>, かく → <b>かかれる</b>, はなす → <b>はなされる</b>." },
+    { id: "u37l3", type: "conj", form: "Passiv", title: "Passiv 2: weitere Verben", teach: ["homerareru","shikarareru","yobareru","furareru","iwareru","taberareruP"],
+      pairs: [
+        ["homeru", "homerareru", [["ほめれる", "homereru"], ["ほまれる", "homareru"]]],
+        ["shikaru", "shikarareru", [["しかれる", "shikareru"], ["しからせる", "shikaraseru"]]],
+        ["yobu", "yobareru", [["よびれる", "yobireru"], ["よぼれる", "yoboreru"]]],
+        ["furu", "furareru", [["ふれる", "fureru"], ["ふるれる", "furureru"]]],
+        ["iu", "iwareru", [["いあれる", "iareru"], ["いうれる", "iureru"]]],
+        ["taberu", "taberareruP", [["たべれる", "tabereru"], ["たべうる", "tabeuru"]]]
+      ],
+      explain: "Bei <b>る-Verben</b> hängst du <b>られる</b> an den Stamm: ほめる → <b>ほめられる</b>, たべる → <b>たべられる</b>. Bei <b>う-Verben</b> mit <b>う</b> am Ende wird daraus <b>わ</b>: いう → <b>いわれる</b>. Achtung: <b>たべられる</b> kann „gegessen werden“ oder „essen können“ heißen, das zeigt der Satz." },
+    { id: "u37l4", type: "conj", form: "Passiv", title: "Passiv 3: Ausnahmen", teach: ["mirareruP","sareru","korareru"],
+      pairs: [
+        ["miru", "mirareruP", [["みれる", "mireru"], ["みらせる", "miraseru"]]],
+        ["suru", "sareru", [["すれる", "sureru"], ["しられる", "shirareru"]]],
+        ["kuru", "korareru", [["くられる", "kurareru"], ["きられる", "kirareru"]]]
+      ],
+      explain: "Unregelmäßig sind <b>する → される</b> und <b>くる → こられる</b>. Bei <b>みる</b> lautet das Passiv wie bei anderen る-Verben <b>みられる</b>." },
+    { id: "u37l5", type: "grammar", title: "〜に ほめられました", teach: ["homeraremashita","shikararemashita","yobaremashita","furaremashita"], focus: "homeraremashita",
+      explain: "Im Passivsatz steht die Person, die etwas tut, mit <b>に</b>: <b>せんせいに ほめられました</b> = „Ich wurde vom Lehrer gelobt.“ Mit dem Passiv drückt man oft aus, dass einem etwas passiert ist, manchmal auch etwas Unangenehmes: <b>あめに ふられました</b> = „Ich bin vom Regen überrascht worden.“",
+      sentences: [
+        wegS("Ich wurde vom Lehrer gelobt.", "watashi wa sensei ni homeraremashita ."),
+        wegS("Ich wurde von meiner Mutter ausgeschimpft.", "watashi wa haha ni shikararemashita ."),
+        wegS("Ich wurde von einem Freund zur Party eingeladen.", "tomodachi ni paatii ni yobaremashita ."),
+        wegS("Gestern wurde ich vom Regen überrascht.", "kinou ame ni furaremashita .")
+      ] },
+    { id: "u37l6", type: "dialog", title: "Wie war dein Tag?", teach: [],
+      lines: [
+        ["Tanaka", wegS("Wie war es gestern?", "kinou wa dou deshita ka .")],
+        ["Hanna", wegS("Ich wurde vom Regen überrascht.", "ame ni furaremashita .")],
+        ["Tanaka", wegS("Schade.", "zannen desu ne .")],
+        ["Hanna", wegS("Aber ich wurde von einem Freund zur Party eingeladen.", "demo , tomodachi ni paatii ni yobaremashita .")],
+        ["Tanaka", wegS("Das ist schön.", "sore wa ii desu ne .")]
+      ] },
+    { id: "u37l7", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 38, lessons: [
+    { id: "u38l1", type: "words", title: "Wer lässt wen?", teach: ["kodomo","seito","shachou"] },
+    { id: "u38l2", type: "conj", form: "させる-Form", title: "Kausativ 1: う-Verben", teach: ["ikaseru","yomaseru","kakaseru","mataseru","nomaseru","hanasaseru"],
+      pairs: [
+        ["iku", "ikaseru", [["いかされる", "ikasareru"], ["いきさせる", "ikisaseru"]]],
+        ["yomu", "yomaseru", [["よまされる", "yomasareru"], ["よみさせる", "yomisaseru"]]],
+        ["kaku", "kakaseru", [["かかされる", "kakasareru"], ["かきさせる", "kakisaseru"]]],
+        ["matsu", "mataseru", [["またされる", "matasareru"], ["まちさせる", "machisaseru"]]],
+        ["nomu", "nomaseru", [["のまされる", "nomasareru"], ["のみさせる", "nomisaseru"]]],
+        ["hanasu", "hanasaseru", [["はなさされる", "hanasasareru"], ["はなしさせる", "hanashisaseru"]]]
+      ],
+      explain: "Das <b>Kausativ</b> sagt, dass man jemanden <b>etwas tun lässt</b> (zwingt oder erlaubt). Bei <b>う-Verben</b> wird der letzte Laut zum <b>あ-Laut</b> und es kommt <b>せる</b> dazu: いく → <b>いかせる</b>, よむ → <b>よませる</b>, はなす → <b>はなさせる</b>." },
+    { id: "u38l3", type: "conj", form: "させる-Form", title: "Kausativ 2: る-Verben und Ausnahmen", teach: ["tabesaseru","misaseru","saseru","kosaseru"],
+      pairs: [
+        ["taberu", "tabesaseru", [["たべせる", "tabeseru"], ["たべらせる", "taberaseru"]]],
+        ["miru", "misaseru", [["みせる", "miseru"], ["みらせる", "miraseru"]]],
+        ["suru", "saseru", [["すらせる", "suraseru"], ["しさせる", "shisaseru"]]],
+        ["kuru", "kosaseru", [["くらせる", "kuraseru"], ["きさせる", "kisaseru"]]]
+      ],
+      explain: "Bei <b>る-Verben</b> fällt <b>る</b> weg und <b>させる</b> kommt dazu: たべる → <b>たべさせる</b>. Ausnahmen: <b>する → させる</b>, <b>くる → こさせる</b>." },
+    { id: "u38l4", type: "grammar", title: "〜に 〜させます", teach: ["tabesasemasu","yomasemasu","kakasemashita","matasemashita"], focus: "tabesasemasu",
+      explain: "Wer zu etwas veranlasst wird, steht mit <b>に</b>: <b>こどもに やさいを たべさせます</b> = „Ich lasse das Kind Gemüse essen.“ Bei <b>わたしを</b> bedeutet es oft „mich warten lassen“: <b>わたしを またせました</b>.",
+      sentences: [
+        wegS("Die Mutter lässt das Kind Gemüse essen.", "haha wa kodomo ni yasai o tabesasemasu ."),
+        wegS("Der Lehrer lässt die Schüler ein Buch lesen.", "sensei wa seito ni hon o yomasemasu ."),
+        wegS("Der Lehrer ließ die Schüler den Namen schreiben.", "sensei wa seito ni namae o kakasemashita ."),
+        wegS("Der Chef hat mich warten lassen.", "shachou wa watashi o matasemashita .")
+      ] },
+    { id: "u38l5", type: "grammar", title: "〜させて ください – bitte lassen Sie mich", teach: ["yasumasete","kaerasete","ikasete"], focus: "kudasai",
+      explain: "Willst du um Erlaubnis bitten, hängst du an die Kausativ-て-Form <b>ください</b>: <b>やすませて ください</b> = „Bitte lassen Sie mich pausieren / mich ausruhen.“",
+      sentences: [
+        wegS("Entschuldigung, bitte lassen Sie mich ausruhen.", "sumimasen , yasumasete kudasai ."),
+        wegS("Bitte lassen Sie mich jetzt nach Hause gehen.", "mou kaerasete kudasai ."),
+        wegS("Bitte lassen Sie mich auch gehen.", "watashi ni mo ikasete kudasai .")
+      ] },
+    { id: "u38l6", type: "dialog", title: "In der Schule", teach: [],
+      lines: [
+        ["Hanna", wegS("Lehrer, bitte lassen Sie mich heute nach Hause gehen.", "sensei , kyou wa kaerasete kudasai .")],
+        ["Sensei", wegS("Warum?", "doushite desu ka .")],
+        ["Hanna", wegS("Weil ich Kopfschmerzen habe.", "atama ga itai desu karaR .")],
+        ["Sensei", wegS("Geht es? Bitte nehmen Sie die Medizin und ruhen Sie sich aus.", "daijoubu desu ka . kusuri o nonde , yasunde kudasai .")],
+        ["Hanna", wegS("Vielen Dank.", "arigatou .")]
+      ] },
+    { id: "u38l7", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 39, lessons: [
+    { id: "u39l1", type: "words", title: "Eindrücke", teach: ["oishisou","tanoshisou","samusou","furisou"] },
+    { id: "u39l2", type: "grammar", title: "〜そうです – es sieht aus", teach: [], focus: "oishisou",
+      explain: "<b>〜そう</b> beschreibt einen <b>Eindruck</b>: <b>おいしそう</b> („sieht lecker aus“), <b>ふりそう</b> („es sieht nach Regen aus“). Bei Adjektiven fällt das <b>い</b> weg: おいしい → おいしそう.",
+      sentences: [
+        wegS("Das Essen sieht lecker aus.", "kono ryouri wa oishisou desu ."),
+        wegS("Es sieht nach Regen aus.", "ashita wa ame ga furisou desu ."),
+        wegS("Der Freund sieht fröhlich aus.", "tomodachi wa tanoshisou desu ."),
+        wegS("Heute sieht es kalt aus.", "kyou wa samusou desu .")
+      ] },
+    { id: "u39l3", type: "grammar", title: "〜らしい – anscheinend", teach: ["rashii"], focus: "rashii",
+      explain: "<b>らしい</b> gibt weiter, was man <b>gehört oder gelesen</b> hat („anscheinend“, „soll“). Davor steht die <b>einfache Form</b>: <b>くるらしいです</b> = „Anscheinend kommt er.“",
+      sentences: [
+        wegS("Anscheinend kommt Herr Tanaka.", "tanaka san wa kuru rashii desu ."),
+        wegS("Anscheinend regnet es morgen.", "ashita wa ame rashii desu ."),
+        wegS("Dieser Laden soll lecker sein.", "kono mise wa oishii rashii desu ."),
+        wegS("Meine Mutter ist anscheinend beschäftigt.", "haha wa isogashii rashii desu .")
+      ] },
+    { id: "u39l4", type: "grammar", title: "〜かもしれません – vielleicht", teach: ["kamoshiremasen"], focus: "kamoshiremasen",
+      explain: "<b>かもしれません</b> heißt „vielleicht, es könnte sein“. Davor steht die <b>einfache Form</b>: <b>ふるかもしれません</b> = „Es regnet vielleicht.“",
+      sentences: [
+        wegS("Morgen regnet es vielleicht.", "ashita ame ga furu kamoshiremasen ."),
+        wegS("Herr Tanaka kommt vielleicht nicht.", "tanaka san wa konai kamoshiremasen ."),
+        wegS("Die Prüfung ist vielleicht schwierig.", "shiken wa muzukashii kamoshiremasen ."),
+        wegS("Es ist vielleicht etwas teuer.", "chotto takai kamoshiremasen .")
+      ] },
+    { id: "u39l5", type: "dialog", title: "Wetter und Pläne", teach: [],
+      lines: [
+        ["Hanna", wegS("Morgen regnet es anscheinend.", "ashita wa ame rashii desu ne .")],
+        ["Tanaka", wegS("Ja, es ist vielleicht kalt.", "ee , samui kamoshiremasen .")],
+        ["Hanna", wegS("Mein Freund kommt vielleicht nicht.", "tomodachi wa konai kamoshiremasen .")],
+        ["Tanaka", wegS("Das stimmt.", "soudesune .")]
+      ] },
+    { id: "u39l6", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 40, lessons: [
+    { id: "u40l1", type: "words", title: "Am Telefon", teach: ["denwa","rusu","atode"] },
+    { id: "u40l2", type: "grammar", title: "Telefonieren", teach: [], focus: "rusu",
+      explain: "Am Telefon beginnst du mit <b>もしもし</b>. Du fragst nach jemandem mit <b>〜さんは いらっしゃいますか</b> und hörst vielleicht <b>いま、るすです</b> („gerade nicht da“).",
+      sentences: [
+        wegS("Hallo, ist Herr Tanaka da?", "moshimoshi , tanaka san wa irasshaimasu ka ."),
+        wegS("Er ist gerade nicht da.", "ima , rusu desu ."),
+        wegS("Ich rufe später noch einmal an.", "atode mata denwa shimasu ."),
+        wegS("Einen Moment bitte.", "shoushou omachi kudasai .")
+      ] },
+    { id: "u40l3", type: "words", title: "Formular", teach: ["jusho","seinengappi","kokuseki","shokugyou","doitsu"] },
+    { id: "u40l4", type: "grammar", title: "Ein Formular ausfüllen", teach: [], focus: "kaite",
+      explain: "Auf Formularen findest du <b>なまえ</b>, <b>じゅうしょ</b>, <b>せいねんがっぴ</b>, <b>こくせき</b> und <b>しょくぎょう</b>. Du schreibst mit <b>〜を かいて ください</b>.",
+      sentences: [
+        wegS("Bitte schreiben Sie hier Namen und Adresse.", "koko ni namae to jusho o kaite kudasai ."),
+        wegS("Das Geburtsdatum, bitte.", "seinengappi o onegai ."),
+        wegS("Meine Staatsangehörigkeit ist Deutschland.", "kokuseki wa doitsu desu ."),
+        wegS("Mein Beruf ist Student.", "shokugyou wa gakusei desu .")
+      ] },
+    { id: "u40l5", type: "words", title: "Arbeit", teach: ["kyuukei","zangyou","yasumi","meeru"] },
+    { id: "u40l6", type: "grammar", title: "Im Büro", teach: [], focus: "zangyou",
+      explain: "Im Berufsalltag brauchst du Wörter wie <b>かいぎ</b> (Besprechung), <b>ざんぎょう</b> (Überstunden) und <b>やすみ</b> (freier Tag).",
+      sentences: [
+        wegS("Morgen ist eine Besprechung.", "ashita wa kaigi ga arimasu ."),
+        wegS("Ich muss Überstunden machen.", "zangyou o shinakereba narimasen ."),
+        wegS("Mein freier Tag ist Sonntag.", "yasumi wa nichiyoubi desu ."),
+        wegS("Ab wann ist die Pause?", "kyuukei wa nanji kara desu ka ."),
+        wegS("Bitte sehen Sie sich die E-Mail an.", "meeru o mite kudasai .")
+      ] },
+    { id: "u40l7", type: "dialog", title: "Im Büro", teach: [],
+      lines: [
+        ["Hanna", wegS("Wann ist die Besprechung?", "kaigi wa nanji kara desu ka .")],
+        ["Tanaka", wegS("Ab 15 Uhr.", "gogo n3 ji kara desu .")],
+        ["Hanna", wegS("Muss ich heute Überstunden machen?", "kyou wa zangyou o shinakereba narimasen ka .")],
+        ["Tanaka", wegS("Nein, das musst du nicht.", "iie , shinakutemo ii desu .")],
+        ["Hanna", wegS("Vielen Dank.", "arigatou .")]
+      ] },
+    { id: "u40l8", type: "check", title: "Checkpoint" }
   ] }
 );
 
