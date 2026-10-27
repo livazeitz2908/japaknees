@@ -8907,6 +8907,7 @@ function lessonCore(unit, idx){
   if (lesson.type === "numgen" || lesson.type === "phone" || lesson.type === "timegen" || (lesson.type === "words" && teachToks.length && teachToks.every(t => t.kind === "num"))) {
     return numberLessonCore(lesson, unit, idx);
   }
+  if (lesson.type === "conj") return conjLessonCore(lesson, unit, idx);
   if (lesson.type === "kana") {
     const kp = kanaPoolFor(lesson, unit.id, idx);
     exs.push({ kind: "intro", title: `Neue Zeichen: ${lesson.title}`,
@@ -9202,7 +9203,7 @@ function renderLektion(mount, parts){
 }
 
 function wegNodeIcon(l){
-  return ({ kana: "あ", words: "語", grammar: "文", dialog: "話", check: "★", numgen: "数", phone: "電", timegen: "時" })[l.type] || "•";
+  return ({ kana: "あ", words: "語", grammar: "文", dialog: "話", check: "★", numgen: "数", phone: "電", timegen: "時", conj: "形" })[l.type] || "•";
 }
 
 function examCardHtml(sec){
@@ -9299,6 +9300,7 @@ function checkCurriculum(){
     (l.lines || []).forEach(([who, s]) => { if (!s.de) problems.push(`${l.id}: Dialogzeile ohne Übersetzung`); used.push(...s.ids); });
     (l.scenes || []).forEach(([q, id]) => used.push(id));
     (l.uses || []).forEach(id => used.push(id));
+    (l.pairs || []).forEach(([m, t]) => used.push(m, t));
     if (["words", "dialog", "grammar", "phone", "timegen"].includes(l.type)) (l.teach || []).forEach(id => used.push(id));
     used.forEach(id => {
       const t = TOK[id];
@@ -10424,6 +10426,222 @@ WEG_UNITS.push(
         ["Hanna", wegS("Den Sommer mag ich am liebsten.", "natsu ga ichiban suki desu .")]
       ] },
     { id: "u17l8", type: "check", title: "Checkpoint" }
+  ] }
+);
+
+// =========================================================
+// Weg, Etappe 4a: Einheiten 18 bis 20 (Bitten mit der て-Form, Gerade jetzt, Gesundheit)
+// =========================================================
+defTokens([
+  // Einheit 18: Bitten
+  ["misemasu", "みせます", "misemasu", "zeigen"], ["machimasu", "まちます", "machimasu", "warten"], ["yomimasu", "よみます", "yomimasu", "lesen"],
+  ["kakimasu", "かきます", "kakimasu", "schreiben"], ["hanashimasu", "はなします", "hanashimasu", "sprechen"], ["asobimasu", "あそびます", "asobimasu", "spielen (zum Spaß)"],
+  ["tabete", "たべて", "tabete", "essen (て-Form)"], ["mite", "みて", "mite", "sehen (て-Form)"], ["okite", "おきて", "okite", "aufstehen (て-Form)"],
+  ["nete", "ねて", "nete", "schlafen (て-Form)"], ["misete", "みせて", "misete", "zeigen (て-Form)"], ["shite", "して", "shite", "machen (て-Form)"],
+  ["kite", "きて", "kite", "kommen (て-Form)"],
+  ["katte", "かって", "katte", "kaufen (て-Form)"], ["matte", "まって", "matte", "warten (て-Form)"], ["kaette", "かえって", "kaette", "heimkehren (て-Form)"],
+  ["itte", "いって", "itte", "gehen (て-Form)"],
+  ["nonde", "のんで", "nonde", "trinken (て-Form)"], ["yonde", "よんで", "yonde", "lesen (て-Form)"], ["asonde", "あそんで", "asonde", "spielen (て-Form)"],
+  ["kiite", "きいて", "kiite", "hören (て-Form)"], ["kaite", "かいて", "kaite", "schreiben (て-Form)"], ["hanashite", "はなして", "hanashite", "sprechen (て-Form)"],
+  ["yukkuri", "ゆっくり", "yukkuri", "langsam; in Ruhe"], ["ii", "いい", "ii", "gut; in Ordnung"],
+  ["iidesuyo", "いいですよ", "ii desu yo", "Ja, gern (Erlaubnis)", "phrase"], ["dame", "だめ", "dame", "nicht erlaubt; geht nicht"],
+  // Einheit 19: Gerade jetzt
+  ["sumimasu", "すみます", "sumimasu", "wohnen"], ["hatarakimasu", "はたらきます", "hatarakimasu", "arbeiten"], ["benkyou", "べんきょう", "benkyō", "Lernen; Studium"],
+  ["kaisha", "かいしゃ", "kaisha", "Firma"], ["shigoto", "しごと", "shigoto", "Arbeit; Beruf"],
+  ["teiru", "います", "imasu", "(gerade dabei; Zustand)", "aux", true], ["teimasen", "いません", "imasen", "(nicht gerade dabei; Zustand nicht)", "aux", true],
+  ["sunde", "すんで", "sunde", "wohnen (て-Form)"], ["hataraite", "はたらいて", "hataraite", "arbeiten (て-Form)"],
+  ["moshimoshi", "もしもし", "moshi moshi", "Hallo (am Telefon)", "phrase"],
+  // Einheit 20: Gesundheit
+  ["atama", "あたま", "atama", "Kopf"], ["onaka", "おなか", "onaka", "Bauch"], ["nodo", "のど", "nodo", "Hals"], ["me", "め", "me", "Auge"], ["mimi", "みみ", "mimi", "Ohr"],
+  ["kuchi", "くち", "kuchi", "Mund"], ["ashi", "あし", "ashi", "Fuß; Bein"], ["hana", "はな", "hana", "Nase"], ["karada", "からだ", "karada", "Körper"],
+  ["itai", "いたい", "itai", "schmerzhaft; tut weh"], ["netsu", "ねつ", "netsu", "Fieber"], ["kaze_c", "かぜ", "kaze", "Erkältung"],
+  ["kusuri", "くすり", "kusuri", "Medikament"], ["isha", "いしゃ", "isha", "Arzt; Ärztin"],
+  ["hikimashita", "ひきました", "hikimashita", "habe mir (eine Erkältung) zugezogen"],
+  ["tabenaide", "たべないで", "tabenaide", "nicht essen"], ["nomanaide", "のまないで", "nomanaide", "nicht trinken"],
+  ["ikanaide", "いかないで", "ikanaide", "nicht gehen"], ["shinaide", "しないで", "shinaide", "nicht machen"],
+  ["yasumimasu", "やすみます", "yasumimasu", "sich ausruhen"], ["yasunde", "やすんで", "yasunde", "sich ausruhen (て-Form)"],
+  ["odaiji", "おだいじに", "odaiji ni", "Gute Besserung", "phrase"], ["doushimashita", "どうしましたか", "dō shimashita ka", "Was fehlt Ihnen?", "phrase"],
+  ["ne", "ね", "ne", "(nicht wahr?)", "part", true]
+]);
+
+// ---------- て-Form: Umwandlung ----------
+function teWrong(w){ return { ja: w[0], ro: w[1], kind: "word", attach: false }; }
+function exTeForm(p, laterTe){
+  const wrong = p.wrong.map(teWrong);
+  const other = shuffle(laterTe.filter(t => t !== p.t && !p.wrong.some(w => w[0] === TOK[t].ja))).slice(0, 1);
+  const opts = [{ k: p.t, h: () => wegHtml([p.t], { noSub: true }) }];
+  wrong.forEach((w, i) => opts.push({ k: "w" + i, h: () => wegHtml([w], { noSub: true }) }));
+  other.forEach(t => opts.push({ k: t, h: () => wegHtml([t], { noSub: true }) }));
+  return exMc({ promptHtml: () => wegHtml([p.m], { noSub: true }), say: TOK[p.m].ja, sub: "Wie lautet die て-Form?",
+    options: shuffle(opts), optionsBig: true, answerK: p.t, srs: tokSrs(TOK[p.t]) });
+}
+function exTeBack(p, pool){
+  const others = shuffle(pool.filter(x => x.m !== p.m)).slice(0, 3).map(x => x.m);
+  return exMc({ promptHtml: () => wegHtml([p.t], { noSub: true }), say: TOK[p.t].ja, sub: "Welches Verb steckt in dieser て-Form?",
+    options: shuffle([p.m, ...others]).map(id => ({ k: id, h: () => wegHtml([id], { noSub: true }) })), optionsBig: true, answerK: p.m });
+}
+function exTeMatch(pairs){
+  return { kind: "match", pairs: pairs.map(p => ({ id: p.m, l: () => wegHtml([p.m], { noSub: true }), r: () => wegHtml([p.t], { noSub: true }), say: TOK[p.t].ja })) };
+}
+function conjLessonCore(lesson, unit, idx){
+  const pairs = lesson.pairs.map(([m, t, wrong]) => ({ m, t, wrong }));
+  // alle bisher gelernten Paare als Ablenkung
+  const known = [];
+  WEG_UNITS.forEach(u => u.lessons.forEach((l, li) => {
+    if (l.type === "conj" && (u.id < unit.id || (u.id === unit.id && li <= idx))) (l.pairs || []).forEach(([m, t]) => known.push({ m, t }));
+  }));
+  const laterTe = known.map(x => x.t);
+  const exs = [];
+  exs.push({ kind: "intro", title: lesson.title, explain: lesson.explain,
+    examples: pairs.map(p => ({
+      html: () => `<span style="display:inline-flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><span>${wegHtml([p.m], { noSub: true })}</span><span>→</span><span>${wegHtml([p.t], { noSub: true })}</span></span>`,
+      de: wegEsc(TOK[p.m].de), say: TOK[p.t].ja })) });
+  const body = [];
+  pairs.forEach(p => body.push(exTeForm(p, laterTe)));
+  shuffle(pairs).slice(0, 4).forEach(p => body.push(exTeBack(p, known)));
+  body.push(exTeMatch(shuffle(pairs).slice(0, 5)));
+  exs.push(...shuffle(body));
+  return exs;
+}
+
+WEG_UNITS.push(
+  { id: 18, lessons: [
+    { id: "u18l1", type: "words", title: "Neue Verben", teach: ["misemasu","machimasu","yomimasu","kakimasu","hanashimasu","asobimasu"] },
+    { id: "u18l2", type: "conj", title: "て-Form 1: Grundregel", teach: ["tabete","mite","okite","nete","misete","shite","kite"],
+      pairs: [
+        ["tabemasu", "tabete", [["たべんで", "tabende"], ["たべって", "tabette"]]],
+        ["mimasu", "mite", [["みんで", "minde"], ["みって", "mitte"]]],
+        ["okimasu", "okite", [["おいて", "oite"], ["おきって", "okitte"]]],
+        ["nemasu", "nete", [["ねんで", "nende"], ["ねって", "nette"]]],
+        ["misemasu", "misete", [["みして", "mishite"], ["みせんで", "misende"]]],
+        ["shimasu", "shite", [["しって", "shitte"], ["しんで", "shinde"]]],
+        ["kimasu", "kite", [["きって", "kitte"], ["いて", "ite"]]]
+      ],
+      explain: "Die <b>て-Form</b> brauchst du für Bitten und viele weitere Sätze. Bei Verben wie たべます, みます, おきます, ねます, みせます gilt die einfachste Regel: <b>ます weg, て dran</b> (たべます → たべて). Zwei Verben sind unregelmäßig: <b>します → して</b> und <b>きます → きて</b>." },
+    { id: "u18l3", type: "conj", title: "て-Form 2: って", teach: ["katte","matte","kaette","itte"],
+      pairs: [
+        ["kaimasu", "katte", [["かいて", "kaite"], ["かんで", "kande"]]],
+        ["machimasu", "matte", [["まちて", "machite"], ["まんで", "mande"]]],
+        ["kaerimasu", "kaette", [["かえりて", "kaerite"], ["かえんで", "kaende"]]],
+        ["ikimasu", "itte", [["いきて", "ikite"], ["いいて", "iite"]]]
+      ],
+      explain: "Bei Verben, deren ます-Stamm auf <b>い, ち oder り</b> endet, wird daraus <b>って</b>: かいます → <b>かって</b>, まちます → <b>まって</b>, かえります → <b>かえって</b>. Die wichtige Ausnahme: <b>いきます → いって</b> (nicht いいて)." },
+    { id: "u18l4", type: "conj", title: "て-Form 3: んで, いて, して", teach: ["nonde","yonde","asonde","kiite","kaite","hanashite"],
+      pairs: [
+        ["nomimasu", "nonde", [["のって", "notte"], ["のみて", "nomite"]]],
+        ["yomimasu", "yonde", [["よって", "yotte"], ["よみて", "yomite"]]],
+        ["asobimasu", "asonde", [["あそって", "asotte"], ["あそびて", "asobite"]]],
+        ["kikimasu", "kiite", [["きって", "kitte"], ["きんで", "kinde"]]],
+        ["kakimasu", "kaite", [["かって", "katte"], ["かんで", "kande"]]],
+        ["hanashimasu", "hanashite", [["はなって", "hanatte"], ["はなんで", "hanande"]]]
+      ],
+      explain: "Endet der ます-Stamm auf <b>み oder び</b>, wird daraus <b>んで</b>: のみます → <b>のんで</b>, よみます → <b>よんで</b>, あそびます → <b>あそんで</b>. Bei <b>き</b> wird daraus <b>いて</b>: ききます → <b>きいて</b>, かきます → <b>かいて</b>. Bei <b>し</b> bleibt es <b>して</b>: はなします → <b>はなして</b>." },
+    { id: "u18l5", type: "grammar", title: "〜て ください", teach: ["yukkuri"], focus: "kudasai",
+      explain: "Mit der て-Form und <b>ください</b> bittest du höflich: <b>まって ください</b> = „Bitte warten Sie.“ Das Objekt steht wie gewohnt vor dem Verb: <b>この ほんを みせて ください</b>.",
+      sentences: [
+        wegS("Bitte warten Sie einen Moment.", "chotto matte kudasai ."),
+        wegS("Bitte zeigen Sie mir dieses Buch.", "kono hon o misete kudasai ."),
+        wegS("Bitte sprechen Sie langsam.", "yukkuri hanashite kudasai ."),
+        wegS("Bitte schreiben Sie hier.", "koko ni kaite kudasai ."),
+        wegS("Bitte kommen Sie morgen.", "ashita kite kudasai .")
+      ] },
+    { id: "u18l6", type: "grammar", title: "〜ても いいですか", teach: ["ii","iidesuyo","dame"], focus: "mo",
+      explain: "Um Erlaubnis zu fragen, hängst du an die て-Form <b>も いいですか</b>: <b>ここで たべても いいですか</b> = „Darf ich hier essen?“ Zustimmung: <b>はい、いいですよ</b>. Ablehnung: <b>いいえ、だめです</b>.",
+      sentences: [
+        wegS("Darf ich hier essen?", "koko de tabete mo ii desu ka ."),
+        wegS("Darf ich dieses Buch ansehen?", "kono hon o mite mo ii desu ka ."),
+        wegS("Darf ich nach Hause gehen?", "ie e kaette mo ii desu ka ."),
+        wegS("Ja, gern.", "hai , iidesuyo ."),
+        wegS("Nein, das geht nicht.", "iie , dame desu .")
+      ] },
+    { id: "u18l7", type: "dialog", title: "Im Restaurant", teach: [],
+      lines: [
+        ["Hanna", wegS("Entschuldigung. Darf ich hier essen?", "sumimasen . koko de tabete mo ii desu ka .")],
+        ["Kellner", wegS("Ja, gern.", "hai , iidesuyo .")],
+        ["Hanna", wegS("Bitte zeigen Sie mir die Speisekarte.", "menyuu o misete kudasai .")],
+        ["Kellner", wegS("Bitte sehr.", "hai , douzo .")],
+        ["Hanna", wegS("Bitte warten Sie einen Moment.", "chotto matte kudasai .")],
+        ["Kellner", wegS("Ja.", "hai .")]
+      ] },
+    { id: "u18l8", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 19, lessons: [
+    { id: "u19l1", type: "words", title: "Wohnen und Arbeiten", teach: ["sumimasu","hatarakimasu","benkyou","kaisha","shigoto"] },
+    { id: "u19l2", type: "grammar", title: "〜ています – gerade jetzt", teach: ["teiru"], focus: "teiru",
+      explain: "Mit der て-Form und <b>います</b> sagst du, was <b>gerade</b> geschieht: <b>たべています</b> = „Ich esse gerade.“ Hier schreibt man いま direkt an die て-Form an: たべて + います = たべています.",
+      sentences: [
+        wegS("Ich esse gerade.", "watashi wa ima gohan o tabete teiru ."),
+        wegS("Ich sehe gerade fern.", "watashi wa ima terebi o mite teiru ."),
+        wegS("Herr Tanaka spricht gerade.", "tanaka san wa ima hanashite teiru ."),
+        wegS("Was machst du gerade?", "anata wa ima nani o shite teiru ka ."),
+        wegS("Ich lese gerade ein Buch.", "watashi wa ima hon o yonde teiru .")
+      ] },
+    { id: "u19l3", type: "grammar", title: "〜ています – wohnen und arbeiten", teach: ["sunde","hataraite","teimasen"], focus: "teimasen",
+      explain: "Auch für Zustände, die andauern, benutzt man <b>〜ています</b>: <b>すんでいます</b> = „ich wohne“, <b>はたらいています</b> = „ich arbeite (dort)“. Verneint wird daraus <b>〜ていません</b>.",
+      sentences: [
+        wegS("Ich wohne in Tokio.", "watashi wa toukyou ni sunde teiru ."),
+        wegS("Wo wohnst du?", "anata wa doko ni sunde teiru ka ."),
+        wegS("Herr Tanaka arbeitet in einer Firma.", "tanaka san wa kaisha de hataraite teiru ."),
+        wegS("Ich arbeite nicht in einer Bank.", "watashi wa ginkou de hataraite teimasen ."),
+        wegS("Meine Mutter lernt gerade Japanisch.", "haha wa nihongo o benkyou shite teiru .")
+      ] },
+    { id: "u19l4", type: "dialog", title: "Am Telefon", teach: ["moshimoshi"],
+      lines: [
+        ["Hanna", wegS("Hallo? Hier ist Hanna.", "moshimoshi . hanna desu .")],
+        ["Tanaka", wegS("Hallo. Hier ist Tanaka.", "moshimoshi . tanaka desu .")],
+        ["Hanna", wegS("Was machen Sie gerade?", "ima nani o shite teiru ka .")],
+        ["Tanaka", wegS("Ich esse gerade.", "ima gohan o tabete teiru .")],
+        ["Hanna", wegS("Wo wohnen Sie?", "doko ni sunde teiru ka .")],
+        ["Tanaka", wegS("Ich wohne in Tokio.", "toukyou ni sunde teiru .")]
+      ] },
+    { id: "u19l5", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 20, lessons: [
+    { id: "u20l1", type: "words", title: "Körper 1", teach: ["atama","onaka","nodo","me","mimi"] },
+    { id: "u20l2", type: "words", title: "Körper 2", teach: ["kuchi","ashi","hana","karada"] },
+    { id: "u20l3", type: "words", title: "Beim Arzt", teach: ["itai","netsu","kaze_c","kusuri","isha"] },
+    { id: "u20l4", type: "grammar", title: "〜が いたいです", teach: [], focus: "itai",
+      explain: "Was weh tut, nennst du mit <b>が</b>: <b>あたまが いたいです</b> = „Ich habe Kopfschmerzen“ (wörtlich: „Der Kopf tut weh“). Gefragt wird mit <b>どこが いたいですか</b>.",
+      sentences: [
+        wegS("Ich habe Kopfschmerzen.", "atama ga itai desu ."),
+        wegS("Mein Bauch tut weh.", "onaka ga itai desu ."),
+        wegS("Mein Hals tut weh.", "nodo ga itai desu ."),
+        wegS("Was tut Ihnen weh?", "doko ga itai desu ka ."),
+        wegS("Meine Füße tun weh.", "ashi ga itai desu .")
+      ] },
+    { id: "u20l5", type: "grammar", title: "Fieber und Erkältung", teach: ["hikimashita"], focus: "netsu",
+      explain: "<b>ねつが あります</b> heißt „Ich habe Fieber“ (wörtlich: „Fieber ist da“). Eine Erkältung „zieht man sich zu“: <b>かぜを ひきました</b> = „Ich habe mich erkältet.“",
+      sentences: [
+        wegS("Ich habe Fieber.", "netsu ga arimasu ."),
+        wegS("Ich habe mich erkältet.", "kaze_c o hikimashita ."),
+        wegS("Ich habe Kopfschmerzen und auch Fieber.", "atama ga itai desu . netsu mo arimasu ."),
+        wegS("Herr Tanaka hat sich erkältet.", "tanaka san wa kaze_c o hikimashita .")
+      ] },
+    { id: "u20l6", type: "grammar", title: "〜ないで ください", teach: ["tabenaide","nomanaide","ikanaide","shinaide"], focus: "kudasai",
+      explain: "<b>〜ないで ください</b> heißt „Bitte … Sie nicht“: <b>たべないで ください</b> = „Bitte essen Sie nicht.“ Diese vier Formen kannst du dir als feste Wörter merken; die Regel dazu kommt später.",
+      sentences: [
+        wegS("Bitte essen Sie hier nicht.", "koko de tabenaide kudasai ."),
+        wegS("Bitte trinken Sie kein Bier.", "biiru o nomanaide kudasai ."),
+        wegS("Bitte gehen Sie heute nicht zur Schule.", "kyou wa gakkou e ikanaide kudasai ."),
+        wegS("Bitte trinken Sie keinen Kaffee.", "koohii o nomanaide kudasai .")
+      ] },
+    { id: "u20l7", type: "grammar", title: "Ratschläge", teach: ["yasumimasu","yasunde","odaiji"], focus: "kudasai",
+      explain: "Ein Arzt gibt Ratschläge mit der て-Form: <b>くすりを のんで ください</b> („Bitte nehmen Sie die Medizin“), <b>ゆっくり やすんで ください</b> („Bitte ruhen Sie sich aus“). Zum Abschied wünscht man <b>おだいじに</b> („Gute Besserung“).",
+      sentences: [
+        wegS("Bitte ruhen Sie sich gut aus.", "yukkuri yasunde kudasai ."),
+        wegS("Bitte nehmen Sie die Medizin.", "kusuri o nonde kudasai ."),
+        wegS("Bitte gehen Sie ins Krankenhaus.", "byouin e itte kudasai .")
+      ] },
+    { id: "u20l8", type: "dialog", title: "Beim Arzt", teach: ["doushimashita","ne"],
+      lines: [
+        ["Arzt", wegS("Was fehlt Ihnen?", "doushimashita .")],
+        ["Hanna", wegS("Ich habe Kopfschmerzen. Ich habe auch Fieber.", "atama ga itai desu . netsu mo arimasu .")],
+        ["Arzt", wegS("Sie haben sich erkältet, nicht wahr?", "kaze_c desu ne .")],
+        ["Arzt", wegS("Bitte nehmen Sie die Medizin. Bitte ruhen Sie sich aus.", "kusuri o nonde kudasai . yukkuri yasunde kudasai .")],
+        ["Hanna", wegS("Vielen Dank.", "arigatou .")],
+        ["Arzt", wegS("Gute Besserung.", "odaiji .")]
+      ] },
+    { id: "u20l9", type: "check", title: "Checkpoint" }
   ] }
 );
 
