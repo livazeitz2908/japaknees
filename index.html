@@ -8683,7 +8683,7 @@ const WEG_SECTIONS = [
   { title: "Abschnitt 3 · Unterwegs", units: [12, 13, 14, 15, 16, 17], exam: "Prüfung 3", examId: "exam3" },
   { title: "Abschnitt 4 · Erleben", units: [18, 19, 20, 21, 22, 23], exam: "Abschlussprüfung N5", examId: "exam4" },
   { title: "Abschnitt 5 · Locker sprechen (N4)", units: [24, 25, 26, 27, 28, 29], exam: "Prüfung 5", examId: "exam5" },
-  { title: "Abschnitt 6 · Beschreiben und erklären (N4)", units: [30, 31, 32, 33, 34, 35], exam: "Prüfung 6" },
+  { title: "Abschnitt 6 · Beschreiben und erklären (N4)", units: [30, 31, 32, 33, 34, 35], exam: "Prüfung 6", examId: "exam6" },
   { title: "Abschnitt 7 · Höflich und selbstständig (N4)", units: [36, 37, 38, 39, 40], exam: "Abschlussprüfung N4" }
 ];
 const WEG_OUTLINE = {
@@ -11312,6 +11312,248 @@ WEG_UNITS.push(
         ["Hanna", wegS("Ja, lass uns essen!", "un , tabeyou .")]
       ] },
     { id: "u29l8", type: "check", title: "Checkpoint" }
+  ] }
+);
+
+// =========================================================
+// Weg, Etappe 5c: Einheiten 30 bis 35 (Vergleichen, Gründe, Bedingungen, Beschreiben, Zustände, Geben und Nehmen) und Prüfung 6
+// =========================================================
+defTokens([
+  // Einheit 30: Vergleichen
+  ["hou", "ほう", "hō", "Seite; (die bessere) Wahl"], ["dochira", "どちら", "dochira", "welcher von beiden"], ["motto", "もっと", "motto", "noch mehr"],
+  ["onaji", "おなじ", "onaji", "gleich"], ["hayai", "はやい", "hayai", "schnell; früh"], ["osoi", "おそい", "osoi", "langsam; spät"],
+  // Einheit 31: Gründe
+  ["node", "ので", "node", "weil; da", "part", true], ["noni", "のに", "noni", "obwohl", "part", true], ["dakara", "だから", "dakara", "deshalb"],
+  ["shikashi", "しかし", "shikashi", "aber; jedoch"], ["riyuu", "りゆう", "riyū", "Grund"], ["imashita", "いました", "imashita", "war da (Lebewesen)"], ["dekimasendeshita", "できませんでした", "dekimasendeshita", "konnte nicht"],
+  ["soudesuka", "そうですか", "sō desu ka", "Ach so?", "phrase"],
+  // Einheit 32: Bedingungen
+  ["toC", "と", "to", "wenn (immer wenn)", "part", true], ["ra", "ら", "ra", "(〜たら: wenn; nachdem)", "part", true], ["nara", "なら", "nara", "wenn; falls", "part", true],
+  ["naru", "なる", "naru", "werden (einfache Form)"], ["magaru", "まがる", "magaru", "abbiegen (einfache Form)"], ["yasukereba", "やすければ", "yasukereba", "wenn es billig ist"],
+  ["tabereba", "たべれば", "tabereba", "wenn man isst"], ["ikeba", "いけば", "ikeba", "wenn man geht"], ["nomeba", "のめば", "nomeba", "wenn man trinkt"],
+  ["yomeba", "よめば", "yomeba", "wenn man liest"], ["kakeba", "かけば", "kakeba", "wenn man schreibt"], ["sureba", "すれば", "sureba", "wenn man macht"],
+  ["kureba", "くれば", "kureba", "wenn man kommt"], ["mireba", "みれば", "mireba", "wenn man sieht"], ["noreba", "のれば", "noreba", "wenn man einsteigt"],
+  // Einheit 33: Beschreiben
+  ["hito", "ひと", "hito", "Person; Mensch"], ["tabemono", "たべもの", "tabemono", "Essen; Speise"], ["mise", "みせ", "mise", "Geschäft; Laden"], ["tokoro", "ところ", "tokoro", "Ort; Stelle"],
+  // Einheit 34: Zustände und Ergebnisse
+  ["akete", "あけて", "akete", "öffnen (て-Form)"], ["namae", "なまえ", "namae", "Name"], ["wasurete", "わすれて", "wasurete", "vergessen (て-Form)"],
+  ["zenbu", "ぜんぶ", "zenbu", "alles; alle"], ["okimashita", "おきました", "okimashita", "habe (im Voraus) getan"], ["shimaimashita", "しまいました", "shimaimashita", "habe (leider) getan; ist erledigt"],
+  ["daijoubu", "だいじょうぶ", "daijōbu", "in Ordnung; keine Sorge"],
+  // Einheit 35: Geben und Nehmen
+  ["purezento", "プレゼント", "purezento", "Geschenk"], ["tanjoubi", "たんじょうび", "tanjōbi", "Geburtstag"],
+  ["agemasu", "あげます", "agemasu", "geben (ich an andere)"], ["kuremasu", "くれます", "kuremasu", "geben (andere an mich)"], ["moraimasu", "もらいます", "moraimasu", "bekommen"],
+  ["agemashita", "あげました", "agemashita", "gab (ich an andere)"], ["kuremashita", "くれました", "kuremashita", "gab (andere an mich)"], ["moraimashita", "もらいました", "moraimashita", "bekam"],
+  ["motte", "もって", "motte", "tragen; halten (て-Form)"], ["oshiete", "おしえて", "oshiete", "lehren; zeigen (て-Form)"]
+]);
+
+WEG_UNITS.push(
+  { id: 30, lessons: [
+    { id: "u30l1", type: "words", title: "Vergleichswörter", teach: ["hayai","osoi","motto","onaji","dochira","hou"] },
+    { id: "u30l2", type: "grammar", title: "A は B より …", teach: [], focus: "yori",
+      explain: "Bei einem Vergleich steht das Verglichene mit <b>より</b> („als“) vor dem Eigenschaftswort: <b>でんしゃは バスより はやいです</b> = „Der Zug ist schneller als der Bus.“",
+      sentences: [
+        wegS("Der Zug ist schneller als der Bus.", "densha wa basu yori hayai desu ."),
+        wegS("Der Bus ist langsamer als der Zug.", "basu wa densha yori osoi desu ."),
+        wegS("Heute ist es heißer als gestern.", "kyou wa kinou yori atsui desu ."),
+        wegS("Tokio ist größer als Kyoto.", "toukyou wa kyouto yori ookii desu ."),
+        wegS("Das hier ist billiger als das dort.", "kore wa are yori yasui desu .")
+      ] },
+    { id: "u30l3", type: "grammar", title: "〜の ほうが – die bessere Wahl", teach: [], focus: "hou",
+      explain: "Fragst du zwischen zwei Dingen, sagst du <b>どちらが</b>. Antwort: <b>〜の ほうが</b>: <b>バスの ほうが やすいです</b> = „Der Bus ist billiger.“ Mit <b>もっと</b> betonst du „noch“.",
+      sentences: [
+        wegS("Der Bus ist billiger.", "basu no hou ga yasui desu ."),
+        wegS("Was magst du lieber, Kaffee oder Tee?", "koohii to ocha to , dochira ga suki desu ka ."),
+        wegS("Ich mag Tee lieber.", "watashi wa ocha no hou ga suki desu ."),
+        wegS("Der Zug ist noch schneller.", "densha no hou ga motto hayai desu .")
+      ] },
+    { id: "u30l4", type: "grammar", title: "いちばん – am meisten", teach: [], focus: "ichiban",
+      explain: "Das Höchste unter mehreren sagst du mit <b>〜の なかで 〜が いちばん</b>: <b>くだものの なかで りんごが いちばん すきです</b> = „Von allem Obst mag ich Äpfel am liebsten.“ <b>おなじ</b> heißt „gleich“.",
+      sentences: [
+        wegS("Welches Obst magst du am liebsten?", "kudamono no naka de nani ga ichiban suki desu ka ."),
+        wegS("Äpfel mag ich am liebsten.", "ringo ga ichiban suki desu ."),
+        wegS("Heute ist es am heißesten.", "kyou wa ichiban atsui desu ."),
+        wegS("Das hier und das dort sind gleich.", "kore to are wa onaji desu .")
+      ] },
+    { id: "u30l5", type: "dialog", title: "Bahn oder Bus?", teach: [],
+      lines: [
+        ["Hanna", wegS("Was ist schneller, Zug oder Bus?", "densha to basu to , dochira ga hayai desu ka .")],
+        ["Tanaka", wegS("Der Zug ist schneller.", "densha no hou ga hayai desu .")],
+        ["Hanna", wegS("Aber der Bus ist billiger.", "demo , basu no hou ga yasui desu ne .")],
+        ["Tanaka", wegS("Das stimmt. Ich mag die U-Bahn am liebsten.", "soudesune . watashi wa chikatetsu ga ichiban suki desu .")]
+      ] },
+    { id: "u30l6", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 31, lessons: [
+    { id: "u31l1", type: "words", title: "Gründe nennen", teach: ["dakara","shikashi","riyuu"] },
+    { id: "u31l2", type: "grammar", title: "〜ので – weil", teach: ["node","imashita"], focus: "node",
+      explain: "<b>ので</b> nennt einen sachlichen Grund („weil“, „da“) und klingt weicher als から. Davor steht die <b>einfache Form</b>; bei Nomen und な-Adjektiven kommt <b>な</b>: <b>あめなので</b>.",
+      sentences: [
+        wegS("Weil ich beschäftigt bin, gehe ich nicht.", "isogashii node , ikimasen ."),
+        wegS("Weil es regnet, bin ich zu Hause.", "ame na node , ie ni imasu ."),
+        wegS("Weil es lecker ist, möchte ich wieder hingehen.", "oishii node , mata ikitai desu ."),
+        wegS("Weil es heiß ist, trinke ich Wasser.", "atsui node , mizu o nomimasu .")
+      ] },
+    { id: "u31l3", type: "grammar", title: "〜のに – obwohl", teach: ["noni","dekimasendeshita"], focus: "noni",
+      explain: "<b>のに</b> bedeutet „obwohl“ und drückt aus, dass etwas Unerwartetes folgt: <b>べんきょうしたのに、できませんでした</b> = „Obwohl ich gelernt habe, habe ich es nicht geschafft.“",
+      sentences: [
+        wegS("Obwohl ich gelernt habe, konnte ich es nicht.", "benkyou shitaV noni , dekimasendeshita ."),
+        wegS("Obwohl es teuer ist, ist es nicht lecker.", "takai noni , oishikunai desu ."),
+        wegS("Obwohl ich jeden Tag lerne, ist es schwierig.", "mainichi benkyou shite iru noni , muzukashii desu .")
+      ] },
+    { id: "u31l4", type: "grammar", title: "だから und しかし", teach: [], focus: "dakara",
+      explain: "<b>だから</b> beginnt einen neuen Satz mit „deshalb“, <b>しかし</b> mit „aber, jedoch“. Beide stehen am Satzanfang und sind meist durch ein Komma vom Rest getrennt.",
+      sentences: [
+        wegS("Es hat geregnet. Deshalb bin ich nicht gegangen.", "ame deshita . dakara , ikimasendeshita ."),
+        wegS("Morgen bin ich beschäftigt. Deshalb gehe ich nicht.", "ashita wa isogashii desu . dakara , ikimasen ."),
+        wegS("Es ist lecker. Aber es ist teuer.", "oishii desu . shikashi , takai desu ."),
+        wegS("Ich habe gelernt. Aber ich konnte es nicht.", "benkyou shimashita . shikashi , dekimasendeshita .")
+      ] },
+    { id: "u31l5", type: "dialog", title: "Warum nicht?", teach: ["soudesuka"],
+      lines: [
+        ["Tanaka", wegS("Warum bist du gestern nicht gegangen?", "doushite kinou ikimasendeshita ka .")],
+        ["Hanna", wegS("Weil es geregnet hat, war ich zu Hause.", "ame datta node , ie ni imashita .")],
+        ["Tanaka", wegS("Ach so? Schade.", "soudesuka . zannen desu ne .")],
+        ["Hanna", wegS("Obwohl ich gelernt habe, gab es keine Prüfung.", "benkyou shitaV noni , shiken ga arimasendeshita .")]
+      ] },
+    { id: "u31l6", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 32, lessons: [
+    { id: "u32l1", type: "words", title: "Wörter für Bedingungen", teach: ["naru","magaru","yasukereba","mise"] },
+    { id: "u32l2", type: "grammar", title: "〜と – immer wenn", teach: ["toC"], focus: "toC",
+      explain: "<b>と</b> steht nach der einfachen Form und beschreibt ein sicheres Ergebnis: <b>はるに なると、さくらが きれいです</b> = „Wenn es Frühling wird, sind die Kirschblüten schön.“",
+      sentences: [
+        wegS("Wenn es Frühling wird, sind die Kirschblüten schön.", "haru ni naru toC , sakura ga kirei desu ."),
+        wegS("Wenn man rechts abbiegt, ist dort der Bahnhof.", "migi e magaru toC , eki ga arimasu ."),
+        wegS("Wenn man dieses Buch liest, wird es interessant.", "kono hon o yomu toC , omoshiroi desu .")
+      ] },
+    { id: "u32l3", type: "grammar", title: "〜たら – wenn, nachdem", teach: ["ra"], focus: "ra",
+      explain: "<b>〜たら</b> bildest du aus der <b>た-Form</b> plus <b>ら</b>: <b>いったら</b> = „wenn / nachdem ich hingehe“. Danach folgt, was dann geschieht oder geschehen soll.",
+      sentences: [
+        wegS("Wenn ich nach Japan komme, möchte ich Sushi essen.", "nihon e itta ra , sushi o tabetai desu ."),
+        wegS("Wenn ich nach Hause komme, schlafe ich.", "kaetta ra , nemasu ."),
+        wegS("Nachdem ich gegessen habe, sehe ich fern.", "gohan o tabeta ra , terebi o mimasu .")
+      ] },
+    { id: "u32l4", type: "conj", form: "ば-Form", title: "Die ば-Form", teach: ["tabereba","ikeba","nomeba","yomeba","kakeba","sureba","kureba","mireba","noreba"],
+      pairs: [
+        ["taberu", "tabereba", [["たべれる", "tabereru"], ["たべなば", "tabenaba"]]],
+        ["miru", "mireba", [["みれる", "mireru"], ["みなば", "minaba"]]],
+        ["iku", "ikeba", [["いければ", "ikereba"], ["いかば", "ikaba"]]],
+        ["nomu", "nomeba", [["のめれば", "nomereba"], ["のまば", "nomaba"]]],
+        ["yomu", "yomeba", [["よめれば", "yomereba"], ["よまば", "yomaba"]]],
+        ["kaku", "kakeba", [["かければ", "kakereba"], ["かかば", "kakaba"]]],
+        ["noru", "noreba", [["のれれば", "norereba"], ["のらば", "noraba"]]],
+        ["suru", "sureba", [["すれる", "sureru"], ["しれば", "shireba"]]],
+        ["kuru", "kureba", [["くれる", "kureru"], ["これば", "koreba"]]]
+      ],
+      explain: "Die <b>ば-Form</b> bedeutet „wenn“. Bei <b>う-Verben</b> wird der letzte Laut zum <b>え-Laut</b> + <b>ば</b>: いく → <b>いけば</b>, のむ → <b>のめば</b>. Bei <b>る-Verben</b> fällt <b>る</b> weg, <b>れば</b> kommt dazu: たべる → <b>たべれば</b>. <b>する → すれば</b>, <b>くる → くれば</b>." },
+    { id: "u32l5", type: "grammar", title: "〜ば – wenn", teach: [], focus: "noreba",
+      explain: "Mit der <b>ば-Form</b> nennst du eine Voraussetzung: <b>ちかてつに のれば、はやいです</b> = „Wenn man die U-Bahn nimmt, geht es schnell.“ Bei Adjektiven: <b>やすければ</b> = „wenn es billig ist“.",
+      sentences: [
+        wegS("Wenn man die U-Bahn nimmt, geht es schnell.", "chikatetsu ni noreba , hayai desu ."),
+        wegS("Wenn es billig ist, kaufe ich es.", "yasukereba , kaimasu ."),
+        wegS("Wenn man Medizin nimmt, wird man gesund.", "kusuri o nomeba , genki desu ."),
+        wegS("Wenn man es liest, ist es interessant.", "yomeba , omoshiroi desu .")
+      ] },
+    { id: "u32l6", type: "grammar", title: "〜なら – wenn du das sagst", teach: ["nara"], focus: "nara",
+      explain: "<b>なら</b> greift ein Thema auf, das jemand genannt hat: <b>にほんへ いくなら、きょうとが いいです</b> = „Wenn du nach Japan fährst, ist Kyoto gut.“",
+      sentences: [
+        wegS("Wenn du nach Japan fährst, ist Kyoto gut.", "nihon e iku nara , kyouto ga ii desu ."),
+        wegS("Wenn du Sushi isst, ist dieser Laden gut.", "sushi o taberu nara , kono mise ga ii desu ."),
+        wegS("Wenn du Tee trinken willst, ist dieser Laden gut.", "ocha o nomu nara , kono mise ga ii desu .")
+      ] },
+    { id: "u32l7", type: "dialog", title: "Wenn du fährst …", teach: [],
+      lines: [
+        ["Tanaka", wegS("Wenn du nach Japan fährst, was möchtest du essen?", "nihon e iku nara , nani o tabetai desu ka .")],
+        ["Hanna", wegS("Wenn ich hinkomme, möchte ich Sushi essen.", "itta ra , sushi o tabetai desu .")],
+        ["Tanaka", wegS("Wenn man die U-Bahn nimmt, geht es schnell.", "chikatetsu ni noreba , hayai desu .")],
+        ["Hanna", wegS("Danke!", "arigatou .")]
+      ] },
+    { id: "u32l8", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 33, lessons: [
+    { id: "u33l1", type: "words", title: "Personen und Orte", teach: ["hito","tabemono","tokoro"] },
+    { id: "u33l2", type: "grammar", title: "Verb vor Nomen: Vergangenheit", teach: [], focus: "katta",
+      explain: "Im Japanischen steht der <b>ganze Nebensatz vor dem Nomen</b>. Das Verb steht dabei in der einfachen Form: <b>わたしが かった ほん</b> = „das Buch, das ich gekauft habe“.",
+      sentences: [
+        wegS("Das ist das Buch, das ich gekauft habe.", "kore wa watashi ga katta hon desu ."),
+        wegS("Der Film, den ich gestern gesehen habe, war interessant.", "kinou mita eiga wa omoshirokatta desu ."),
+        wegS("Die Tasche, die ich in Japan gekauft habe, war teuer.", "nihon de katta kaban wa takakatta desu ."),
+        wegS("Der Laden, in dem ich gestern war, war billig.", "kinou itta mise wa yasukatta desu .")
+      ] },
+    { id: "u33l3", type: "grammar", title: "Verb vor Nomen: Gegenwart", teach: [], focus: "hito",
+      explain: "Auch gegenwärtiges Geschehen kommt vor das Nomen: <b>よんでいる ひと</b> = „die Person, die gerade liest“. Mit <b>すきな</b> beschreibst du „…, den/die/das ich mag“.",
+      sentences: [
+        wegS("Die Person, die dort ein Buch liest, ist Herr Tanaka.", "asoko de hon o yonde iru hito wa tanaka san desu ."),
+        wegS("Mein Lieblingsessen ist Sushi.", "watashi ga suki na tabemono wa sushi desu ."),
+        wegS("Die Person, die in dem Laden arbeitet, ist ein Freund von mir.", "ano mise de hataraite iru hito wa tomodachi desu .")
+      ] },
+    { id: "u33l4", type: "dialog", title: "Im Laden", teach: [],
+      lines: [
+        ["Hanna", wegS("Das ist die Tasche, die ich gestern gekauft habe.", "kore wa kinou katta kaban desu .")],
+        ["Tanaka", wegS("Eine schöne Tasche. Wo hast du sie gekauft?", "ii kaban desu ne . doko de kaimashita ka .")],
+        ["Hanna", wegS("In dem Laden dort.", "ano mise desu .")],
+        ["Tanaka", wegS("Ich habe auch schon in dem Laden eingekauft.", "watashi mo ano mise de kaimono o shitaV koto ga arimasu .")]
+      ] },
+    { id: "u33l5", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 34, lessons: [
+    { id: "u34l1", type: "words", title: "Wörter für Ergebnisse", teach: ["akete","namae","wasurete","zenbu"] },
+    { id: "u34l2", type: "grammar", title: "〜てあります – Zustand", teach: [], focus: "arimasu",
+      explain: "<b>〜て あります</b> beschreibt einen Zustand, den jemand mit Absicht herbeigeführt hat: <b>まどが あけて あります</b> = „Das Fenster ist (absichtlich) geöffnet.“ Das Objekt steht mit <b>が</b>.",
+      sentences: [
+        wegS("Das Fenster ist geöffnet.", "mado ga akete arimasu ."),
+        wegS("Hier steht ein Name geschrieben.", "koko ni namae ga kaite arimasu ."),
+        wegS("Die Telefonnummer steht da.", "denwabangou ga kaite arimasu .")
+      ] },
+    { id: "u34l3", type: "grammar", title: "〜ておきます – im Voraus", teach: ["okimashita"], focus: "okimashita",
+      explain: "<b>〜て おきます</b> heißt „etwas im Voraus erledigen“: <b>ホテルを よやくして おきました</b> = „Ich habe das Hotel schon im Voraus reserviert.“",
+      sentences: [
+        wegS("Ich habe das Hotel im Voraus reserviert.", "hoteru o yoyaku shite okimashita ."),
+        wegS("Ich habe schon vorher gegessen.", "gohan o tabete okimashita ."),
+        wegS("Ich habe die Hausaufgabe schon gemacht.", "shukudai o shite okimashita .")
+      ] },
+    { id: "u34l4", type: "grammar", title: "〜てしまいます – leider", teach: ["shimaimashita"], focus: "shimaimashita",
+      explain: "<b>〜て しまいました</b> heißt „ganz erledigt“ oder „leider passiert“: <b>わすれて しまいました</b> = „Ich habe es (leider) vergessen.“",
+      sentences: [
+        wegS("Ich habe die Hausaufgabe vergessen.", "shukudai o wasurete shimaimashita ."),
+        wegS("Ich habe alles aufgegessen.", "zenbu tabete shimaimashita ."),
+        wegS("Ich habe meinen Regenschirm vergessen.", "kasa o wasurete shimaimashita .")
+      ] },
+    { id: "u34l5", type: "dialog", title: "Vor der Reise", teach: ["daijoubu"],
+      lines: [
+        ["Hanna", wegS("Ich habe das Hotel schon reserviert.", "hoteru o yoyaku shite okimashita .")],
+        ["Tanaka", wegS("Danke. Ich habe auch die Fahrkarte schon gekauft.", "arigatou . kippu mo katte okimashita .")],
+        ["Hanna", wegS("Ich habe meinen Reisepass vergessen.", "paspooto o wasurete shimaimashita .")],
+        ["Tanaka", wegS("Geht es noch?", "daijoubu desu ka .")]
+      ] },
+    { id: "u34l6", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 35, lessons: [
+    { id: "u35l1", type: "words", title: "Geben und Nehmen", teach: ["purezento","tanjoubi","agemasu","kuremasu","moraimasu"] },
+    { id: "u35l2", type: "grammar", title: "あげる, くれる, もらう", teach: ["agemashita","kuremashita","moraimashita"], focus: "kuremashita",
+      explain: "<b>あげます</b>: ich gebe jemandem etwas. <b>くれます</b>: jemand gibt <b>mir</b> etwas. <b>もらいます</b>: ich bekomme etwas (von jemandem, mit <b>に</b> oder <b>から</b>).",
+      sentences: [
+        wegS("Ich habe meinem Freund ein Geschenk gegeben.", "watashi wa tomodachi ni purezento o agemashita ."),
+        wegS("Mein Freund hat mir ein Buch geschenkt.", "tomodachi wa watashi ni hon o kuremashita ."),
+        wegS("Ich habe von meinem Freund ein Geschenk bekommen.", "watashi wa tomodachi ni purezento o moraimashita ."),
+        wegS("Was hast du zum Geburtstag bekommen?", "tanjoubi ni nani o moraimashita ka ."),
+        wegS("Von der Mutter habe ich eine Uhr bekommen.", "haha ni tokei o moraimashita .")
+      ] },
+    { id: "u35l3", type: "grammar", title: "〜てくれました, 〜てもらいました", teach: ["motte","oshiete"], focus: "kuremashita",
+      explain: "Auch Gefälligkeiten drückst du so aus: <b>もって くれました</b> = „Er hat es für mich getragen.“ <b>おしえて もらいました</b> = „Ich habe es mir zeigen lassen.“",
+      sentences: [
+        wegS("Mein Freund hat mein Gepäck für mich getragen.", "tomodachi ga nimotsu o motte kuremashita ."),
+        wegS("Der Lehrer hat mir Japanisch beigebracht.", "sensei ga nihongo o oshiete kuremashita ."),
+        wegS("Ich habe mir von meinem Freund das Gepäck tragen lassen.", "tomodachi ni nimotsu o motte moraimashita ."),
+        wegS("Ich habe mir vom Lehrer Japanisch beibringen lassen.", "sensei ni nihongo o oshiete moraimashita .")
+      ] },
+    { id: "u35l4", type: "dialog", title: "Zum Geburtstag", teach: [],
+      lines: [
+        ["Tanaka", wegS("Was hast du zum Geburtstag bekommen?", "tanjoubi ni nani o moraimashita ka .")],
+        ["Hanna", wegS("Ich habe von meinem Freund ein Buch bekommen.", "tomodachi ni hon o moraimashita .")],
+        ["Tanaka", wegS("Ich habe von meiner Mutter eine Uhr bekommen.", "haha ni tokei o moraimashita .")],
+        ["Hanna", wegS("Das ist schön.", "iidesune .")]
+      ] },
+    { id: "u35l5", type: "check", title: "Checkpoint" }
   ] }
 );
 
