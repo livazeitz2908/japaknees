@@ -15037,13 +15037,17 @@ if (!state.write) state.write = { items: [], i: 0, target: "kana" }; // "kana" |
   mount.innerHTML = `
     <h2>Schreibübung</h2>
 
-    <div class="card" style="display:flex; gap:8px; align-items:center; justify-content:space-between;">
+    <div class="card" style="display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
       <div style="display:flex; gap:8px; align-items:center;">
        <input id="wImport" type="file" accept=".xlsx,.xls,.csv" style="position:absolute; left:-9999px;">
 <label id="wImportBtn" for="wImport" title="Wörter aus XLSX/CSV importieren" class="btn">Import</label>
         <button id="wp-random">Zufällig</button>
+        <label style="display:flex; gap:.4rem; align-items:center;">
+          Wörter:
+          <select id="wSrc"></select>
+        </label>
       </div>
-      <div style="display:flex; gap:8px; align-items:center;">
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <button id="wPrev">⟵</button>
         <span id="wPos" style="min-width:4ch; text-align:center; opacity:.7;">–/–</span>
         <button id="wNext">⟶</button>
@@ -15059,6 +15063,7 @@ if (!state.write) state.write = { items: [], i: 0, target: "kana" }; // "kana" |
       </div>
     </div>
 
+    <div id="wSrcHint" class="hint" style="margin-top:.5rem;"></div>
     <div class="write-layout" style="margin-top:12px;">
   <div id="write-standalone"></div>
   <aside id="write-prompt" class="card" style="padding:16px; min-height:240px;">
@@ -15097,7 +15102,7 @@ if (!state.write) state.write = { items: [], i: 0, target: "kana" }; // "kana" |
   deEl.textContent = de || "—";
   roEl.textContent = romaji || "—";
 
-  const targetWord = (state.write.target === "kanji" ? kanji : kana).trim();
+  const targetWord = (state.write.target === "kanji" ? (kanji || kana) : kana).trim();
   bigEl.textContent = targetWord || " "; // Leerzeichen hält die Box offen
   box.dataset.empty = targetWord ? "0" : "1";
 
@@ -15153,6 +15158,8 @@ document.getElementById("wImport").addEventListener("change", async (e) => {
 
     // ✅ hier knallt es vorher – jetzt sicher:
     state.write.items = usable;
+    state.write.imported = usable;
+    state.write.src = "import"; $("#wSrc").value = "import";
     state.write.i = 0;
 
     // Anzeige aktualisieren
@@ -15210,6 +15217,8 @@ function curItem(){
     }
     if (!items.length) { alert("Keine Einträge gefunden (Spalten: de, romaji, kana, kanji)."); return; }
     state.write.items = items;
+    state.write.imported = items;
+    state.write.src = "import"; $("#wSrc").value = "import";
     loadIndex(0);
   } catch(err){
     console.error(err);
@@ -15219,8 +15228,40 @@ function curItem(){
   }
 });
 
+  // Wörter-Quelle: gelernte Wörter aus dem Weg (alle oder je Einheit) oder eigene Importliste
+  const groups = learnedByUnit().filter(g => g.toks.length);
+  $("#wSrc").innerHTML = `<option value="all">Gelernte Wörter (alle)</option>` +
+    groups.map(g => `<option value="${g.unit.id}">Einheit ${g.unit.id} · ${escapeHTML((WEG_OUTLINE[g.unit.id] || [""])[0])}</option>`).join("") +
+    `<option value="import">Importierte Liste</option>`;
+  function setSource(v){
+    state.write.src = v;
+    state.write.items = v === "import" ? (state.write.imported || []) : learnedWriteItems(v === "all" ? null : Number(v));
+    $("#wSrcHint").textContent = !state.write.items.length
+      ? (v === "import" ? "Noch keine Liste importiert." : "Du hast noch keine Wörter im Weg gelernt. Schließe zuerst eine Lektion ab.")
+      : "";
+    loadIndex(0);
+  }
+  $("#wSrc").onchange = (e) => setSource(e.target.value);
+
   // 4) Start
-  loadIndex(state.write.i || 0);
+  const src0 = state.write.src || "all";
+  if (src0 !== "import" && !$("#wSrc").querySelector(`option[value="${src0}"]`)) state.write.src = "all";
+  $("#wSrc").value = state.write.src || "all";
+  if (state.write.src === "import") loadIndex(state.write.i || 0); else setSource(state.write.src || "all");
+}
+
+// Gelernte Wörter als Schreibübungs-Einträge (de, romaji, kana, kanji)
+function learnedWriteItems(unitId){
+  const out = [], seen = new Set();
+  learnedByUnit().forEach(g => {
+    if (unitId != null && g.unit.id !== unitId) return;
+    g.toks.forEach(t => {
+      if (seen.has(t.ja)) return;
+      seen.add(t.ja);
+      out.push({ de: t.de, romaji: t.ro, kana: t.ja, kanji: "" });
+    });
+  });
+  return out;
 }
 
 // Erwartete Spaltennamen (case-insensitive): de, romaji, kana, kanji
