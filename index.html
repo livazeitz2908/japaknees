@@ -2193,8 +2193,10 @@ button.linklike { background:none; border:0; box-shadow:none; width:auto; paddin
 .match2 { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
 .match2 > div { display:flex; flex-direction:column; gap:.5rem; }
 .intro-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(7rem, 1fr)); gap:.5rem; }
-.intro-card { display:flex; flex-direction:column; align-items:center; padding:.6rem; }
-.intro-big { font-size:1.8rem; }
+.intro-grid.wide { grid-template-columns:repeat(auto-fill, minmax(9.5rem, 1fr)); }
+.intro-card { display:flex; flex-direction:column; align-items:center; padding:.6rem; border-radius:1.2rem; }
+.intro-big { font-size:1.8rem; word-break:keep-all; }
+.intro-grid.wide .intro-big { font-size:1.5rem; }
 .intro-sub { font-size:.85rem; color:var(--muted); }
 .intro-ex { display:flex; gap:.6rem; align-items:flex-start; margin:.5rem 0; }
 .intro-ja { font-size:1.2rem; }
@@ -8590,7 +8592,7 @@ const WEG_OUTLINE = {
   3: ["Zahlen", "Ich kann zählen, Alter und Telefonnummer sagen."],
   4: ["Menschen und Familie", "Ich kann über Familie und Freunde sprechen."],
   5: ["Dinge und Orte", "Ich kann fragen „Was ist das?“ und „Wo ist …?“."],
-  6: ["Zeit und Tage", "Ich kann Uhrzeit, Wochentage und Datum nennen."],
+  6: ["Zeit und Tage", "Ich kann Uhrzeit, Wochentage und Monate nennen."],
   7: ["Essen und Trinken", "Ich kann sagen, was ich esse und mag."],
   8: ["Mein Tag", "Ich kann meinen Tagesablauf erzählen."],
   9: ["Einkaufen", "Ich kann nach dem Preis fragen und etwas kaufen."],
@@ -8902,7 +8904,7 @@ function lessonCore(unit, idx){
   const poolAll = introducedTokens(unit.id, idx, false);
   const teachToks = (lesson.teach || []).map(id => TOK[id]).filter(Boolean);
   const exs = [];
-  if (lesson.type === "numgen" || lesson.type === "phone" || (lesson.type === "words" && teachToks.length && teachToks.every(t => t.kind === "num"))) {
+  if (lesson.type === "numgen" || lesson.type === "phone" || lesson.type === "timegen" || (lesson.type === "words" && teachToks.length && teachToks.every(t => t.kind === "num"))) {
     return numberLessonCore(lesson, unit, idx);
   }
   if (lesson.type === "kana") {
@@ -8911,9 +8913,13 @@ function lessonCore(unit, idx){
       cards: lesson.chars.map(([k, r]) => ({ big: wegEsc(k), sub: wegEsc(r), say: k })),
       note: lesson.note || "Tippe ein Zeichen an, um es zu hören." });
     const body = [];
-    lesson.chars.forEach(([k, r]) => { body.push(exKanaRead(k, r, kp)); body.push(exKanaFind(k, r, kp)); });
-    shuffle(lesson.chars).slice(0, 2).forEach(([k, r]) => body.push(exKanaHear(k, r, kp)));
-    body.push(exKanaMatch(lesson.chars));
+    const many = lesson.chars.length > 6;   // bei vielen Zeichen nur eine Frage je Zeichen, damit die Lektion kurz bleibt
+    lesson.chars.forEach(([k, r]) => {
+      if (many) body.push(Math.random() < 0.5 ? exKanaRead(k, r, kp) : exKanaFind(k, r, kp));
+      else { body.push(exKanaRead(k, r, kp)); body.push(exKanaFind(k, r, kp)); }
+    });
+    shuffle(lesson.chars).slice(0, many ? 3 : 2).forEach(([k, r]) => body.push(exKanaHear(k, r, kp)));
+    body.push(exKanaMatch(many ? shuffle(lesson.chars).slice(0, 6) : lesson.chars));
     exs.push(...shuffle(body));
   } else if (lesson.type === "words") {
     exs.push({ kind: "intro", title: lesson.title,
@@ -8922,7 +8928,7 @@ function lessonCore(unit, idx){
     const body = [];
     teachToks.forEach(t => { body.push(exTokJa2De(t, pool)); body.push(exTokDe2Ja(t, pool)); });
     shuffle(teachToks).slice(0, 3).forEach(t => body.push(exTokHear(t, pool)));
-    body.push(exTokMatch(teachToks.slice(0, 5)));
+    body.push(exTokMatch(shuffle(teachToks).slice(0, 5)));
     (lesson.scenes || []).forEach(([q, id]) => {
       const t = TOK[id];
       const others = uniqueJa(shuffle(pool.filter(x => x.id !== id && x.ja !== t.ja))).slice(0, 3);
@@ -8938,6 +8944,7 @@ function lessonCore(unit, idx){
     lesson.sentences.forEach(s => body.push(exBuild(s, poolAll)));
     lesson.sentences.slice(0, 3).forEach(s => body.push(exSentJa2De(s, lesson.sentences)));
     if (lesson.focus) lesson.sentences.slice(0, 2).forEach(s => { if (s.ids.includes(lesson.focus)) body.push(exFill(s, lesson.focus, poolAll)); });
+    (lesson.gens || []).forEach(g => body.push(...genSet(GENS[g], GENS[g].vals, 2, 1, 1, 0)));
     exs.push(...shuffle(body));
   } else if (lesson.type === "dialog") {
     const sents = lesson.lines.map(l => l[1]);
@@ -9039,7 +9046,9 @@ function playLesson(mount, cfg){
   function showIntro(ex){
     let inner = `<h3>${wegEsc(ex.title || "")}</h3>`;
     if (ex.explain) inner += `<p>${ex.explain}</p>`;
-    if (ex.cards) inner += `<div class="intro-grid">${ex.cards.map(c => `
+    // längere Wörter brauchen breitere Kacheln, damit sie nicht mitten im Wort umbrechen
+    const wide = (ex.cards || []).some(c => String(hv(c.big)).replace(/<[^>]*>/g, "").length > 4);
+    if (ex.cards) inner += `<div class="intro-grid${wide ? " wide" : ""}">${ex.cards.map(c => `
       <button type="button" class="intro-card" data-say="${wegEsc(c.say || "")}"><span class="intro-big">${hv(c.big)}</span><span class="intro-sub">${c.sub || ""}</span></button>`).join("")}</div>`;
     if (ex.examples) inner += `<div class="intro-list">${ex.examples.map(e => `
       <div class="intro-ex"><button type="button" class="mini" data-say="${wegEsc(e.say)}" aria-label="Vorlesen" style="width:auto;">🔊</button>
@@ -9193,7 +9202,7 @@ function renderLektion(mount, parts){
 }
 
 function wegNodeIcon(l){
-  return ({ kana: "あ", words: "語", grammar: "文", dialog: "話", check: "★", numgen: "数", phone: "電" })[l.type] || "•";
+  return ({ kana: "あ", words: "語", grammar: "文", dialog: "話", check: "★", numgen: "数", phone: "電", timegen: "時" })[l.type] || "•";
 }
 
 function examCardHtml(sec){
@@ -9290,7 +9299,7 @@ function checkCurriculum(){
     (l.lines || []).forEach(([who, s]) => { if (!s.de) problems.push(`${l.id}: Dialogzeile ohne Übersetzung`); used.push(...s.ids); });
     (l.scenes || []).forEach(([q, id]) => used.push(id));
     (l.uses || []).forEach(id => used.push(id));
-    if (["words", "dialog", "grammar", "phone"].includes(l.type)) (l.teach || []).forEach(id => used.push(id));
+    if (["words", "dialog", "grammar", "phone", "timegen"].includes(l.type)) (l.teach || []).forEach(id => used.push(id));
     used.forEach(id => {
       const t = TOK[id];
       if (!t) { problems.push(`${l.id}: Baustein ${id} nicht definiert`); return; }
@@ -9571,6 +9580,13 @@ function numberLessonCore(lesson, unit, idx){
     all.slice(7, 10).forEach(v => body.push(exNumJ2A(v, lesson.min, lesson.max)));
     all.slice(10, 12).forEach(v => body.push(exNumHear(v, lesson.min, lesson.max)));
     exs.push(...shuffle(body));
+  } else if (lesson.type === "timegen") {
+    const gen = GENS[lesson.gen];
+    const exVals = { hour: [3, 4, 7, 9], month: [1, 4, 7, 12], minute: [1, 5, 10, 15] }[lesson.gen];
+    exs.push({ kind: "intro", title: lesson.title, explain: lesson.explain,
+      cards: toks.map(t => ({ big: () => wegHtml([t.id], { noSub: true }), sub: wegEsc(t.de), say: t.ja })),
+      examples: exVals.map(v => ({ html: () => wegHtml(gen.ids(v)), de: wegEsc(gen.disp(v)), say: wegJa(gen.ids(v)) })) });
+    exs.push(...shuffle(genSet(gen, gen.vals, 3, 4, 3, 2)));
   } else if (lesson.type === "phone") {
     const poolAll = introducedTokens(unit.id, idx, false);
     exs.push({ kind: "intro", title: lesson.title, explain: lesson.explain,
@@ -9622,6 +9638,267 @@ function renderPruefung(mount, parts){
     }
   });
 }
+
+// =========================================================
+// Weg, Etappe 3a: Einheiten 6 bis 8 (Zeit und Tage, Essen und Trinken, Mein Tag)
+// =========================================================
+defTokens([
+  // Einheit 6: Zeit und Tage
+  ["getsuyoubi", "げつようび", "getsuyōbi", "Montag"], ["kayoubi", "かようび", "kayōbi", "Dienstag"],
+  ["suiyoubi", "すいようび", "suiyōbi", "Mittwoch"], ["mokuyoubi", "もくようび", "mokuyōbi", "Donnerstag"],
+  ["kinyoubi", "きんようび", "kin’yōbi", "Freitag"], ["doyoubi", "どようび", "doyōbi", "Samstag"],
+  ["nichiyoubi", "にちようび", "nichiyōbi", "Sonntag"],
+  ["kyou", "きょう", "kyō", "heute"], ["nanyoubi", "なんようび", "nan’yōbi", "welcher Wochentag"],
+  ["ji", "じ", "ji", "Uhr (Zählwort)", "suffix", true],
+  ["h4", "よ", "yo", "vier (in よじ)", "num"], ["h7", "しち", "shichi", "sieben (in しちじ)", "num"], ["h9", "く", "ku", "neun (in くじ)", "num"],
+  ["m1", "いっぷん", "ippun", "1 Minute", "num"], ["m2", "にふん", "nifun", "2 Minuten", "num"], ["m3", "さんぷん", "sanpun", "3 Minuten", "num"],
+  ["m4", "よんぷん", "yonpun", "4 Minuten", "num"], ["m5", "ごふん", "gofun", "5 Minuten", "num"], ["m6", "ろっぷん", "roppun", "6 Minuten", "num"],
+  ["m7", "ななふん", "nanafun", "7 Minuten", "num"], ["m8", "はっぷん", "happun", "8 Minuten", "num"], ["m9", "きゅうふん", "kyūfun", "9 Minuten", "num"],
+  ["m10", "じゅっぷん", "juppun", "10 Minuten", "num"],
+  ["ima", "いま", "ima", "jetzt"], ["nanji", "なんじ", "nanji", "wie viel Uhr"],
+  ["gozen", "ごぜん", "gozen", "vormittags (a.m.)"], ["gogo", "ごご", "gogo", "nachmittags (p.m.)"], ["han", "はん", "han", "halb (…:30)"],
+  ["gatsu", "がつ", "-gatsu", "Monat (Zählwort)", "suffix", true], ["mo4", "し", "shi", "vier (in しがつ)", "num"],
+  ["nangatsu", "なんがつ", "nangatsu", "welcher Monat"],
+  // Einheit 7: Essen und Trinken
+  ["gohan", "ごはん", "gohan", "Reis; Essen"], ["pan", "パン", "pan", "Brot"], ["sakana", "さかな", "sakana", "Fisch"],
+  ["niku", "にく", "niku", "Fleisch"], ["yasai", "やさい", "yasai", "Gemüse"],
+  ["kudamono", "くだもの", "kudamono", "Obst"], ["tamago", "たまご", "tamago", "Ei"], ["sushi", "すし", "sushi", "Sushi"],
+  ["raamen", "ラーメン", "rāmen", "Ramen (Nudelsuppe)"], ["ringo", "りんご", "ringo", "Apfel"],
+  ["mizu", "みず", "mizu", "Wasser"], ["ocha", "おちゃ", "ocha", "Tee"], ["koohii", "コーヒー", "kōhī", "Kaffee"],
+  ["gyuunyuu", "ぎゅうにゅう", "gyūnyū", "Milch"], ["biiru", "ビール", "bīru", "Bier"],
+  ["tabemasu", "たべます", "tabemasu", "essen"], ["nomimasu", "のみます", "nomimasu", "trinken"],
+  ["o", "を", "o", "(Objektpartikel)", "part", true],
+  ["suki", "すき", "suki", "mögen; gern haben"], ["kirai", "きらい", "kirai", "nicht mögen"],
+  ["ga", "が", "ga", "(Partikel für Subjekt/Gefallen)", "part", true],
+  // Einheit 8: Mein Tag
+  ["kitte", "きって", "kitte", "Briefmarke"], ["zasshi", "ざっし", "zasshi", "Zeitschrift"],
+  ["obaasan", "おばあさん", "obāsan", "Großmutter"], ["ojiisan", "おじいさん", "ojīsan", "Großvater"],
+  ["toukyou", "とうきょう", "Tōkyō", "Tokio", "name"],
+  ["okimasu", "おきます", "okimasu", "aufstehen"], ["nemasu", "ねます", "nemasu", "schlafen gehen"],
+  ["ikimasu", "いきます", "ikimasu", "gehen"], ["kaerimasu", "かえります", "kaerimasu", "heimkehren"],
+  ["kimasu", "きます", "kimasu", "kommen"],
+  ["asa", "あさ", "asa", "Morgen"], ["hiru", "ひる", "hiru", "Mittag"], ["yoru", "よる", "yoru", "Abend; Nacht"],
+  ["mainichi", "まいにち", "mainichi", "jeden Tag"], ["ashita", "あした", "ashita", "morgen"],
+  ["ni", "に", "ni", "(Partikel für Zeit und Ziel)", "part", true], ["e", "へ", "e", "(Richtungspartikel)", "part", true],
+  ["de", "で", "de", "(Partikel für den Ort einer Handlung)", "part", true],
+  ["tabemasen", "たべません", "tabemasen", "esse/isst nicht"], ["nomimasen", "のみません", "nomimasen", "trinke/trinkt nicht"],
+  ["ikimasen", "いきません", "ikimasen", "gehe/geht nicht"]
+]);
+
+// ---------- Zeit: Stunden, Minuten, Monate ----------
+const MONTH_NAMES = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+function hourIds(h){
+  if (h === 4) return ["h4", "ji"];
+  if (h === 7) return ["h7", "ji"];
+  if (h === 9) return ["h9", "ji"];
+  if (h <= 10) return ["n" + h, "ji"];
+  return ["n10", "n" + (h - 10), "ji"];
+}
+function monthIds(m){
+  if (m === 4) return ["mo4", "gatsu"];
+  if (m === 7) return ["h7", "gatsu"];
+  if (m === 9) return ["h9", "gatsu"];
+  if (m <= 10) return ["n" + m, "gatsu"];
+  return ["n10", "n" + (m - 10), "gatsu"];
+}
+function minuteIds(m){
+  const t = Math.floor(m / 10), u = m % 10, out = [];
+  if (u === 0) { if (t > 1) out.push("n" + t); out.push("m10"); return out; }
+  if (t >= 1) { if (t > 1) out.push("n" + t); out.push("n10"); }
+  out.push("m" + u);
+  return out;
+}
+const WEG_NUMS = ["n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "n9", "n10"];
+const GENS = {
+  hour:   { vals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], ids: hourIds, disp: v => v + " Uhr", build: [...WEG_NUMS, "h4", "h7", "h9", "ji"] },
+  month:  { vals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], ids: monthIds, disp: v => MONTH_NAMES[v - 1], build: [...WEG_NUMS, "h7", "h9", "mo4", "gatsu"] },
+  minute: { vals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 16, 18, 20, 23, 25, 28, 35, 40, 48, 50, 56, 59],
+            ids: minuteIds, disp: v => v + " Min.", build: [...WEG_NUMS, "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10"] },
+  clock:  { vals: [[3, 0], [3, 15], [4, 30], [7, 45], [9, 5], [10, 20], [11, 50], [12, 10], [6, 40], [8, 25], [2, 35], [5, 55], [1, 30], [10, 30]],
+            ids: v => hourIds(v[0]).concat(v[1] === 0 ? [] : (v[1] === 30 ? ["han"] : minuteIds(v[1]))),
+            disp: v => v[0] + ":" + String(v[1]).padStart(2, "0"),
+            build: [...WEG_NUMS, "h4", "h7", "h9", "ji", "han", "m1", "m5", "m10"] }
+};
+function genKey(gen, v){ return gen.disp(v); }
+function genNear(gen, v, n){
+  const vals = gen.vals;
+  const idx = vals.findIndex(x => genKey(gen, x) === genKey(gen, v));
+  const near = [];
+  for (let d = 1; d <= 3; d++) { if (vals[idx - d] !== undefined) near.push(vals[idx - d]); if (vals[idx + d] !== undefined) near.push(vals[idx + d]); }
+  const out = [];
+  shuffle(near).concat(shuffle(vals)).forEach(x => { if (out.length < n && genKey(gen, x) !== genKey(gen, v) && !out.some(o => genKey(gen, o) === genKey(gen, x))) out.push(x); });
+  return out;
+}
+function genOptions(gen, v){ return shuffle([v, ...genNear(gen, v, 3)]); }
+function genA2J(gen, v){
+  return exMc({ big: true, promptHtml: `<span class="w-num">${wegEsc(gen.disp(v))}</span>`, sub: "Wie sagt man das auf Japanisch?", say: wegJa(gen.ids(v)),
+    options: genOptions(gen, v).map(x => ({ k: genKey(gen, x), h: () => wegHtml(gen.ids(x)) })), optionsBig: true, answerK: genKey(gen, v) });
+}
+function genJ2A(gen, v){
+  return exMc({ big: true, promptHtml: () => wegHtml(gen.ids(v)), say: wegJa(gen.ids(v)), sub: "Was ist das?",
+    options: genOptions(gen, v).map(x => ({ k: genKey(gen, x), h: wegEsc(gen.disp(x)) })), optionsBig: true, answerK: genKey(gen, v) });
+}
+function genHear(gen, v){
+  return { kind: "hear", say: wegJa(gen.ids(v)), sub: "Was hörst du?",
+    options: genOptions(gen, v).map(x => ({ k: genKey(gen, x), h: wegEsc(gen.disp(x)) })), optionsBig: true, answerK: genKey(gen, v) };
+}
+function genBuild(gen, v){
+  const ids = gen.ids(v);
+  const extra = shuffle(gen.build.filter(id => !ids.includes(id))).slice(0, 2);
+  return { kind: "build", hint: "Schreibe es auf Japanisch", de: gen.disp(v), answerIds: ids, fullIds: ids, bank: shuffle([...ids, ...extra]), say: wegJa(ids) };
+}
+function genSet(gen, vals, nBuild, nA2J, nJ2A, nHear){
+  const pool = shuffle(vals.slice());
+  const pick = i => pool[i % pool.length];
+  const out = [];
+  let i = 0;
+  for (let k = 0; k < nBuild; k++) out.push(genBuild(gen, pick(i++)));
+  for (let k = 0; k < nA2J; k++) out.push(genA2J(gen, pick(i++)));
+  for (let k = 0; k < nJ2A; k++) out.push(genJ2A(gen, pick(i++)));
+  for (let k = 0; k < nHear; k++) out.push(genHear(gen, pick(i++)));
+  return out;
+}
+
+WEG_UNITS.push(
+  { id: 6, lessons: [
+    { id: "u6l1", type: "kana", title: "が-Reihe", script: "hiragana",
+      chars: [["が","ga"],["ぎ","gi"],["ぐ","gu"],["げ","ge"],["ご","go"]],
+      note: "Zwei kleine Striche (゛) machen den Laut stimmhaft: か → が, き → ぎ. Du kennst sie schon aus Wörtern wie がくせい." },
+    { id: "u6l2", type: "kana", title: "ざ-Reihe und だ-Reihe", script: "hiragana",
+      chars: [["ざ","za"],["じ","ji"],["ず","zu"],["ぜ","ze"],["ぞ","zo"],["だ","da"],["で","de"],["ど","do"]],
+      note: "じ klingt wie „dschi“. Es gibt noch ぢ und づ; sie klingen wie じ und ず und kommen selten vor." },
+    { id: "u6l3", type: "words", title: "Wochentage", teach: ["getsuyoubi","kayoubi","suiyoubi","mokuyoubi","kinyoubi","doyoubi","nichiyoubi"],
+      note: "Alle enden auf ようび („Wochentag“). Die ersten Silben sind alte Namen: げつ = Mond, か = Feuer, すい = Wasser, もく = Holz, きん = Gold, ど = Erde, にち = Sonne." },
+    { id: "u6l4", type: "grammar", title: "きょうは なんようび?", teach: ["kyou","nanyoubi"], focus: "kyou",
+      explain: "<b>きょう</b> heißt „heute“. Mit <b>なんようび</b> fragst du nach dem Wochentag: <b>きょうは なんようびですか</b> = „Welcher Wochentag ist heute?“",
+      sentences: [
+        wegS("Heute ist Montag.", "kyou wa getsuyoubi desu ."),
+        wegS("Welcher Wochentag ist heute?", "kyou wa nanyoubi desu ka ."),
+        wegS("Heute ist Samstag.", "kyou wa doyoubi desu ."),
+        wegS("Heute ist nicht Sonntag.", "kyou wa nichiyoubi dewa arimasen .")
+      ] },
+    { id: "u6l5", type: "timegen", title: "Uhrzeit: Stunden", gen: "hour", teach: ["ji","h4","h7","h9"], uses: WEG_NUMS,
+      explain: "Die volle Stunde bildest du aus Zahl + <b>じ</b>: さんじ = 3 Uhr. Drei Ausnahmen musst du dir merken: <b>4 Uhr = よじ</b> (nicht よんじ), <b>7 Uhr = しちじ</b> und <b>9 Uhr = くじ</b>. Ab 11 Uhr zählst du wie gewohnt: じゅういちじ." },
+    { id: "u6l6", type: "timegen", title: "Uhrzeit: Minuten", gen: "minute", teach: ["m1","m2","m3","m4","m5","m6","m7","m8","m9","m10"], uses: ["n2","n3","n4","n5","n10"],
+      explain: "Minuten bildest du aus Zahl + <b>ふん</b> oder <b>ぷん</b>, und der Laut ändert sich: 1 いっぷん, 2 にふん, 3 さんぷん, 4 よんぷん, 5 ごふん, 6 ろっぷん, 7 ななふん, 8 はっぷん, 9 きゅうふん, 10 じゅっぷん. Größere Minuten setzt du aus Zehner und Einer zusammen: 15 = じゅうごふん, 25 = にじゅうごふん, 20 = にじゅっぷん." },
+    { id: "u6l7", type: "grammar", title: "いま なんじですか", teach: ["ima","nanji","gozen","gogo","han"], focus: "ima", gens: ["clock"],
+      uses: [...WEG_NUMS, "ji", "h4", "h7", "h9", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10"],
+      explain: "<b>いま</b> heißt „jetzt“, <b>なんじ</b> heißt „wie viel Uhr“. Für 30 Minuten sagt man <b>はん</b> („halb“): じゅうじ はん = 10:30. Mit <b>ごぜん</b> (vormittags) und <b>ごご</b> (nachmittags) wird die Tageszeit genannt.",
+      sentences: [
+        wegS("Wie spät ist es jetzt?", "ima nanji desu ka ."),
+        wegS("Es ist jetzt 3 Uhr.", "ima n3 ji desu ."),
+        wegS("Es ist jetzt 10:30 Uhr.", "ima n10 ji han desu ."),
+        wegS("Es ist jetzt 8:15 Uhr.", "ima n8 ji n10 m5 desu ."),
+        wegS("Es ist jetzt 9 Uhr vormittags.", "ima gozen h9 ji desu .")
+      ] },
+    { id: "u6l8", type: "timegen", title: "Monate", gen: "month", teach: ["gatsu","mo4","nangatsu"], uses: [...WEG_NUMS, "h7", "h9"],
+      explain: "Monate bildest du aus Zahl + <b>がつ</b>: いちがつ = Januar, じゅうにがつ = Dezember. Auch hier gibt es drei Ausnahmen: <b>4 = し</b> (しがつ), <b>7 = しち</b> (しちがつ) und <b>9 = く</b> (くがつ). Fragen kannst du mit <b>なんがつ</b>." },
+    { id: "u6l9", type: "dialog", title: "Wie spät ist es?", teach: [],
+      lines: [
+        ["Hanna", wegS("Entschuldigung. Wie spät ist es jetzt?", "sumimasen . ima nanji desu ka .")],
+        ["Passant", wegS("Es ist jetzt 3:30 Uhr nachmittags.", "ima gogo n3 ji han desu .")],
+        ["Hanna", wegS("Welcher Wochentag ist heute?", "kyou wa nanyoubi desu ka .")],
+        ["Passant", wegS("Heute ist Mittwoch.", "kyou wa suiyoubi desu .")],
+        ["Hanna", wegS("Welcher Monat ist jetzt?", "ima nangatsu desu ka .")],
+        ["Passant", wegS("Es ist November.", "n10 n1 gatsu desu .")]
+      ] },
+    { id: "u6l10", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 7, lessons: [
+    { id: "u7l1", type: "kana", title: "ば-Reihe", script: "hiragana",
+      chars: [["ば","ba"],["び","bi"],["ぶ","bu"],["べ","be"],["ぼ","bo"]],
+      note: "Mit ゛ wird aus dem h-Zeichen ein b-Zeichen: は → ば." },
+    { id: "u7l2", type: "kana", title: "ぱ-Reihe", script: "hiragana",
+      chars: [["ぱ","pa"],["ぴ","pi"],["ぷ","pu"],["ぺ","pe"],["ぽ","po"]],
+      note: "Mit dem kleinen Kreis (゜) wird aus dem h-Zeichen ein p-Zeichen: は → ぱ." },
+    { id: "u7l3", type: "kana", title: "Kombinationen: きゃ, しゃ, ちゃ", script: "hiragana",
+      chars: [["きゃ","kya"],["きゅ","kyu"],["きょ","kyo"],["しゃ","sha"],["しゅ","shu"],["しょ","sho"],["ちゃ","cha"],["ちゅ","chu"],["ちょ","cho"]],
+      note: "Ein kleines ゃ, ゅ oder ょ verschmilzt mit dem Zeichen davor zu EINER Silbe: き + ゃ = きゃ („kya“), nicht „ki-ya“." },
+    { id: "u7l4", type: "words", title: "Essen 1", teach: ["gohan","pan","sakana","niku","yasai"] },
+    { id: "u7l5", type: "words", title: "Essen 2", teach: ["kudamono","tamago","sushi","raamen","ringo"] },
+    { id: "u7l6", type: "words", title: "Getränke", teach: ["mizu","ocha","koohii","gyuunyuu","biiru"] },
+    { id: "u7l7", type: "grammar", title: "Verben mit を", teach: ["tabemasu","nomimasu","o"], focus: "o",
+      explain: "Das Verb steht am Satzende. Mit <b>を</b> markierst du, was man isst oder trinkt: <b>X を たべます</b> = „X essen“. を wird „o“ gesprochen. Die Endung <b>ます</b> ist die höfliche Form für Gegenwart und Zukunft: たべます = „ich esse / ich werde essen“.",
+      sentences: [
+        wegS("Ich esse Brot.", "watashi wa pan o tabemasu ."),
+        wegS("Ich trinke Wasser.", "watashi wa mizu o nomimasu ."),
+        wegS("Herr Tanaka trinkt Kaffee.", "tanaka san wa koohii o nomimasu ."),
+        wegS("Trinkst du Tee?", "anata wa ocha o nomimasu ka .")
+      ] },
+    { id: "u7l8", type: "grammar", title: "が すきです", teach: ["suki","kirai","ga"], focus: "ga",
+      explain: "Was du magst oder nicht magst, steht mit <b>が</b>: <b>X が すきです</b> = „Ich mag X“, <b>X が きらいです</b> = „Ich mag X nicht“. Statt を steht hier が.",
+      sentences: [
+        wegS("Ich mag Fisch.", "watashi wa sakana ga suki desu ."),
+        wegS("Ich mag kein Gemüse.", "watashi wa yasai ga kirai desu ."),
+        wegS("Magst du Kaffee?", "anata wa koohii ga suki desu ka ."),
+        wegS("Herr Tanaka mag Ramen.", "tanaka san wa raamen ga suki desu .")
+      ] },
+    { id: "u7l9", type: "dialog", title: "Was magst du?", teach: [],
+      lines: [
+        ["Hanna", wegS("Magst du Fisch?", "anata wa sakana ga suki desu ka .")],
+        ["Tanaka", wegS("Ja, ich mag ihn.", "hai , suki desu .")],
+        ["Hanna", wegS("Trinkst du Kaffee?", "koohii o nomimasu ka .")],
+        ["Tanaka", wegS("Nein, ich trinke Tee.", "iie , ocha o nomimasu .")],
+        ["Hanna", wegS("Magst du auch Bier?", "biiru mo suki desu ka .")],
+        ["Tanaka", wegS("Ja, Bier mag ich auch.", "hai , biiru mo suki desu .")]
+      ] },
+    { id: "u7l10", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 8, lessons: [
+    { id: "u8l1", type: "kana", title: "Kombinationen: にゃ, ひゃ, みゃ, りゃ", script: "hiragana",
+      chars: [["にゃ","nya"],["にゅ","nyu"],["にょ","nyo"],["ひゃ","hya"],["ひゅ","hyu"],["ひょ","hyo"],["みゃ","mya"],["みゅ","myu"],["みょ","myo"],["りゃ","rya"],["りゅ","ryu"],["りょ","ryo"]],
+      note: "Gleiches Prinzip wie zuvor: kleines ゃ, ゅ, ょ verschmilzt mit dem Zeichen davor." },
+    { id: "u8l2", type: "kana", title: "Kombinationen: ぎゃ, じゃ, びゃ, ぴゃ", script: "hiragana",
+      chars: [["ぎゃ","gya"],["ぎゅ","gyu"],["ぎょ","gyo"],["じゃ","ja"],["じゅ","ju"],["じょ","jo"],["びゃ","bya"],["びゅ","byu"],["びょ","byo"],["ぴゃ","pya"],["ぴゅ","pyu"],["ぴょ","pyo"]],
+      note: "Auch hier gilt: kleines ゃゅょ = eine Silbe. じゃ, じゅ, じょ klingen „ja, ju, jo“ (dsch)." },
+    { id: "u8l3", type: "words", title: "Kleines っ und lange Vokale", teach: ["kitte","zasshi","obaasan","ojiisan","toukyou"],
+      note: "Kleines っ verdoppelt den folgenden Konsonanten (きって = kit-te, mit kurzer Pause). Lange Vokale sind doppelt so lang und ändern die Bedeutung: おばあさん (Großmutter) ≠ おばさん (Tante). Bei とうきょう ist „ou“ ein langes „ō“." },
+    { id: "u8l4", type: "words", title: "Verben im Alltag", teach: ["okimasu","nemasu","ikimasu","kaerimasu","kimasu"] },
+    { id: "u8l5", type: "words", title: "Tageszeiten", teach: ["asa","hiru","yoru","mainichi","ashita"] },
+    { id: "u8l6", type: "grammar", title: "に – Uhrzeit", teach: ["ni"], focus: "ni", uses: [...WEG_NUMS, "ji", "h7"],
+      explain: "Mit <b>に</b> nennst du den Zeitpunkt: <b>しちじに おきます</b> = „Ich stehe um 7 Uhr auf“. Nach der Uhrzeit steht immer に. Fragen kannst du mit <b>なんじに</b> („um wie viel Uhr“).",
+      sentences: [
+        wegS("Ich stehe um 7 Uhr auf.", "watashi wa h7 ji ni okimasu ."),
+        wegS("Ich gehe um 11 Uhr ins Bett.", "watashi wa n10 n1 ji ni nemasu ."),
+        wegS("Ich komme um 6 Uhr nach Hause.", "watashi wa n6 ji ni kaerimasu ."),
+        wegS("Um wie viel Uhr stehst du auf?", "anata wa nanji ni okimasu ka .")
+      ] },
+    { id: "u8l7", type: "grammar", title: "へ – Richtung", teach: ["e"], focus: "e",
+      explain: "Mit <b>へ</b> nennst du das Ziel einer Bewegung: <b>がっこうへ いきます</b> = „Ich gehe zur Schule“. Als Partikel wird へ „e“ gesprochen. Bei いきます, きます und かえります kannst du auch <b>に</b> benutzen.",
+      sentences: [
+        wegS("Ich gehe zur Schule.", "watashi wa gakkou e ikimasu ."),
+        wegS("Ich gehe nach Hause.", "watashi wa ie e kaerimasu ."),
+        wegS("Herr Tanaka kommt zur Bank.", "tanaka san wa ginkou e kimasu ."),
+        wegS("Wohin gehst du?", "anata wa doko e ikimasu ka .")
+      ] },
+    { id: "u8l8", type: "grammar", title: "で – Ort der Handlung", teach: ["de"], focus: "de",
+      explain: "Mit <b>で</b> sagst du, <b>wo</b> etwas geschieht: <b>がっこうで たべます</b> = „Ich esse in der Schule“. Vergleiche: へ nennt das Ziel einer Bewegung, で den Ort einer Handlung.",
+      sentences: [
+        wegS("Ich esse in der Schule Brot.", "watashi wa gakkou de pan o tabemasu ."),
+        wegS("Ich trinke zu Hause Tee.", "watashi wa ie de ocha o nomimasu ."),
+        wegS("Wo isst du?", "anata wa doko de tabemasu ka ."),
+        wegS("Ich trinke in der Schule Wasser.", "watashi wa gakkou de mizu o nomimasu .")
+      ] },
+    { id: "u8l9", type: "grammar", title: "〜ません – Verneinung", teach: ["tabemasen","nomimasen","ikimasen"], focus: "nomimasen",
+      explain: "Die höfliche Verneinung endet auf <b>ません</b>: たべます → <b>たべません</b> („ich esse nicht“). Die Wörter ändern sich nur am Ende, der Rest des Satzes bleibt gleich.",
+      sentences: [
+        wegS("Ich esse keinen Fisch.", "watashi wa sakana o tabemasen ."),
+        wegS("Ich trinke keinen Kaffee.", "watashi wa koohii o nomimasen ."),
+        wegS("Ich gehe nicht zur Schule.", "watashi wa gakkou e ikimasen ."),
+        wegS("Ich trinke keinen Kaffee. Ich trinke Tee.", "watashi wa koohii o nomimasen . ocha o nomimasu .")
+      ] },
+    { id: "u8l10", type: "dialog", title: "Mein Tag", teach: [],
+      lines: [
+        ["Hanna", wegS("Um wie viel Uhr stehst du jeden Tag auf?", "mainichi nanji ni okimasu ka .")],
+        ["Tanaka", wegS("Ich stehe um 7 Uhr auf.", "h7 ji ni okimasu .")],
+        ["Hanna", wegS("Trinkst du morgens Kaffee?", "asa koohii o nomimasu ka .")],
+        ["Tanaka", wegS("Nein, ich trinke keinen Kaffee. Ich trinke Tee.", "iie , nomimasen . ocha o nomimasu .")],
+        ["Hanna", wegS("Gehst du zur Schule?", "gakkou e ikimasu ka .")],
+        ["Tanaka", wegS("Ja, ich komme um 5 Uhr nach Hause.", "hai , n5 ji ni kaerimasu .")]
+      ] },
+    { id: "u8l11", type: "check", title: "Checkpoint" }
+  ] }
+);
 
 // ---------- Reihenfolge des Lernpfads ----------
 // "K" = Katakana-Block; "g:" = Grammatik-Lektion; "l:" = Stufe
