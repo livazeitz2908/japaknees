@@ -8682,7 +8682,7 @@ const WEG_SECTIONS = [
   { title: "Abschnitt 2 · Alltag", units: [6, 7, 8, 9, 10, 11], exam: "Prüfung 2", examId: "exam2" },
   { title: "Abschnitt 3 · Unterwegs", units: [12, 13, 14, 15, 16, 17], exam: "Prüfung 3", examId: "exam3" },
   { title: "Abschnitt 4 · Erleben", units: [18, 19, 20, 21, 22, 23], exam: "Abschlussprüfung N5", examId: "exam4" },
-  { title: "Abschnitt 5 · Locker sprechen (N4)", units: [24, 25, 26, 27, 28, 29], exam: "Prüfung 5" },
+  { title: "Abschnitt 5 · Locker sprechen (N4)", units: [24, 25, 26, 27, 28, 29], exam: "Prüfung 5", examId: "exam5" },
   { title: "Abschnitt 6 · Beschreiben und erklären (N4)", units: [30, 31, 32, 33, 34, 35], exam: "Prüfung 6" },
   { title: "Abschnitt 7 · Höflich und selbstständig (N4)", units: [36, 37, 38, 39, 40], exam: "Abschlussprüfung N4" }
 ];
@@ -11083,6 +11083,235 @@ WEG_UNITS.push(
         ["Tanaka", wegS("Ja, bestimmt.", "ee , kitto .")]
       ] },
     { id: "u25l7", type: "check", title: "Checkpoint" }
+  ] }
+);
+
+// =========================================================
+// Weg, Etappe 5b: Einheiten 26 bis 29 (Erfahrungen, Pflichten und Erlaubnis, Können, Pläne) und Prüfung 5
+// =========================================================
+defTokens([
+  // Einheit 26: Erfahrungen
+  ["koto", "こと", "koto", "(Erfahrung; Sache)", "part", true], ["notta", "のった", "notta", "stieg ein (einfache Form)"], ["asonda", "あそんだ", "asonda", "spielte (einfache Form)"],
+  ["tari", "り", "ri", "(〜たり: mal … mal …)", "part", true],
+  ["ichido", "いちど", "ichido", "einmal"], ["hajimete", "はじめて", "hajimete", "zum ersten Mal"], ["mou", "もう", "mō", "schon; bereits"],
+  ["mada", "まだ", "mada", "noch (nicht)"], ["fujisan", "ふじさん", "fujisan", "Fuji", "name"], ["shinkansen", "しんかんせん", "shinkansen", "Shinkansen"],
+  // Einheit 27: Pflichten und Erlaubnis
+  ["ruuru", "ルール", "rūru", "Regel"], ["shukudai", "しゅくだい", "shukudai", "Hausaufgabe"], ["shiken", "しけん", "shiken", "Prüfung"],
+  ["jugyou", "じゅぎょう", "jugyō", "Unterricht"], ["shashin", "しゃしん", "shashin", "Foto"],
+  ["tabenakereba", "たべなければ", "tabenakereba", "wenn man nicht isst"], ["ikanakereba", "いかなければ", "ikanakereba", "wenn man nicht geht"],
+  ["shinakereba", "しなければ", "shinakereba", "wenn man nicht macht"], ["kaeranakereba", "かえらなければ", "kaeranakereba", "wenn man nicht heimkehrt"],
+  ["yomanakereba", "よまなければ", "yomanakereba", "wenn man nicht liest"], ["nomanakereba", "のまなければ", "nomanakereba", "wenn man nicht trinkt"],
+  ["narimasen", "なりません", "narimasen", "geht nicht; darf nicht", "aux"], ["ikemasen", "いけません", "ikemasen", "ist nicht erlaubt", "aux"],
+  ["tabenakutemo", "たべなくても", "tabenakutemo", "auch wenn man nicht isst"], ["konakutemo", "こなくても", "konakutemo", "auch wenn man nicht kommt"],
+  ["shinakutemo", "しなくても", "shinakutemo", "auch wenn man nicht macht"], ["ikanakutemo", "いかなくても", "ikanakutemo", "auch wenn man nicht geht"],
+  // Einheit 28: Können
+  ["oyogu", "およぐ", "oyogu", "schwimmen (einfache Form)"], ["hashiru", "はしる", "hashiru", "laufen (einfache Form)"], ["utau", "うたう", "utau", "singen (einfache Form)"],
+  ["unten", "うんてん", "unten", "Fahren (ein Fahrzeug)"], ["jitensha", "じてんしゃ", "jitensha", "Fahrrad"], ["noru", "のる", "noru", "einsteigen; fahren mit (einfache Form)"],
+  ["kanji", "かんじ", "kanji", "Kanji"], ["sugoi", "すごい", "sugoi", "Wahnsinn!; toll", "phrase"],
+  ["ikeru", "いける", "ikeru", "gehen können (einfache Form)"], ["nomeru", "のめる", "nomeru", "trinken können (einfache Form)"], ["yomeru", "よめる", "yomeru", "lesen können (einfache Form)"],
+  ["kakeru", "かける", "kakeru", "schreiben können (einfache Form)"], ["hanaseru", "はなせる", "hanaseru", "sprechen können (einfache Form)"], ["materu", "まてる", "materu", "warten können (einfache Form)"],
+  ["taberareru", "たべられる", "taberareru", "essen können (einfache Form)"], ["mirareru", "みられる", "mirareru", "sehen können (einfache Form)"],
+  // Einheit 29: Pläne
+  ["raishuu", "らいしゅう", "raishū", "nächste Woche"], ["rainen", "らいねん", "rainen", "nächstes Jahr"], ["natsuyasumi", "なつやすみ", "natsuyasumi", "Sommerferien"],
+  ["yotei", "よてい", "yotei", "Plan; Termin"], ["tsumori", "つもり", "tsumori", "Absicht"], ["kaigi", "かいぎ", "kaigi", "Besprechung"], ["itsu", "いつ", "itsu", "wann"],
+  ["tabeyou", "たべよう", "tabeyō", "lass uns essen (einfache Form)"], ["miyou", "みよう", "miyō", "lass uns sehen (einfache Form)"], ["shiyou", "しよう", "shiyō", "lass uns machen (einfache Form)"],
+  ["koyou", "こよう", "koyō", "lass uns kommen (einfache Form)"], ["ikou", "いこう", "ikō", "lass uns gehen (einfache Form)"], ["nomou", "のもう", "nomō", "lass uns trinken (einfache Form)"],
+  ["yomou", "よもう", "yomō", "lass uns lesen (einfache Form)"], ["kakou", "かこう", "kakō", "lass uns schreiben (einfache Form)"], ["hanasou", "はなそう", "hanasō", "lass uns sprechen (einfache Form)"],
+  ["kaerou", "かえろう", "kaerō", "lass uns heimgehen (einfache Form)"]
+]);
+
+WEG_UNITS.push(
+  { id: 26, lessons: [
+    { id: "u26l1", type: "words", title: "Erlebnisse", teach: ["ichido","hajimete","mou","mada","fujisan","shinkansen"] },
+    { id: "u26l2", type: "grammar", title: "〜たことが あります", teach: ["koto","notta"], focus: "koto",
+      explain: "Eine Erfahrung sagst du mit der <b>た-Form</b> und <b>ことが あります</b>: <b>いったことが あります</b> = „Ich bin schon einmal hingegangen.“ Verneint: <b>〜たことが ありません</b> = „noch nie“.",
+      sentences: [
+        wegS("Ich war schon einmal in Japan.", "nihon e itta koto ga arimasu ."),
+        wegS("Ich habe schon Sushi gegessen.", "sushi o tabeta koto ga arimasu ."),
+        wegS("Ich habe den Fuji noch nie gesehen.", "fujisan o mita koto ga arimasen ."),
+        wegS("Bist du schon einmal mit dem Shinkansen gefahren?", "shinkansen ni notta koto ga arimasu ka ."),
+        wegS("Ich war einmal in Kyoto.", "ichido kyouto e itta koto ga arimasu .")
+      ] },
+    { id: "u26l3", type: "grammar", title: "もう und まだ", teach: [], focus: "mada",
+      explain: "<b>もう</b> heißt „schon“, <b>まだ</b> heißt „noch (nicht)“. Frage: <b>もう たべましたか</b>. Antwort: <b>はい、もう たべました</b> oder <b>いいえ、まだ たべていません</b>.",
+      sentences: [
+        wegS("Hast du schon gegessen?", "mou gohan o tabemashita ka ."),
+        wegS("Ja, ich habe schon gegessen.", "hai , mou tabemashita ."),
+        wegS("Nein, ich habe noch nicht gegessen.", "iie , mada tabete teimasen ."),
+        wegS("Ich war noch nie in Japan.", "mada nihon e itta koto ga arimasen .")
+      ] },
+    { id: "u26l4", type: "grammar", title: "〜たり 〜たり – mal … mal …", teach: ["tari","asonda"], focus: "tari",
+      explain: "Mehrere Tätigkeiten als Beispiele zählst du mit <b>〜たり 〜たり します</b> auf: <b>よんだり、みたり します</b> = „Ich lese und sehe fern (und so)“. Nimm die <b>た-Form</b> und hänge <b>り</b> an.",
+      sentences: [
+        wegS("Am Sonntag lese ich Bücher und sehe fern.", "nichiyoubi wa hon o yonda tari , terebi o mita tari shimasu ."),
+        wegS("Gestern habe ich eingekauft und einen Film gesehen.", "kinou wa kaimono o shitaV tari , eiga o mita tari shimashita ."),
+        wegS("Am Wochenende spiele ich mit Freunden und so.", "shuumatsu wa tomodachi to asonda tari , eiga o mita tari shimasu .")
+      ] },
+    { id: "u26l5", type: "dialog", title: "Reiseerfahrungen", teach: [],
+      lines: [
+        ["Tanaka", wegS("Warst du schon einmal in Japan?", "nihon e kita koto ga arimasu ka .")],
+        ["Hanna", wegS("Ja, einmal.", "hai , ichido arimasu .")],
+        ["Tanaka", wegS("Wo warst du?", "doko e ikimashita ka .")],
+        ["Hanna", wegS("In Kyoto. Den Fuji habe ich noch nie gesehen.", "kyouto e ikimashita . fujisan wa mada mita koto ga arimasen .")],
+        ["Tanaka", wegS("Gehen wir nächstes Mal zusammen ansehen.", "kondo isshoni mini ikimashou .")]
+      ] },
+    { id: "u26l6", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 27, lessons: [
+    { id: "u27l1", type: "words", title: "Schule und Regeln", teach: ["ruuru","shukudai","shiken","jugyou","shashin"] },
+    { id: "u27l2", type: "conj", form: "なければ-Form", title: "なければ: Muss-Form", teach: ["tabenakereba","ikanakereba","shinakereba","kaeranakereba","yomanakereba","nomanakereba"],
+      pairs: [
+        ["tabenai", "tabenakereba", [["たべなくて", "tabenakute"], ["たべなければ ない", "tabenakereba nai"]]],
+        ["ikanai", "ikanakereba", [["いかなくて", "ikanakute"], ["いかないば", "ikanaiba"]]],
+        ["shinai", "shinakereba", [["しなくて", "shinakute"], ["しないば", "shinaiba"]]],
+        ["kaeranai", "kaeranakereba", [["かえらなくて", "kaeranakute"], ["かえらないば", "kaeranaiba"]]],
+        ["yomanai", "yomanakereba", [["よまなくて", "yomanakute"], ["よまないば", "yomanaiba"]]],
+        ["nomanai", "nomanakereba", [["のまなくて", "nomanakute"], ["のまないば", "nomanaiba"]]]
+      ],
+      explain: "Aus der <b>ない-Form</b> wird <b>なければ</b>: das <b>い</b> am Ende fällt weg, <b>ければ</b> kommt dazu: たべない → <b>たべなければ</b>. Gemeinsam mit <b>なりません</b> bedeutet es „muss“." },
+    { id: "u27l3", type: "grammar", title: "〜なければ なりません – müssen", teach: ["narimasen"], focus: "narimasen",
+      explain: "<b>〜なければ なりません</b> heißt wörtlich „wenn man nicht … , geht es nicht“, also „man muss“: <b>べんきょうしなければ なりません</b> = „Ich muss lernen.“",
+      sentences: [
+        wegS("Morgen ist eine Prüfung, deshalb muss ich lernen.", "ashita shiken ga arimasu karaR , benkyou shinakereba narimasen ."),
+        wegS("Ich muss jeden Tag Medizin nehmen.", "mainichi kusuri o nomanakereba narimasen ."),
+        wegS("Ich muss zum Unterricht gehen.", "jugyou ni ikanakereba narimasen ."),
+        wegS("Ich muss die Hausaufgabe machen.", "shukudai o shinakereba narimasen ."),
+        wegS("Ich muss heute nach Hause gehen.", "kyou kaeranakereba narimasen .")
+      ] },
+    { id: "u27l4", type: "grammar", title: "〜ては いけません – nicht erlaubt", teach: ["ikemasen"], focus: "ikemasen",
+      explain: "Ein Verbot sagst du mit der <b>て-Form</b> und <b>は いけません</b>: <b>たべては いけません</b> = „Man darf nicht essen.“",
+      sentences: [
+        wegS("Hier darf man nicht essen.", "koko de tabete wa ikemasen ."),
+        wegS("Im Unterricht darf man nicht schlafen.", "jugyou de nete wa ikemasen ."),
+        wegS("Hier darf man nichts trinken.", "koko de nonde wa ikemasen ."),
+        wegS("Man darf nicht fernsehen.", "terebi o mite wa ikemasen ."),
+        wegS("Hier darf man nicht sprechen.", "koko de hanashite wa ikemasen .")
+      ] },
+    { id: "u27l5", type: "conj", form: "なくても-Form", title: "なくても: nicht nötig", teach: ["tabenakutemo","konakutemo","shinakutemo","ikanakutemo"],
+      pairs: [
+        ["tabenai", "tabenakutemo", [["たべなければも", "tabenakerebamo"], ["たべないても", "tabenaitemo"]]],
+        ["konai", "konakutemo", [["こなければも", "konakerebamo"], ["こないても", "konaitemo"]]],
+        ["shinai", "shinakutemo", [["しなければも", "shinakerebamo"], ["しないても", "shinaitemo"]]],
+        ["ikanai", "ikanakutemo", [["いかなければも", "ikanakerebamo"], ["いかないても", "ikanaitemo"]]]
+      ],
+      explain: "Aus <b>ない</b> wird <b>なくても</b>: das <b>い</b> fällt weg, <b>くても</b> kommt dazu: こない → <b>こなくても</b>. Mit <b>いいです</b> heißt es „man muss nicht“." },
+    { id: "u27l6", type: "grammar", title: "〜なくても いいです – nicht nötig", teach: [], focus: "ii",
+      explain: "<b>〜なくても いいです</b> heißt „Du musst nicht …“: <b>こなくても いいです</b> = „Du musst nicht kommen.“",
+      sentences: [
+        wegS("Du musst morgen nicht kommen.", "ashita konakutemo ii desu ."),
+        wegS("Du musst nicht essen.", "tabenakutemo ii desu ."),
+        wegS("Du musst nicht hingehen.", "ikanakutemo ii desu ."),
+        wegS("Du musst es nicht machen.", "shinakutemo ii desu .")
+      ] },
+    { id: "u27l7", type: "dialog", title: "In der Schule", teach: [],
+      lines: [
+        ["Hanna", wegS("Lehrer, darf ich hier essen?", "sensei , koko de tabete mo ii desu ka .")],
+        ["Sensei", wegS("Nein, hier darf man nicht essen.", "iie , koko de tabete wa ikemasen .")],
+        ["Hanna", wegS("Muss ich die Hausaufgabe machen?", "shukudai o shinakereba narimasen ka .")],
+        ["Sensei", wegS("Ja, du musst sie machen.", "ee , shinakereba narimasen .")],
+        ["Hanna", wegS("Muss ich auch für die Prüfung lernen?", "shiken no benkyou mo shinakereba narimasen ka .")],
+        ["Sensei", wegS("Das musst du nicht.", "sore wa shinakutemo ii desu .")]
+      ] },
+    { id: "u27l8", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 28, lessons: [
+    { id: "u28l1", type: "words", title: "Fähigkeiten", teach: ["oyogu","hashiru","utau","unten","jitensha","noru","kanji"] },
+    { id: "u28l2", type: "grammar", title: "〜ことが できます", teach: [], focus: "koto",
+      explain: "Eine Fähigkeit sagst du mit der <b>einfachen Form</b> und <b>ことが できます</b>: <b>およぐことが できます</b> = „Ich kann schwimmen.“ Verneint: <b>できません</b>.",
+      sentences: [
+        wegS("Ich kann schwimmen.", "watashi wa oyogu koto ga dekimasu ."),
+        wegS("Ich kann Japanisch sprechen.", "nihongo o hanasu koto ga dekimasu ."),
+        wegS("Ich kann Fahrrad fahren.", "jitensha ni noru koto ga dekimasu ."),
+        wegS("Ich kann nicht singen.", "utau koto ga dekimasen ."),
+        wegS("Können Sie Auto fahren?", "kuruma o unten suru koto ga dekimasu ka .")
+      ] },
+    { id: "u28l3", type: "conj", form: "Möglichkeitsform", title: "Die Möglichkeitsform", teach: ["ikeru","nomeru","yomeru","kakeru","hanaseru","materu","taberareru","mirareru"],
+      pairs: [
+        ["iku", "ikeru", [["いかれる", "ikareru"], ["いくれる", "ikureru"]]],
+        ["nomu", "nomeru", [["のまれる", "nomareru"], ["のむれる", "nomureru"]]],
+        ["yomu", "yomeru", [["よまれる", "yomareru"], ["よむれる", "yomureru"]]],
+        ["kaku", "kakeru", [["かかれる", "kakareru"], ["かくれる", "kakureru"]]],
+        ["hanasu", "hanaseru", [["はなされる", "hanasareru"], ["はなすれる", "hanasureru"]]],
+        ["matsu", "materu", [["またれる", "matareru"], ["まつれる", "matsureru"]]],
+        ["taberu", "taberareru", [["たべるれる", "taberureru"], ["たべうる", "tabeuru"]]],
+        ["miru", "mirareru", [["みるれる", "mirureru"], ["みうる", "miuru"]]]
+      ],
+      explain: "Mit der <b>Möglichkeitsform</b> sagst du „können“ direkt am Verb. Bei <b>う-Verben</b> wird der letzte Laut zum <b>え-Laut</b> + る: いく → <b>いける</b>, のむ → <b>のめる</b>, はなす → <b>はなせる</b>. Bei <b>る-Verben</b> hängst du <b>られる</b> an den Stamm: たべる → <b>たべられる</b>, みる → <b>みられる</b>. Das Objekt steht dann mit <b>が</b>." },
+    { id: "u28l4", type: "grammar", title: "Können im lockeren Gespräch", teach: ["sugoi"], focus: "ga",
+      explain: "In der einfachen Sprache sagst du „kann“ mit der Möglichkeitsform, das Objekt bekommt <b>が</b>: <b>にほんごが はなせる</b> = „Ich kann Japanisch sprechen.“",
+      sentences: [
+        wegS("Ich kann Japanisch sprechen.", "nihongo ga hanaseru ."),
+        wegS("Kannst du Sushi essen?", "sushi ga taberareru ?"),
+        wegS("Von hier kann man den Fuji sehen.", "koko kara fujisan ga mirareru ."),
+        wegS("Kannst du Kanji lesen?", "kanji ga yomeru ?"),
+        wegS("Kannst du morgen hingehen?", "ashita ikeru ?")
+      ] },
+    { id: "u28l5", type: "dialog", title: "Was kannst du?", teach: [],
+      lines: [
+        ["Tanaka", wegS("Kannst du Kanji lesen?", "kanji ga yomeru ?")],
+        ["Hanna", wegS("Ein bisschen kann ich.", "sukoshi yomeru .")],
+        ["Tanaka", wegS("Kannst du auch Sushi essen?", "sushi mo taberareru ?")],
+        ["Hanna", wegS("Ja, das kann ich!", "un , taberareru .")],
+        ["Tanaka", wegS("Von hier kann man den Fuji sehen.", "koko kara fujisan ga mirareru .")],
+        ["Hanna", wegS("Wahnsinn!", "sugoi .")]
+      ] },
+    { id: "u28l6", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 29, lessons: [
+    { id: "u29l1", type: "words", title: "Pläne", teach: ["raishuu","rainen","natsuyasumi","yotei","tsumori","kaigi","itsu"] },
+    { id: "u29l2", type: "conj", form: "Aufforderungsform", title: "Lass uns …! (る-Verben)", teach: ["tabeyou","miyou","shiyou","koyou"],
+      pairs: [
+        ["taberu", "tabeyou", [["たべろう", "taberou"], ["たべおう", "tabeou"]]],
+        ["miru", "miyou", [["みろう", "mirou"], ["みおう", "miou"]]],
+        ["suru", "shiyou", [["すろう", "surou"], ["せよう", "seyou"]]],
+        ["kuru", "koyou", [["くよう", "kuyou"], ["きよう", "kiyou"]]]
+      ],
+      explain: "Die <b>Aufforderungsform</b> heißt „Lass uns …!“ oder „Ich will …“. Bei <b>る-Verben</b> fällt <b>る</b> weg, dazu kommt <b>よう</b>: たべる → <b>たべよう</b>. Ausnahmen: <b>する → しよう</b>, <b>くる → こよう</b>." },
+    { id: "u29l3", type: "conj", form: "Aufforderungsform", title: "Lass uns …! (う-Verben)", teach: ["ikou","nomou","yomou","kakou","hanasou","kaerou"],
+      pairs: [
+        ["iku", "ikou", [["いくよう", "ikuyou"], ["いこ", "iko"]]],
+        ["nomu", "nomou", [["のもよう", "nomoyou"], ["のむう", "nomuu"]]],
+        ["yomu", "yomou", [["よもよう", "yomoyou"], ["よむう", "yomuu"]]],
+        ["kaku", "kakou", [["かくよう", "kakuyou"], ["かきょう", "kakyou"]]],
+        ["hanasu", "hanasou", [["はなすよう", "hanasuyou"], ["はなしょう", "hanashou"]]],
+        ["kaeru", "kaerou", [["かえよう", "kaeyou"], ["かえるよう", "kaeruyou"]]]
+      ],
+      explain: "Bei <b>う-Verben</b> wird der letzte Laut zum <b>お-Laut</b> + <b>う</b>: いく → <b>いこう</b>, のむ → <b>のもう</b>, はなす → <b>はなそう</b>. <b>かえる</b> gehört hierher: <b>かえろう</b>." },
+    { id: "u29l4", type: "grammar", title: "Vorschläge im lockeren Gespräch", teach: [], focus: "ikou",
+      explain: "Unter Freunden schlägst du etwas mit der <b>Aufforderungsform</b> vor: <b>いっしょに いこう</b> = „Lass uns zusammen gehen!“",
+      sentences: [
+        wegS("Lass uns zusammen gehen.", "isshoni ikou ."),
+        wegS("Lass uns essen.", "gohan o tabeyou ."),
+        wegS("Lass uns zusammen ansehen.", "isshoni miyou ."),
+        wegS("Lass uns jetzt nach Hause gehen.", "mou kaerou ."),
+        wegS("Lass uns die Hausaufgabe machen.", "shukudai o shiyou .")
+      ] },
+    { id: "u29l5", type: "grammar", title: "〜つもりです – Absicht", teach: [], focus: "tsumori",
+      explain: "Eine feste Absicht nennst du mit der <b>einfachen Form</b> und <b>つもりです</b>: <b>いく つもりです</b> = „Ich habe vor zu gehen.“ Verneint steht die <b>ない-Form</b>: <b>いかない つもりです</b>.",
+      sentences: [
+        wegS("Nächste Woche habe ich vor, nach Japan zu fahren.", "raishuu nihon e iku tsumori desu ."),
+        wegS("In den Sommerferien habe ich vor, den Fuji zu sehen.", "natsuyasumi ni fujisan o miru tsumori desu ."),
+        wegS("Ich habe nicht vor, Bier zu trinken.", "biiru o nomanai tsumori desu ."),
+        wegS("Was hast du vor?", "nani o suru tsumori desu ka .")
+      ] },
+    { id: "u29l6", type: "grammar", title: "〜よていです – Termin", teach: [], focus: "yotei",
+      explain: "Einen festen Plan oder Termin nennst du mit <b>よていです</b>: <b>いく よていです</b> = „Es ist geplant hinzufahren.“ Das klingt verbindlicher als <b>つもり</b>.",
+      sentences: [
+        wegS("Nächste Woche fahre ich planmäßig nach Kyoto.", "raishuu wa kyouto e iku yotei desu ."),
+        wegS("Morgen ist eine Besprechung geplant.", "ashita wa kaigi no yotei desu ."),
+        wegS("In den Sommerferien fahre ich planmäßig nach Japan.", "natsuyasumi wa nihon e iku yotei desu ."),
+        wegS("Nächstes Jahr studiere ich planmäßig in Japan.", "rainen nihon de benkyou suru yotei desu .")
+      ] },
+    { id: "u29l7", type: "dialog", title: "Pläne für den Sommer", teach: [],
+      lines: [
+        ["Tanaka", wegS("Was hast du in den Sommerferien vor?", "natsuyasumi wa nani o suru tsumori desu ka .")],
+        ["Hanna", wegS("Ich habe vor, nach Japan zu fahren.", "nihon e iku tsumori desu .")],
+        ["Tanaka", wegS("Wann fährst du?", "itsu iku yotei desu ka .")],
+        ["Hanna", wegS("Nächste Woche am Samstag.", "raishuu no doyoubi ni iku yotei desu .")],
+        ["Tanaka", wegS("Schön. Lass uns zusammen essen.", "iidesune . isshoni gohan o tabeyou .")],
+        ["Hanna", wegS("Ja, lass uns essen!", "un , tabeyou .")]
+      ] },
+    { id: "u29l8", type: "check", title: "Checkpoint" }
   ] }
 );
 
