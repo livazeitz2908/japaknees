@@ -10620,18 +10620,18 @@ defTokens([
 
 // ---------- て-Form: Umwandlung ----------
 function teWrong(w){ return { ja: w[0], ro: w[1], kind: "word", attach: false }; }
-function exTeForm(p, laterTe){
+function exTeForm(p, laterTe, form){
   const wrong = p.wrong.map(teWrong);
   const other = shuffle(laterTe.filter(t => t !== p.t && !p.wrong.some(w => w[0] === TOK[t].ja))).slice(0, 1);
   const opts = [{ k: p.t, h: () => wegHtml([p.t], { noSub: true }) }];
   wrong.forEach((w, i) => opts.push({ k: "w" + i, h: () => wegHtml([w], { noSub: true }) }));
   other.forEach(t => opts.push({ k: t, h: () => wegHtml([t], { noSub: true }) }));
-  return exMc({ promptHtml: () => wegHtml([p.m], { noSub: true }), say: TOK[p.m].ja, sub: "Wie lautet die て-Form?",
+  return exMc({ promptHtml: () => wegHtml([p.m], { noSub: true }), say: TOK[p.m].ja, sub: `Wie lautet die ${form || "て-Form"}?`,
     options: shuffle(opts), optionsBig: true, answerK: p.t, srs: tokSrs(TOK[p.t]) });
 }
-function exTeBack(p, pool){
-  const others = shuffle(pool.filter(x => x.m !== p.m)).slice(0, 3).map(x => x.m);
-  return exMc({ promptHtml: () => wegHtml([p.t], { noSub: true }), say: TOK[p.t].ja, sub: "Welches Verb steckt in dieser て-Form?",
+function exTeBack(p, pool, form){
+  const others = shuffle([...new Set(pool.filter(x => x.m !== p.m).map(x => x.m))]).slice(0, 3);
+  return exMc({ promptHtml: () => wegHtml([p.t], { noSub: true }), say: TOK[p.t].ja, sub: `Welches Verb steckt in dieser ${form || "て-Form"}?`,
     options: shuffle([p.m, ...others]).map(id => ({ k: id, h: () => wegHtml([id], { noSub: true }) })), optionsBig: true, answerK: p.m });
 }
 function exTeMatch(pairs){
@@ -10639,10 +10639,11 @@ function exTeMatch(pairs){
 }
 function conjLessonCore(lesson, unit, idx){
   const pairs = lesson.pairs.map(([m, t, wrong]) => ({ m, t, wrong }));
-  // alle bisher gelernten Paare als Ablenkung
+  const form = lesson.form || "て-Form";
+  // alle bisher gelernten Paare derselben Form als Ablenkung
   const known = [];
   WEG_UNITS.forEach(u => u.lessons.forEach((l, li) => {
-    if (l.type === "conj" && (u.id < unit.id || (u.id === unit.id && li <= idx))) (l.pairs || []).forEach(([m, t]) => known.push({ m, t }));
+    if (l.type === "conj" && (l.form || "て-Form") === form && (u.id < unit.id || (u.id === unit.id && li <= idx))) (l.pairs || []).forEach(([m, t]) => known.push({ m, t }));
   }));
   const laterTe = known.map(x => x.t);
   const exs = [];
@@ -10651,8 +10652,8 @@ function conjLessonCore(lesson, unit, idx){
       html: () => `<span style="display:inline-flex;gap:.6rem;align-items:center;flex-wrap:wrap;"><span>${wegHtml([p.m], { noSub: true })}</span><span>→</span><span>${wegHtml([p.t], { noSub: true })}</span></span>`,
       de: wegEsc(TOK[p.m].de), say: TOK[p.t].ja })) });
   const body = [];
-  pairs.forEach(p => body.push(exTeForm(p, laterTe)));
-  shuffle(pairs).slice(0, 4).forEach(p => body.push(exTeBack(p, known)));
+  pairs.forEach(p => body.push(exTeForm(p, laterTe, form)));
+  shuffle(pairs).slice(0, 4).forEach(p => body.push(exTeBack(p, known, form)));
   body.push(exTeMatch(shuffle(pairs).slice(0, 5)));
   exs.push(...shuffle(body));
   return exs;
@@ -10929,6 +10930,159 @@ WEG_UNITS.push(
         ["Hanna", wegS("Vielen Dank.", "arigatou .")]
       ] },
     { id: "u23l7", type: "check", title: "Checkpoint" }
+  ] }
+);
+
+// =========================================================
+// Weg, Etappe 5a: Einheiten 24 und 25 (Lockere Sprache, Meinungen)
+// =========================================================
+defTokens([
+  ["?", "？", "?", "(Fragezeichen)", "punct", true],
+  // Einheit 24: Wörterbuchform (einfache Form)
+  ["taberu", "たべる", "taberu", "essen (einfache Form)"], ["miru", "みる", "miru", "sehen (einfache Form)"], ["okiru", "おきる", "okiru", "aufstehen (einfache Form)"],
+  ["neru", "ねる", "neru", "schlafen (einfache Form)"], ["suru", "する", "suru", "machen (einfache Form)"], ["kuru", "くる", "kuru", "kommen (einfache Form)"],
+  ["iku", "いく", "iku", "gehen (einfache Form)"], ["nomu", "のむ", "nomu", "trinken (einfache Form)"], ["kau", "かう", "kau", "kaufen (einfache Form)"],
+  ["hanasu", "はなす", "hanasu", "sprechen (einfache Form)"], ["yomu", "よむ", "yomu", "lesen (einfache Form)"], ["kaku", "かく", "kaku", "schreiben (einfache Form)"],
+  ["matsu", "まつ", "matsu", "warten (einfache Form)"], ["kaeru", "かえる", "kaeru", "heimkehren (einfache Form)"],
+  ["aru", "ある", "aru", "es gibt (einfache Form)"], ["iru", "いる", "iru", "es gibt, sein (einfache Form)"],
+  // ない-Form
+  ["tabenai", "たべない", "tabenai", "nicht essen (einfache Form)"], ["minai", "みない", "minai", "nicht sehen (einfache Form)"], ["okinai", "おきない", "okinai", "nicht aufstehen (einfache Form)"],
+  ["nenai", "ねない", "nenai", "nicht schlafen (einfache Form)"],
+  ["ikanai", "いかない", "ikanai", "nicht gehen (einfache Form)"], ["nomanai", "のまない", "nomanai", "nicht trinken (einfache Form)"], ["kawanai", "かわない", "kawanai", "nicht kaufen (einfache Form)"],
+  ["hanasanai", "はなさない", "hanasanai", "nicht sprechen (einfache Form)"], ["yomanai", "よまない", "yomanai", "nicht lesen (einfache Form)"], ["kakanai", "かかない", "kakanai", "nicht schreiben (einfache Form)"],
+  ["matanai", "またない", "matanai", "nicht warten (einfache Form)"], ["kaeranai", "かえらない", "kaeranai", "nicht heimkehren (einfache Form)"],
+  ["shinai", "しない", "shinai", "nicht machen (einfache Form)"], ["konai", "こない", "konai", "nicht kommen (einfache Form)"],
+  ["nai", "ない", "nai", "es gibt nicht (einfache Form)"], ["inai", "いない", "inai", "es gibt nicht, ist nicht da (einfache Form)"],
+  // た-Form
+  ["tabeta", "たべた", "tabeta", "aß (einfache Form)"], ["mita", "みた", "mita", "sah (einfache Form)"], ["okita", "おきた", "okita", "stand auf (einfache Form)"],
+  ["neta", "ねた", "neta", "schlief (einfache Form)"], ["shitaV", "した", "shita", "machte (einfache Form)"], ["kita", "きた", "kita", "kam (einfache Form)"],
+  ["itta", "いった", "itta", "ging (einfache Form)"], ["nonda", "のんだ", "nonda", "trank (einfache Form)"], ["katta", "かった", "katta", "kaufte (einfache Form)"],
+  ["hanashita", "はなした", "hanashita", "sprach (einfache Form)"], ["yonda", "よんだ", "yonda", "las (einfache Form)"], ["kaita", "かいた", "kaita", "schrieb (einfache Form)"],
+  ["matta", "まった", "matta", "wartete (einfache Form)"], ["kaetta", "かえった", "kaetta", "kehrte heim (einfache Form)"],
+  // lockere Sätze
+  ["da", "だ", "da", "ist (einfache Form)", "aux", true], ["yo", "よ", "yo", "(betont, wie: „sag ich dir“)", "part", true],
+  ["datta", "だった", "datta", "war (einfache Form)", "aux", true], ["omoshirokatta", "おもしろかった", "omoshirokatta", "war interessant"],
+  ["kondo", "こんど", "kondo", "nächstes Mal"], ["un", "うん", "un", "Ja (locker)", "phrase"],
+  // Einheit 25: Meinungen
+  ["tabun", "たぶん", "tabun", "wahrscheinlich"], ["kitto", "きっと", "kitto", "bestimmt"], ["hontou", "ほんとう", "hontō", "wahr; wirklich"],
+  ["kare", "かれ", "kare", "er"], ["kanojo", "かのじょ", "kanojo", "sie"],
+  ["iimasu", "いいます", "iimasu", "sagen"], ["iimashita", "いいました", "iimashita", "sagte"], ["deshou", "でしょう", "deshō", "wohl; nicht wahr", "aux", true]
+]);
+
+WEG_UNITS.push(
+  { id: 24, lessons: [
+    { id: "u24l1", type: "words", title: "Verben 1", teach: ["taberu","miru","okiru","neru","suru","kuru"], note: "Das ist die einfache Form (Wörterbuchform). Unter Freunden sagst du „たべる“ statt „たべます“." },
+    { id: "u24l2", type: "words", title: "Verben 2", teach: ["iku","nomu","kau","hanasu","yomu","kaku"] },
+    { id: "u24l3", type: "words", title: "Verben 3", teach: ["matsu","kaeru","aru","iru"] },
+    { id: "u24l4", type: "conj", form: "ない-Form", title: "ない-Form 1: る-Verben", teach: ["tabenai","minai","okinai","nenai"],
+      pairs: [
+        ["taberu", "tabenai", [["たべらない", "taberanai"], ["たべなる", "tabenaru"]]],
+        ["miru", "minai", [["みらない", "miranai"], ["みなる", "minaru"]]],
+        ["okiru", "okinai", [["おきらない", "okiranai"], ["おきる ない", "okiru nai"]]],
+        ["neru", "nenai", [["ねらない", "neranai"], ["ねなる", "nenaru"]]]
+      ],
+      explain: "Die <b>ない-Form</b> verneint: „nicht“. Bei Verben, die auf <b>る</b> enden und davor ein い- oder え-Laut haben (たべる, みる, おきる, ねる), fällt <b>る</b> weg und <b>ない</b> kommt dazu: たべる → <b>たべない</b>." },
+    { id: "u24l5", type: "conj", form: "ない-Form", title: "ない-Form 2: う-Verben", teach: ["ikanai","nomanai","kawanai","hanasanai","yomanai","kakanai","matanai","kaeranai"],
+      pairs: [
+        ["iku", "ikanai", [["いきない", "ikinai"], ["いくない", "ikunai"]]],
+        ["nomu", "nomanai", [["のみない", "nominai"], ["のむない", "nomunai"]]],
+        ["kau", "kawanai", [["かあない", "kaanai"], ["かうない", "kaunai"]]],
+        ["hanasu", "hanasanai", [["はなしない", "hanashinai"], ["はなすない", "hanasunai"]]],
+        ["yomu", "yomanai", [["よみない", "yominai"], ["よむない", "yomunai"]]],
+        ["kaku", "kakanai", [["かきない", "kakinai"], ["かくない", "kakunai"]]],
+        ["matsu", "matanai", [["まつない", "matsunai"], ["まちない", "machinai"]]],
+        ["kaeru", "kaeranai", [["かえない", "kaenai"], ["かえるない", "kaerunai"]]]
+      ],
+      explain: "Bei den übrigen Verben (den <b>う-Verben</b>) wird der letzte Laut zum <b>あ-Laut</b>, dann kommt <b>ない</b>: いく → <b>いかない</b>, のむ → <b>のまない</b>, まつ → <b>またない</b>. Achtung: <b>かう → かわない</b> (わ statt あ). <b>かえる</b> sieht aus wie ein る-Verb, gehört aber hierher: かえらない." },
+    { id: "u24l6", type: "conj", form: "ない-Form", title: "ない-Form 3: Ausnahmen", teach: ["shinai","konai","nai","inai"],
+      pairs: [
+        ["suru", "shinai", [["すらない", "suranai"], ["せない", "senai"]]],
+        ["kuru", "konai", [["くない", "kunai"], ["きない", "kinai"]]],
+        ["aru", "nai", [["あらない", "aranai"], ["あるない", "arunai"]]],
+        ["iru", "inai", [["いらない", "iranai"], ["いるない", "irunai"]]]
+      ],
+      explain: "Unregelmäßig sind <b>する → しない</b> und <b>くる → こない</b>. Auch <b>ある</b> („es gibt“) verneint sich besonders: <b>ない</b> (nicht あらない!). <b>いる → いない</b>." },
+    { id: "u24l7", type: "conj", form: "た-Form", title: "た-Form 1", teach: ["tabeta","mita","okita","neta","shitaV","kita"],
+      pairs: [
+        ["taberu", "tabeta", [["たべって", "tabette"], ["たべんだ", "tabenda"]]],
+        ["miru", "mita", [["みんだ", "minda"], ["みった", "mitta"]]],
+        ["okiru", "okita", [["おきんだ", "okinda"], ["おきった", "okitta"]]],
+        ["neru", "neta", [["ねんだ", "nenda"], ["ねった", "netta"]]],
+        ["suru", "shitaV", [["すった", "sutta"], ["すんだ", "sunda"]]],
+        ["kuru", "kita", [["くった", "kutta"], ["くんだ", "kunda"]]]
+      ],
+      explain: "Die <b>た-Form</b> ist die einfache Vergangenheit („… hat / war“). Sie wird genauso gebildet wie die て-Form, nur mit <b>た</b> statt <b>て</b>: たべて → <b>たべた</b>, みて → <b>みた</b>, して → <b>した</b>, きて → <b>きた</b>." },
+    { id: "u24l8", type: "conj", form: "た-Form", title: "た-Form 2", teach: ["itta","nonda","katta","hanashita","yonda","kaita","matta","kaetta"],
+      pairs: [
+        ["iku", "itta", [["いいた", "iita"], ["いんだ", "inda"]]],
+        ["nomu", "nonda", [["のった", "notta"], ["のみた", "nomita"]]],
+        ["kau", "katta", [["かいた", "kaita"], ["かんだ", "kanda"]]],
+        ["hanasu", "hanashita", [["はなった", "hanatta"], ["はなんだ", "hananda"]]],
+        ["yomu", "yonda", [["よった", "yotta"], ["よみた", "yomita"]]],
+        ["kaku", "kaita", [["かった", "katta"], ["かんだ", "kanda"]]],
+        ["matsu", "matta", [["まんだ", "manda"], ["まちた", "machita"]]],
+        ["kaeru", "kaetta", [["かえんだ", "kaenda"], ["かえた", "kaeta"]]]
+      ],
+      explain: "Auch hier gelten die て-Form-Regeln: <b>って → った</b> (かって → <b>かった</b>), <b>んで → んだ</b> (のんで → <b>のんだ</b>), <b>いて → いた</b> (かいて → <b>かいた</b>), <b>して → した</b> (はなして → <b>はなした</b>). Ausnahme wie bei て: <b>いく → いった</b>." },
+    { id: "u24l9", type: "grammar", title: "Locker sprechen", teach: ["da","yo","?"], focus: "da",
+      explain: "Unter Freunden lässt man <b>です</b> und <b>ます</b> weg. Statt <b>です</b> steht <b>だ</b>, Verben stehen in der einfachen Form (たべる, たべない, たべた). Fragen stellst du ohne <b>か</b>, nur mit steigender Stimme (<b>？</b>). Mit <b>よ</b> betonst du etwas.",
+      sentences: [
+        wegS("Das ist ein Buch.", "kore wa hon da ."),
+        wegS("Ich bin Student.", "watashi wa gakusei da ."),
+        wegS("Gehst du morgen zur Schule?", "ashita gakkou e iku ?"),
+        wegS("Isst du mit mir?", "isshoni gohan o taberu ?"),
+        wegS("Gestern habe ich einen Film gesehen.", "kinou eiga o mita ."),
+        wegS("Ich esse nicht!", "tabenai yo .")
+      ] },
+    { id: "u24l10", type: "dialog", title: "Unter Freunden", teach: ["datta","omoshirokatta","kondo","un"],
+      lines: [
+        ["Hanna", wegS("Was hast du gestern gemacht?", "kinou nani o shitaV ?")],
+        ["Tanaka", wegS("Ich habe mit einem Freund einen Film gesehen.", "tomodachi to eiga o mita .")],
+        ["Hanna", wegS("Wie war er?", "dou datta ?")],
+        ["Tanaka", wegS("Er war interessant.", "omoshirokatta .")],
+        ["Hanna", wegS("Gehen wir nächstes Mal zusammen?", "kondo isshoni iku ?")],
+        ["Tanaka", wegS("Ja, ich gehe mit.", "un , iku .")]
+      ] },
+    { id: "u24l11", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 25, lessons: [
+    { id: "u25l1", type: "words", title: "Vermutung und Sicherheit", teach: ["tabun","kitto","hontou"] },
+    { id: "u25l2", type: "words", title: "Sagen und Personen", teach: ["iimasu","iimashita","kare","kanojo"] },
+    { id: "u25l3", type: "grammar", title: "〜と おもいます mit einfacher Form", teach: [], focus: "omoimasu",
+      explain: "Vor <b>と おもいます</b> steht die <b>einfache Form</b>: <b>あめだと おもいます</b> („Ich denke, es regnet“), <b>くると おもいます</b> („Ich denke, er kommt“), <b>いかないと おもいます</b> („Ich denke, er geht nicht“). Bei Nomen steht <b>だ</b>.",
+      sentences: [
+        wegS("Ich denke, morgen regnet es.", "ashita wa ame da to omoimasu ."),
+        wegS("Ich denke, Herr Tanaka kommt.", "tanaka san wa kuru to omoimasu ."),
+        wegS("Ich denke, er geht nicht.", "kare wa ikanai to omoimasu ."),
+        wegS("Ich denke, sie hat den Film gesehen.", "kanojo wa eiga o mita to omoimasu ."),
+        wegS("Ich denke, das ist wahr.", "hontou da to omoimasu .")
+      ] },
+    { id: "u25l4", type: "grammar", title: "〜と いいます – Gesagtes wiedergeben", teach: [], focus: "iimasu",
+      explain: "Was jemand sagt, gibst du mit <b>と いいます</b> wieder: <b>くると いいます</b> = „Er sagt, er kommt.“ Vor <b>と</b> steht wieder die einfache Form. Vergangenheit: <b>いいました</b>.",
+      sentences: [
+        wegS("Herr Tanaka sagt, er kommt morgen.", "tanaka san wa ashita kuru to iimasu ."),
+        wegS("Er sagt, er isst nicht.", "kare wa tabenai to iimasu ."),
+        wegS("Sie sagte, es sei interessant.", "kanojo wa omoshiroi to iimashita ."),
+        wegS("Der Lehrer sagte, er geht nach Hause.", "sensei wa kaeru to iimashita .")
+      ] },
+    { id: "u25l5", type: "grammar", title: "〜でしょう – wohl, nicht wahr?", teach: ["deshou"], focus: "deshou",
+      explain: "<b>でしょう</b> drückt eine Vermutung aus („wohl“) oder fragt freundlich nach Zustimmung („nicht wahr?“). Oft steht <b>たぶん</b> (wahrscheinlich) oder <b>きっと</b> (bestimmt) davor.",
+      sentences: [
+        wegS("Morgen regnet es wahrscheinlich.", "ashita wa tabun ame deshou ."),
+        wegS("Herr Tanaka kommt bestimmt.", "tanaka san wa kitto kuru deshou ."),
+        wegS("Das ist billig, nicht wahr?", "kore wa yasui deshou ?"),
+        wegS("Es ist heiß, nicht wahr?", "atsui deshou ?")
+      ] },
+    { id: "u25l6", type: "dialog", title: "Wie wird das Wetter?", teach: [],
+      lines: [
+        ["Hanna", wegS("Wie wird das Wetter morgen?", "ashita no tenki wa dou desu ka .")],
+        ["Tanaka", wegS("Es regnet wahrscheinlich.", "tabun ame deshou .")],
+        ["Hanna", wegS("Ob Herr Tanaka wohl kommt?", "tanaka san wa kuru deshou ka .")],
+        ["Tanaka", wegS("Er hat gesagt, er kommt.", "kuru to iimashita .")],
+        ["Hanna", wegS("Ich denke, es wird kalt, nicht wahr?", "samui to omoimasu . samui deshou ?")],
+        ["Tanaka", wegS("Ja, bestimmt.", "ee , kitto .")]
+      ] },
+    { id: "u25l7", type: "check", title: "Checkpoint" }
   ] }
 );
 
