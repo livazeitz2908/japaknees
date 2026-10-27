@@ -8348,7 +8348,194 @@ const KANJI_GROUPS = [
     ["古","alt","コ","ふる(い)",[["古い","ふるい","alt"],["中古","ちゅうこ","gebraucht"]]],
     ["高","hoch; teuer","コウ","たか(い)",[["高い","たかい","hoch; teuer"],["高校生","こうこうせい","Oberschüler/in"]]],
     ["安","billig","アン","やす(い)",[["安い","やすい","billig"],["安心","あんしん","Beruhigung"]]],
-    ["長","lang","チョウ","なが(い)",[["長い","ながい","lang"],["校長","こうちょう","Schulleiter/in"]]]] }
+    ["長","lang","チョウ","なが(い)",[["長い","ながい","lang"],["校長","こうちょう","Schulleiter/in"]]]] },
+  { id:23, title:"Himmelsrichtungen", note:"Die vier Himmelsrichtungen: 東 (Osten), 西 (Westen), 南 (Süden), 北 (Norden). 東京 bedeutet wörtlich „östliche Hauptstadt“.", kanji:[
+    ["東","Osten","トウ","ひがし",[["東","ひがし","Osten"],["東洋","とうよう","Orient"]]],
+    ["西","Westen","セイ・サイ","にし",[["西","にし","Westen"],["西洋","せいよう","der Westen"]]],
+    ["南","Süden","ナン","みなみ",[["南","みなみ","Süden"],["南極","なんきょく","Südpol"]]],
+    ["北","Norden","ホク","きた",[["北","きた","Norden"],["北極","ほっきょく","Nordpol"]]]] },
+  { id:24, title:"Zeit 3", note:"午 steckt in 午前 und 午後. 半 heißt „halb“: 三時半 = halb vier. 間 bedeutet „Zwischenraum“ und „Zeitspanne“: 時間 = Zeit, Stunde.", kanji:[
+    ["午","Mittag","ゴ","",[["午前","ごぜん","vormittags"],["午後","ごご","nachmittags"]]],
+    ["半","halb","ハン","",[["半分","はんぶん","Hälfte"],["半","はん","halb (in 三時半)"]]],
+    ["間","Zwischenraum; Zeitspanne","カン・ケン","あいだ・ま",[["時間","じかん","Zeit; Stunde"],["昼間","ひるま","tagsüber"]]],
+    ["夕","Abend","セキ","ゆう",[["夕方","ゆうがた","früher Abend"],["夕飯","ゆうはん","Abendessen"]]]] },
+  { id:25, title:"Jahreszeiten und Himmel", note:"春夏秋冬 sind die vier Jahreszeiten. 天気 (Wetter) enthält 天, den Himmel.", kanji:[
+    ["天","Himmel","テン","",[["天気","てんき","Wetter"],["天気予報","てんきよほう","Wetterbericht"]]],
+    ["春","Frühling","シュン","はる",[["春","はる","Frühling"],["青春","せいしゅん","Jugend"]]],
+    ["夏","Sommer","カ","なつ",[["夏","なつ","Sommer"],["夏休み","なつやすみ","Sommerferien"]]],
+    ["秋","Herbst","シュウ","あき",[["秋","あき","Herbst"]]],
+    ["冬","Winter","トウ","ふゆ",[["冬","ふゆ","Winter"],["冬眠","とうみん","Winterschlaf"]]]] },
+  { id:26, title:"Familie 2", note:"兄弟姉妹 meint die Geschwister: 兄 älterer Bruder, 弟 jüngerer Bruder, 姉 ältere Schwester, 妹 jüngere Schwester. 親 (Eltern) und 族 (Sippe) kommen in 両親 und 家族 vor.", kanji:[
+    ["兄","älterer Bruder","ケイ・キョウ","あに",[["兄","あに","älterer Bruder (mein)"],["兄弟","きょうだい","Geschwister"]]],
+    ["弟","jüngerer Bruder","テイ・ダイ・デ","おとうと",[["弟","おとうと","jüngerer Bruder"],["弟子","でし","Schüler; Lehrling"]]],
+    ["姉","ältere Schwester","シ","あね",[["姉","あね","ältere Schwester (meine)"],["お姉さん","おねえさん","ältere Schwester (andere)"]]],
+    ["妹","jüngere Schwester","マイ","いもうと",[["妹","いもうと","jüngere Schwester"],["姉妹","しまい","Schwestern"]]],
+    ["親","Eltern; vertraut","シン","おや・した(しい)",[["両親","りょうしん","Eltern"],["親切","しんせつ","Freundlichkeit"]]],
+    ["族","Sippe; Familie","ゾク","",[["家族","かぞく","Familie"],["民族","みんぞく","Volk"]]]] },
+  { id:27, title:"Wohnen", note:"家 (Haus, Familie) steht in 家族. 住む (wohnen) und 屋 (Haus, Laden) kommen oft in Wörtern wie 部屋 (Zimmer) vor.", kanji:[
+    ["家","Haus; Familie","カ・ケ","いえ・うち",[["家","いえ","Haus"],["家庭","かてい","Haushalt; Familie"]]],
+    ["住","wohnen","ジュウ","す(む)",[["住む","すむ","wohnen"],["住所","じゅうしょ","Adresse"]]],
+    ["屋","Haus; Laden","オク","や",[["部屋","へや","Zimmer"],["八百屋","やおや","Gemüsehändler"]]],
+    ["室","Raum","シツ","",[["教室","きょうしつ","Klassenzimmer"],["会議室","かいぎしつ","Besprechungsraum"]]]] },
+  { id:28, title:"Tiere", note:"Viele Tierzeichen sind alte Bilder: 犬 zeigt einen Hund, 魚 einen Fisch mit Schwanz, 鳥 einen Vogel.", kanji:[
+    ["犬","Hund","ケン","いぬ",[["犬","いぬ","Hund"]]],
+    ["魚","Fisch","ギョ","さかな・うお",[["魚","さかな","Fisch"],["金魚","きんぎょ","Goldfisch"]]],
+    ["鳥","Vogel","チョウ","とり",[["鳥","とり","Vogel"],["小鳥","ことり","kleiner Vogel"]]],
+    ["牛","Rind","ギュウ","うし",[["牛肉","ぎゅうにく","Rindfleisch"],["牛乳","ぎゅうにゅう","Milch"]]]] },
+  { id:29, title:"Essen", note:"Aus 肉 (Fleisch), 茶 (Tee), 飯 (gekochter Reis), 味 (Geschmack), 料 (Zutat) und 野 (Feld) entstehen viele Wörter rund ums Essen: 料理, 野菜, 朝御飯.", kanji:[
+    ["肉","Fleisch","ニク","",[["肉","にく","Fleisch"],["豚肉","ぶたにく","Schweinefleisch"]]],
+    ["茶","Tee","チャ・サ","",[["お茶","おちゃ","Tee"],["紅茶","こうちゃ","schwarzer Tee"]]],
+    ["飯","gekochter Reis; Mahlzeit","ハン","めし",[["御飯","ごはん","Reis; Mahlzeit"],["朝御飯","あさごはん","Frühstück"]]],
+    ["味","Geschmack","ミ","あじ",[["味","あじ","Geschmack"],["意味","いみ","Bedeutung"]]],
+    ["料","Zutat; Gebühr","リョウ","",[["料理","りょうり","Küche; Kochen"],["給料","きゅうりょう","Gehalt"]]],
+    ["野","Feld; Ebene","ヤ","の",[["野菜","やさい","Gemüse"],["野","の","Feld"]]]] },
+  { id:30, title:"Einkaufen und Kleidung", note:"買う (kaufen) und 売る (verkaufen) sehen sich ähnlich. Bei Kleidung: 洋服 (westliche Kleidung), 着る (anziehen).", kanji:[
+    ["買","kaufen","バイ","か(う)",[["買う","かう","kaufen"],["買い物","かいもの","Einkauf"]]],
+    ["品","Ware","ヒン","しな",[["品物","しなもの","Ware"],["食料品","しょくりょうひん","Lebensmittel"]]],
+    ["洋","Meer; westlich","ヨウ","",[["洋服","ようふく","westliche Kleidung"],["西洋","せいよう","der Westen"]]],
+    ["服","Kleidung","フク","",[["服","ふく","Kleidung"],["和服","わふく","japanische Kleidung"]]],
+    ["着","anziehen; ankommen","チャク","き(る)・つ(く)",[["着る","きる","anziehen"],["着く","つく","ankommen"]]],
+    ["紙","Papier","シ","かみ",[["紙","かみ","Papier"],["手紙","てがみ","Brief"]]]] },
+  { id:31, title:"Orte in der Stadt", note:"Viele Orte enden auf ein Kanji für „Gebäude“: 館 (z. B. 図書館) oder 堂 (z. B. 食堂). 公園 ist ein Park, 町 ein Stadtviertel.", kanji:[
+    ["公","öffentlich","コウ・ク","",[["公園","こうえん","Park"],["公務員","こうむいん","Beamter; Beamtin"]]],
+    ["館","großes Gebäude","カン","",[["図書館","としょかん","Bibliothek"],["映画館","えいがかん","Kino"]]],
+    ["堂","Halle","ドウ","",[["食堂","しょくどう","Kantine"],["講堂","こうどう","Aula"]]],
+    ["町","Stadt; Viertel","チョウ","まち",[["町","まち","Stadt; Viertel"],["下町","したまち","Altstadtviertel"]]],
+    ["京","Hauptstadt","キョウ・ケイ","みやこ",[["東京","とうきょう","Tokio"],["京都","きょうと","Kyoto"]]]] },
+  { id:32, title:"Dinge und Fragen", note:"何 ist das Fragewort „was“ und wird je nach Wort なに oder なん gelesen: 何ですか (なんですか), 何を (なにを).", kanji:[
+    ["何","was","カ","なに・なん",[["何","なに","was"],["何か","なにか","etwas"]]],
+    ["物","Ding","ブツ・モツ","もの",[["物","もの","Ding"],["果物","くだもの","Obst"]]],
+    ["銀","Silber","ギン","",[["銀行","ぎんこう","Bank"],["銀","ぎん","Silber"]]]] },
+  { id:33, title:"Nähe und Gehen", note:"近い (nah) ist das Gegenteil von 遠い. 歩く (gehen) und 走る (laufen) zeigen beide einen Fuß, der sich bewegt.", kanji:[
+    ["近","nah","キン","ちか(い)",[["近い","ちかい","nah"],["近所","きんじょ","Nachbarschaft"]]],
+    ["歩","zu Fuß gehen","ホ","ある(く)",[["歩く","あるく","zu Fuß gehen"],["散歩","さんぽ","Spaziergang"]]],
+    ["走","laufen","ソウ","はし(る)",[["走る","はしる","laufen"]]],
+    ["道","Weg; Straße","ドウ","みち",[["道","みち","Weg; Straße"],["柔道","じゅうどう","Judo"]]]] },
+  { id:34, title:"Verkehr", note:"Bei Fahrzeugen kommen 運 (befördern), 転 (drehen) und 通 (durchfahren) vor: 運転 = Fahren, 自転車 = Fahrrad, 交通 = Verkehr.", kanji:[
+    ["通","hindurchgehen","ツウ","とお(る)・かよ(う)",[["通る","とおる","durchgehen; passieren"],["交通","こうつう","Verkehr"]]],
+    ["運","befördern; Glück","ウン","はこ(ぶ)",[["運ぶ","はこぶ","befördern"],["運動","うんどう","Sport; Bewegung"]]],
+    ["転","sich drehen","テン","ころ(ぶ)",[["自転車","じてんしゃ","Fahrrad"],["転ぶ","ころぶ","hinfallen"]]],
+    ["場","Ort","ジョウ","ば",[["場所","ばしょ","Ort"],["駐車場","ちゅうしゃじょう","Parkplatz"]]],
+    ["自","selbst","ジ・シ","みずか(ら)",[["自分","じぶん","selbst"],["自動車","じどうしゃ","Auto"]]]] },
+  { id:35, title:"Sprache", note:"漢字 heißt „Zeichen der Han“ und meint die chinesischen Schriftzeichen. 言う (sagen) und 言葉 (Wort) gehören zusammen.", kanji:[
+    ["漢","China (Han)","カン","",[["漢字","かんじ","Kanji"],["漢語","かんご","sinojapanisches Wort"]]],
+    ["英","England; Englisch","エイ","",[["英語","えいご","Englisch"],["英文","えいぶん","englischer Text"]]],
+    ["言","sagen; Wort","ゲン・ゴン","い(う)・こと",[["言う","いう","sagen"],["言葉","ことば","Wort; Sprache"]]]] },
+  { id:36, title:"Musik und Film", note:"楽 steht für „Freude“ und für „Musik“: 楽しい (angenehm), 音楽 (Musik). 画 steckt in 映画 (Film) und 漫画 (Manga).", kanji:[
+    ["歌","Lied; singen","カ","うた(う)・うた",[["歌","うた","Lied"],["歌う","うたう","singen"]]],
+    ["楽","Freude; Musik","ガク・ラク","たの(しい)",[["楽しい","たのしい","angenehm; lustig"],["音楽","おんがく","Musik"]]],
+    ["音","Klang; Geräusch","オン・イン","おと・ね",[["音","おと","Geräusch"],["発音","はつおん","Aussprache"]]],
+    ["映","spiegeln; zeigen","エイ","うつ(る)・うつ(す)",[["映す","うつす","zeigen; projizieren"],["映画","えいが","Film"]]],
+    ["画","Bild; Strich","ガ・カク","",[["映画","えいが","Film"],["漫画","まんが","Manga; Comic"]]]] },
+  { id:37, title:"Lernen", note:"勉強 (lernen) und 習う (üben, lernen) sind zwei Wörter fürs Lernen; 教える heißt lehren.", kanji:[
+    ["習","üben; lernen","シュウ","なら(う)",[["習う","ならう","lernen; üben"],["練習","れんしゅう","Übung"]]],
+    ["勉","sich anstrengen","ベン","",[["勉強","べんきょう","Lernen; Studium"]]],
+    ["強","stark","キョウ・ゴウ","つよ(い)",[["強い","つよい","stark"],["強調","きょうちょう","Betonung"]]],
+    ["教","lehren","キョウ","おし(える)",[["教える","おしえる","lehren"],["教育","きょういく","Erziehung; Bildung"]]]] },
+  { id:38, title:"Gesundheit", note:"Beim Arzt: 医者 (Arzt), 病院 (Krankenhaus), 病気 (Krankheit). 元気 heißt „gesund, munter“.", kanji:[
+    ["医","Arzt; Medizin","イ","",[["医者","いしゃ","Arzt; Ärztin"],["医学","いがく","Medizin"]]],
+    ["者","Person","シャ","もの",[["学者","がくしゃ","Gelehrte/r"],["者","もの","Person"]]],
+    ["病","krank","ビョウ・ヘイ","や(む)",[["病気","びょうき","Krankheit"],["病院","びょういん","Krankenhaus"]]],
+    ["院","Anstalt; Klinik","イン","",[["入院","にゅういん","Aufnahme im Krankenhaus"],["退院","たいいん","Entlassung aus dem Krankenhaus"]]],
+    ["体","Körper","タイ","からだ",[["体","からだ","Körper"],["大体","だいたい","ungefähr"]]],
+    ["心","Herz; Gemüt","シン","こころ",[["心","こころ","Herz; Gemüt"],["安心","あんしん","Beruhigung"]]],
+    ["元","Ursprung; gesund","ゲン・ガン","もと",[["元気","げんき","gesund; munter"],["元日","がんじつ","Neujahrstag"]]]] },
+  { id:39, title:"Alltag", note:"早く起きる (früh aufstehen), 作る (machen), 休む (ausruhen): Verben für den Tagesablauf.", kanji:[
+    ["起","aufstehen; wecken","キ","お(きる)・お(こす)",[["起きる","おきる","aufstehen"],["起こす","おこす","wecken"]]],
+    ["早","früh","ソウ・サッ","はや(い)",[["早い","はやい","früh"],["早口","はやくち","schnelles Sprechen"]]],
+    ["作","machen","サク・サ","つく(る)",[["作る","つくる","machen"],["作文","さくぶん","Aufsatz"]]],
+    ["休","ausruhen","キュウ","やす(む)",[["休む","やすむ","ausruhen; fehlen"],["休み","やすみ","Pause; freier Tag"]]]] },
+  { id:40, title:"Gestern und morgen", note:"去年 (letztes Jahr) und 明日 (morgen) zeigen Zeit. 明日 liest man normalerweise あした.", kanji:[
+    ["去","vergehen","キョ・コ","さ(る)",[["去年","きょねん","letztes Jahr"],["過去","かこ","Vergangenheit"]]],
+    ["明","hell; klar","メイ・ミョウ","あか(るい)・あ(ける)",[["明るい","あかるい","hell"],["説明","せつめい","Erklärung"]]]] },
+  { id:41, title:"Verben des Tuns", note:"Wichtige Verben mit Kanji vorn: 使う, 持つ, 待つ, 始める, 終わる. Der Rest steht in Hiragana.", kanji:[
+    ["使","benutzen","シ","つか(う)",[["使う","つかう","benutzen"],["大使館","たいしかん","Botschaft"]]],
+    ["持","halten; besitzen","ジ","も(つ)",[["持つ","もつ","halten; besitzen"],["気持ち","きもち","Gefühl"]]],
+    ["待","warten","タイ","ま(つ)",[["待つ","まつ","warten"],["招待","しょうたい","Einladung"]]],
+    ["始","anfangen","シ","はじ(める)・はじ(まる)",[["始める","はじめる","anfangen (etwas)"],["始まる","はじまる","anfangen (selbst)"]]],
+    ["終","enden","シュウ","お(わる)",[["終わる","おわる","enden"],["終わり","おわり","Ende"]]]] },
+  { id:42, title:"Denken und Wissen", note:"思う und 考える heißen beide „denken“. 思う meint eher „glauben, finden“, 考える „nachdenken“.", kanji:[
+    ["思","denken; glauben","シ","おも(う)",[["思う","おもう","denken; glauben"],["思い出す","おもいだす","sich erinnern"]]],
+    ["考","nachdenken","コウ","かんが(える)",[["考える","かんがえる","nachdenken"],["参考","さんこう","Referenz"]]],
+    ["知","wissen","チ","し(る)",[["知る","しる","wissen; kennen"],["知らせる","しらせる","mitteilen"]]],
+    ["意","Sinn; Absicht","イ","",[["意見","いけん","Meinung"],["注意","ちゅうい","Vorsicht"]]]] },
+  { id:43, title:"Reisen und Erlebnisse", note:"旅行 (Reise) und 出発 (Abfahrt) brauchst du auf Reisen. 一度 heißt „einmal“, 今度 „diesmal, nächstes Mal“.", kanji:[
+    ["旅","Reise","リョ","たび",[["旅行","りょこう","Reise"],["旅館","りょかん","japanisches Gasthaus"]]],
+    ["発","abfahren; entdecken","ハツ・ホツ","",[["出発","しゅっぱつ","Abfahrt"],["発見","はっけん","Entdeckung"]]],
+    ["度","Mal; Grad","ド","たび",[["一度","いちど","einmal"],["今度","こんど","diesmal; nächstes Mal"]]]] },
+  { id:44, title:"Schrift und Fragen", note:"字 (Zeichen) und 文 (Satz) bilden 文字 und 作文. 問題 (Aufgabe) enthält 問 (Frage) und 題 (Thema).", kanji:[
+    ["字","Schriftzeichen","ジ","",[["字","じ","Schriftzeichen"],["数字","すうじ","Zahl; Ziffer"]]],
+    ["文","Satz; Text","ブン・モン","",[["文法","ぶんぽう","Grammatik"],["文化","ぶんか","Kultur"]]],
+    ["答","antworten","トウ","こた(える)",[["答える","こたえる","antworten"],["答","こたえ","Antwort"]]],
+    ["問","Frage","モン","と(う)",[["質問","しつもん","Frage"],["問題","もんだい","Problem; Aufgabe"]]],
+    ["題","Thema; Aufgabe","ダイ","",[["宿題","しゅくだい","Hausaufgabe"],["話題","わだい","Gesprächsthema"]]]] },
+  { id:45, title:"Studium und Prüfung", note:"試験 (Prüfung) und 経験 (Erfahrung) enthalten beide 験. 研究 (Forschung) besteht aus zwei Zeichen mit ähnlicher Bedeutung.", kanji:[
+    ["研","erforschen","ケン","と(ぐ)",[["研究","けんきゅう","Forschung"],["研修","けんしゅう","Fortbildung"]]],
+    ["究","ergründen","キュウ","きわ(める)",[["研究室","けんきゅうしつ","Forschungsraum"],["研究","けんきゅう","Forschung"]]],
+    ["試","versuchen; prüfen","シ","こころ(みる)・ため(す)",[["試験","しけん","Prüfung"],["試合","しあい","Wettkampf"]]],
+    ["験","prüfen; Erfahrung","ケン","",[["経験","けいけん","Erfahrung"],["実験","じっけん","Experiment"]]],
+    ["質","Qualität; Beschaffenheit","シツ","",[["質","しつ","Qualität"],["性質","せいしつ","Eigenschaft"]]]] },
+  { id:46, title:"Regeln", note:"Zeichen für Regeln und Gebote: 正しい (richtig), 不便 (unpraktisch), 止まる (anhalten), 大切 (wichtig).", kanji:[
+    ["用","benutzen; Angelegenheit","ヨウ","もち(いる)",[["用事","ようじ","Erledigung; Termin"],["用意","ようい","Vorbereitung"]]],
+    ["正","richtig","セイ・ショウ","ただ(しい)",[["正しい","ただしい","richtig"],["正月","しょうがつ","Neujahr"]]],
+    ["切","schneiden; wichtig","セツ・サイ","き(る)",[["切る","きる","schneiden"],["大切","たいせつ","wichtig; kostbar"]]],
+    ["不","nicht; un-","フ・ブ","",[["不便","ふべん","unpraktisch"],["不安","ふあん","Unruhe"]]],
+    ["止","anhalten","シ","と(まる)・や(める)",[["止まる","とまる","anhalten"],["中止","ちゅうし","Abbruch"]]]] },
+  { id:47, title:"Kraft und Bewegung", note:"力 steht für „Kraft“, 動 für „sich bewegen“, 工 für „Handwerk, Bau“ und 業 für „Beruf, Gewerbe“: 工業 (Industrie), 授業 (Unterricht).", kanji:[
+    ["力","Kraft","リョク・リキ","ちから",[["力","ちから","Kraft"],["努力","どりょく","Anstrengung"]]],
+    ["動","sich bewegen","ドウ","うご(く)",[["動く","うごく","sich bewegen"],["動物","どうぶつ","Tier"]]],
+    ["工","Handwerk; Bau","コウ・ク","",[["工場","こうじょう","Fabrik"],["工業","こうぎょう","Industrie"]]],
+    ["業","Beruf; Gewerbe","ギョウ・ゴウ","わざ",[["授業","じゅぎょう","Unterricht"],["卒業","そつぎょう","Abschluss"]]]] },
+  { id:48, title:"Pläne", note:"計 bedeutet „messen, planen“: 時計 (Uhr), 計画 (Plan). 以上 heißt „mehr als“ und „das war's“.", kanji:[
+    ["計","messen; planen","ケイ","はか(る)",[["時計","とけい","Uhr"],["計画","けいかく","Plan"]]],
+    ["図","Zeichnung; Plan","ズ・ト","え・はか(る)",[["地図","ちず","Landkarte"],["図","ず","Abbildung"]]],
+    ["以","von … an; Grenze","イ","",[["以上","いじょう","mehr als; Ende"],["以内","いない","innerhalb"]]]] },
+  { id:49, title:"Mengen und Vergleiche", note:"多い (viel) und 少ない (wenig) sind Gegensätze. 同じ (gleich) schreibt man mit Kanji plus じ in Hiragana.", kanji:[
+    ["多","viel","タ","おお(い)",[["多い","おおい","viel"],["多分","たぶん","vermutlich"]]],
+    ["少","wenig","ショウ","すこ(し)・すく(ない)",[["少し","すこし","ein wenig"],["少ない","すくない","wenig"]]],
+    ["広","weit; breit","コウ","ひろ(い)",[["広い","ひろい","weit; geräumig"],["広告","こうこく","Werbung"]]],
+    ["重","schwer; wichtig","ジュウ・チョウ","おも(い)",[["重い","おもい","schwer"],["重要","じゅうよう","wichtig"]]],
+    ["同","gleich","ドウ","おな(じ)",[["同じ","おなじ","gleich"],["同時","どうじ","gleichzeitig"]]]] },
+  { id:50, title:"Gründe", note:"理由 heißt „Grund“. 特別 (besonders) und 注意 (Vorsicht) hörst du oft.", kanji:[
+    ["理","Vernunft; Prinzip","リ","",[["理由","りゆう","Grund"],["無理","むり","unmöglich; zu viel"]]],
+    ["別","trennen; besondere","ベツ","わか(れる)",[["特別","とくべつ","besonders"],["別れる","わかれる","sich trennen"]]],
+    ["特","besonders","トク","",[["特に","とくに","besonders"],["特急","とっきゅう","Sonderschnellzug"]]],
+    ["注","gießen; aufmerksam","チュウ","そそ(ぐ)",[["注意","ちゅうい","Vorsicht"],["注射","ちゅうしゃ","Spritze"]]]] },
+  { id:51, title:"Wörter für Bedingungen", note:"Oft gebraucht: 仕方 (Weg, Art), 会う (treffen), 有名 (berühmt).", kanji:[
+    ["方","Richtung; Art","ホウ","かた",[["両方","りょうほう","beide"],["一方","いっぽう","andererseits"]]],
+    ["会","treffen; Treffen","カイ・エ","あ(う)",[["会う","あう","treffen"],["会社","かいしゃ","Firma"]]],
+    ["有","haben; vorhanden","ユウ・ウ","あ(る)",[["有名","ゆうめい","berühmt"],["有効","ゆうこう","gültig"]]]] },
+  { id:52, title:"Beschreiben", note:"色 (Farbe) steckt in 黄色 (gelb) und 茶色 (braun). 悪い heißt „schlecht“, 急ぐ „sich beeilen“.", kanji:[
+    ["色","Farbe","ショク・シキ","いろ",[["色","いろ","Farbe"],["黄色","きいろ","Gelb"]]],
+    ["悪","schlecht","アク","わる(い)",[["悪い","わるい","schlecht"],["悪口","わるくち","Lästerei"]]],
+    ["真","wahr; echt","シン","ま",[["写真","しゃしん","Foto"],["真中","まんなか","Mitte"]]],
+    ["急","eilig; plötzlich","キュウ","いそ(ぐ)",[["急ぐ","いそぐ","sich beeilen"],["急行","きゅうこう","Eilzug"]]]] },
+  { id:53, title:"Zustände", note:"Verben, die einen Zustand beschreiben: 開く (offen sein), 集まる (versammelt sein), 立つ (stehen), 建つ (stehen, gebaut sein).", kanji:[
+    ["開","öffnen","カイ","ひら(く)・あ(ける)・あ(く)",[["開ける","あける","öffnen"],["開く","あく","sich öffnen"]]],
+    ["集","sammeln","シュウ","あつ(まる)・あつ(める)",[["集める","あつめる","sammeln"],["集まる","あつまる","sich versammeln"]]],
+    ["立","stehen","リツ","た(つ)・た(てる)",[["立つ","たつ","aufstehen; stehen"],["役に立つ","やくにたつ","nützlich sein"]]],
+    ["建","bauen","ケン","た(てる)",[["建物","たてもの","Gebäude"],["建てる","たてる","bauen"]]]] },
+  { id:54, title:"Geben und Nehmen", note:"貸す (verleihen) und 借りる (leihen) sind ein Paar. 送る heißt „schicken“, 代わり „Ersatz“.", kanji:[
+    ["貸","verleihen","タイ","か(す)",[["貸す","かす","verleihen"],["貸家","かしや","Mietshaus"]]],
+    ["借","leihen","シャク","か(りる)",[["借りる","かりる","leihen"],["借金","しゃっきん","Schulden"]]],
+    ["送","schicken","ソウ","おく(る)",[["送る","おくる","schicken"],["放送","ほうそう","Sendung"]]],
+    ["代","ersetzen; Zeitalter","ダイ・タイ","か(わる)・よ",[["代わり","かわり","Ersatz"],["時代","じだい","Zeitalter"]]]] },
+  { id:55, title:"Höflich und Welt", note:"ご主人 (Ehemann einer anderen Person) und お世話になります (danke für Ihre Hilfe) sind höfliche Wendungen. 世界 heißt „Welt“.", kanji:[
+    ["主","Hauptperson; Herr","シュ・ス","おも・ぬし",[["ご主人","ごしゅじん","Ehemann (anderer)"],["主に","おもに","hauptsächlich"]]],
+    ["世","Welt; Generation","セイ・セ","よ",[["世界","せかい","Welt"],["世話","せわ","Fürsorge; Hilfe"]]],
+    ["界","Welt; Bereich","カイ","",[["世界","せかい","Welt"],["限界","げんかい","Grenze; Limit"]]],
+    ["社","Gesellschaft; Firma","シャ","やしろ",[["社長","しゃちょう","Firmenchef"],["神社","じんじゃ","Schrein"]]]] },
+  { id:56, title:"Passiv und Ereignisse", note:"売る (verkaufen) wird zu 売られる (verkauft werden), 写す (fotografieren) zu 写る (zu sehen sein).", kanji:[
+    ["写","abbilden; fotografieren","シャ","うつ(す)・うつ(る)",[["写す","うつす","fotografieren; abschreiben"],["写る","うつる","abgebildet sein"]]],
+    ["売","verkaufen","バイ","う(る)",[["売る","うる","verkaufen"],["売り場","うりば","Verkaufsstelle"]]],
+    ["死","sterben","シ","し(ぬ)",[["死ぬ","しぬ","sterben"],["死","し","Tod"]]]] },
+  { id:57, title:"Naturereignisse", note:"台風 (Taifun) und 地震 (Erdbeben) sind in Japan häufig. 事 steckt in 火事 (Brand) und 事故 (Unfall).", kanji:[
+    ["台","Gestell; Taifun","ダイ・タイ","",[["台風","たいふう","Taifun"],["台所","だいどころ","Küche"]]],
+    ["地","Erde; Boden","チ・ジ","",[["地震","じしん","Erdbeben"],["地下鉄","ちかてつ","U-Bahn"]]],
+    ["事","Sache; Ereignis","ジ","こと",[["火事","かじ","Brand"],["事故","じこ","Unfall"]]]] },
+  { id:58, title:"Arbeit", note:"仕事 (Arbeit) enthält 仕 und 事. 員 steht für Mitglieder: 店員 (Verkäufer/in), 全員 (alle).", kanji:[
+    ["仕","dienen; tun","シ・ジ","つか(える)",[["仕事","しごと","Arbeit"],["仕方","しかた","Art und Weise"]]],
+    ["員","Mitglied; Angestellte","イン","",[["店員","てんいん","Verkäufer/in"],["全員","ぜんいん","alle Mitglieder"]]]] }
 ];
 
 const KANJI_DB = KANJI_GROUPS.map(g => ({
@@ -8551,7 +8738,7 @@ function kanjiWrite(gid){
   if (!g) return;
   state.write = {
     items: g.items.map(it => ({ de: it.m, romaji: it.kun || it.on, kana: it.words[0] ? it.words[0][1] : "", kanji: it.k })),
-    i: 0, target: "kanji"
+    i: 0, target: "kanji", src: "custom"
   };
   goto("write");
 }
@@ -9389,34 +9576,40 @@ function renderWeg(mount){
 const WEG_EXTRA = {
   2: { kanji: [20], story: [1] },
   3: { kanji: [1, 2] },
-  4: { kanji: [6, 7] },
-  5: { kanji: [13] },
-  6: { kanji: [4, 5] },
-  7: { kanji: [15], story: [4] },
-  8: { kanji: [18], story: [3] },
-  9: { kanji: [3, 22] },
+  4: { kanji: [6, 7, 26] },
+  5: { kanji: [13, 31, 32] },
+  6: { kanji: [4, 5, 24] },
+  7: { kanji: [15, 29], story: [4] },
+  8: { kanji: [18, 39], story: [3] },
+  9: { kanji: [3, 22, 30] },
   10: { story: [20] },
-  11: { kanji: [21], story: [2] },
-  12: { kanji: [10, 11], story: [7] },
-  13: { kanji: [16, 19] },
+  11: { kanji: [21, 27, 28], story: [2] },
+  12: { kanji: [10, 11, 23, 33], story: [7] },
+  13: { kanji: [16, 19, 34] },
   14: { story: [6] },
-  15: { kanji: [17], story: [11] },
-  16: { kanji: [14], story: [8] },
-  17: { kanji: [8, 9], story: [9] },
-  19: { story: [15] },
-  20: { kanji: [12], story: [16] },
+  15: { kanji: [17, 40], story: [11] },
+  16: { kanji: [14, 35, 36], story: [8] },
+  17: { kanji: [8, 9, 25], story: [9] },
+  19: { kanji: [37], story: [15] },
+  20: { kanji: [12, 38], story: [16] },
   21: { story: [12] },
   23: { story: [5, 10, 13, 14] },
-  26: { story: [19, 23] },
-  27: { story: [21, 31] },
-  28: { story: [28] },
-  30: { story: [22] },
-  31: { story: [24, 29] },
-  33: { story: [25, 26] },
-  34: { story: [18, 27] },
-  35: { story: [30] },
-  39: { story: [32] },
-  40: { story: [17] }
+  24: { kanji: [41] },
+  25: { kanji: [42] },
+  26: { kanji: [43], story: [19, 23] },
+  27: { kanji: [44, 45, 46], story: [21, 31] },
+  28: { kanji: [47], story: [28] },
+  29: { kanji: [48] },
+  30: { kanji: [49], story: [22] },
+  31: { kanji: [50], story: [24, 29] },
+  32: { kanji: [51] },
+  33: { kanji: [52], story: [25, 26] },
+  34: { kanji: [53], story: [18, 27] },
+  35: { kanji: [54], story: [30] },
+  36: { kanji: [55] },
+  37: { kanji: [56] },
+  39: { kanji: [57], story: [32] },
+  40: { kanji: [58], story: [17] }
 };
 const WEG_HARD_STORIES = [11, 12, 13, 14, 15, 16, 20];   // etwas anspruchsvoller: mit Furigana lesen
 function kanjiUnitOf(gid){
@@ -16344,9 +16537,11 @@ function curItem(){
   const groups = learnedByUnit().filter(g => g.toks.length);
   $("#wSrc").innerHTML = `<option value="all">Gelernte Wörter (alle)</option>` +
     groups.map(g => `<option value="${g.unit.id}">Einheit ${g.unit.id} · ${escapeHTML((WEG_OUTLINE[g.unit.id] || [""])[0])}</option>`).join("") +
-    `<option value="import">Importierte Liste</option>`;
+    `<option value="import">Importierte Liste</option>` +
+    (state.write.src === "custom" ? `<option value="custom">Aktuelle Auswahl (Kanji)</option>` : "");
   function setSource(v){
     state.write.src = v;
+    if (v === "custom") { loadIndex(state.write.i || 0); return; }
     state.write.items = v === "import" ? (state.write.imported || []) : learnedWriteItems(v === "all" ? null : Number(v));
     $("#wSrcHint").textContent = !state.write.items.length
       ? (v === "import" ? "Noch keine Liste importiert." : "Du hast noch keine Wörter im Weg gelernt. Schließe zuerst eine Lektion ab.")
@@ -16357,9 +16552,9 @@ function curItem(){
 
   // 4) Start
   const src0 = state.write.src || "all";
-  if (src0 !== "import" && !$("#wSrc").querySelector(`option[value="${src0}"]`)) state.write.src = "all";
+  if (src0 !== "import" && src0 !== "custom" && !$("#wSrc").querySelector(`option[value="${src0}"]`)) state.write.src = "all";
   $("#wSrc").value = state.write.src || "all";
-  if (state.write.src === "import") loadIndex(state.write.i || 0); else setSource(state.write.src || "all");
+  if (state.write.src === "import" || state.write.src === "custom") loadIndex(state.write.i || 0); else setSource(state.write.src || "all");
 }
 
 // Gelernte Wörter als Schreibübungs-Einträge (de, romaji, kana, kanji)
