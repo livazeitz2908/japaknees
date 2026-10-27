@@ -8506,7 +8506,7 @@ defTokens([
   ["arimasen", "ありません", "arimasen", "gibt es nicht / ist nicht"],
   ["hajimemashite", "はじめまして", "hajimemashite", "Freut mich (beim Kennenlernen)", "phrase"],
   ["yoroshiku", "よろしくおねがいします", "yoroshiku onegai shimasu", "Auf gute Zusammenarbeit", "phrase"],
-  ["nan", "なん", "nan", "was"], ["onamae", "おなまえ", "onamae", "Name (höflich)"]
+  ["nan", "なん", "nan", "was (vor です, か)"], ["onamae", "おなまえ", "onamae", "Name (höflich)"]
 ]);
 
 // Satz aus Tokens: wegS("deutsche Übersetzung", "id id id …")
@@ -8580,7 +8580,7 @@ const WEG_UNITS = [
 const WEG_SECTIONS = [
   { title: "Abschnitt 1 · Ankommen", units: [1, 2, 3, 4, 5], exam: "Prüfung 1", examId: "exam1" },
   { title: "Abschnitt 2 · Alltag", units: [6, 7, 8, 9, 10, 11], exam: "Prüfung 2", examId: "exam2" },
-  { title: "Abschnitt 3 · Unterwegs", units: [12, 13, 14, 15, 16, 17], exam: "Prüfung 3" },
+  { title: "Abschnitt 3 · Unterwegs", units: [12, 13, 14, 15, 16, 17], exam: "Prüfung 3", examId: "exam3" },
   { title: "Abschnitt 4 · Erleben", units: [18, 19, 20, 21, 22, 23], exam: "Abschlussprüfung N5" },
   { title: "Abschnitt 5 · Locker sprechen (N4)", units: [24, 25, 26, 27, 28, 29], exam: "Prüfung 5" },
   { title: "Abschnitt 6 · Beschreiben und erklären (N4)", units: [30, 31, 32, 33, 34, 35], exam: "Prüfung 6" },
@@ -8820,12 +8820,12 @@ function exKanaRead(k, r, pool){
 }
 function exKanaFind(k, r, pool){
   return exMc({ promptHtml: `<span class="w-ja">${wegEsc(r)}</span>`, sub: "Welches Zeichen ist das?",
-    options: shuffle([k, ...pickDistractors(k, pool.map(x => x[0]), 3)]).map(x => ({ k: x, h: wegEsc(x) })), optionsBig: true, answerK: k,
+    options: shuffle([k, ...pickDistractors(k, pool.filter(x => x[1] !== r).map(x => x[0]), 3)]).map(x => ({ k: x, h: wegEsc(x) })), optionsBig: true, answerK: k,
     srs: { key: "k:" + k, t: "kana", d: { k, r } } });
 }
 function exKanaHear(k, r, pool){
   return { kind: "hear", say: k, sub: "Welches Zeichen hörst du?",
-    options: shuffle([k, ...pickDistractors(k, pool.map(x => x[0]), 3)]).map(x => ({ k: x, h: wegEsc(x) })), optionsBig: true, answerK: k,
+    options: shuffle([k, ...pickDistractors(k, pool.filter(x => x[1] !== r).map(x => x[0]), 3)]).map(x => ({ k: x, h: wegEsc(x) })), optionsBig: true, answerK: k,
     srs: { key: "k:" + k, t: "kana", d: { k, r } } };
 }
 function exKanaMatch(chars){
@@ -9370,7 +9370,9 @@ WEG_UNITS.push(
       explain: "Telefonnummern liest man <b>Ziffer für Ziffer</b>. Die Null heißt meist ゼロ, die 4 wird よん, die 7 なな und die 9 きゅう gesprochen. Das kleine <b>の</b> verbindet die Gruppen (wie ein Bindestrich). Als Partikel heißt の „von“: <b>A の B</b> = „B von A“.",
       sentences: [
         wegS("Wie lautet deine Telefonnummer?", "anata no denwabangou wa nan desu ka ."),
-        wegS("Meine Telefonnummer ist 090-1234-5678.", "watashi no denwabangou wa n0 n9 n0 no n1 n2 n3 n4 no n5 n6 n7 n8 desu .")
+        wegS("Meine Telefonnummer ist 090-1234-5678.", "watashi no denwabangou wa n0 n9 n0 no n1 n2 n3 n4 no n5 n6 n7 n8 desu ."),
+        wegS("Herrn Tanakas Telefonnummer ist 090-2345-6789.", "tanaka san no denwabangou wa n0 n9 n0 no n2 n3 n4 n5 no n6 n7 n8 n9 desu ."),
+        wegS("Ist deine Telefonnummer 090-1234-5678?", "anata no denwabangou wa n0 n9 n0 no n1 n2 n3 n4 no n5 n6 n7 n8 desu ka .")
       ] },
     { id: "u3l8", type: "dialog", title: "Wie alt bist du?", teach: [],
       lines: [
@@ -10106,6 +10108,322 @@ WEG_UNITS.push(
         ["Tanaka", wegS("Ja, unter dem Bett ist eine Katze.", "hai , beddo no shita ni neko ga imasu .")]
       ] },
     { id: "u11l10", type: "check", title: "Checkpoint" }
+  ] }
+);
+
+// =========================================================
+// Weg, Etappe 3c: Einheiten 12 bis 17 (Weg fragen, Verkehr, Verabreden, Gestern und Wochenende,
+// Hobbys und Können, Wetter) und Prüfung 3
+// =========================================================
+defTokens([
+  // Einheit 12: Den Weg fragen
+  ["yuubinkyoku", "ゆうびんきょく", "yūbinkyoku", "Post (Postamt)"], ["konbini", "コンビニ", "konbini", "Convenience-Store"],
+  ["suupaa", "スーパー", "sūpā", "Supermarkt"], ["kouen", "こうえん", "kōen", "Park"], ["toshokan", "としょかん", "toshokan", "Bibliothek"],
+  ["migi", "みぎ", "migi", "rechts"], ["hidari", "ひだり", "hidari", "links"], ["massugu", "まっすぐ", "massugu", "geradeaus"],
+  ["kado", "かど", "kado", "Ecke"], ["chikai", "ちかい", "chikai", "nah"], ["tooi", "とおい", "tōi", "weit"],
+  ["magarimasu", "まがります", "magarimasu", "abbiegen"],
+  // Einheit 13: Verkehr
+  ["densha", "でんしゃ", "densha", "Zug (Bahn)"], ["basu", "バス", "basu", "Bus"], ["takushii", "タクシー", "takushī", "Taxi"],
+  ["chikatetsu", "ちかてつ", "chikatetsu", "U-Bahn"], ["hikouki", "ひこうき", "hikōki", "Flugzeug"],
+  ["kippu", "きっぷ", "kippu", "Fahrkarte"], ["hoomu", "ホーム", "hōmu", "Bahnsteig"], ["chizu", "ちず", "chizu", "Stadtplan"],
+  ["jikan", "じかん", "jikan", "Zeit; Stunde"],
+  ["nani", "なに", "nani", "was (vor を, で)"],
+  ["kara", "から", "kara", "von; ab", "part", true], ["made", "まで", "made", "bis", "part", true],
+  ["norimasu", "のります", "norimasu", "einsteigen"], ["orimasu", "おります", "orimasu", "aussteigen"],
+  // Einheit 14: Verabreden
+  ["eiga", "えいが", "eiga", "Film"], ["ongaku", "おんがく", "ongaku", "Musik"], ["kaimono", "かいもの", "kaimono", "Einkaufen"],
+  ["tenisu", "テニス", "tenisu", "Tennis"], ["sakkaa", "サッカー", "sakkā", "Fußball"],
+  ["mimasu", "みます", "mimasu", "sehen; ansehen"], ["kikimasu", "ききます", "kikimasu", "hören"], ["shimasu", "します", "shimasu", "machen; spielen"],
+  ["kaimasu", "かいます", "kaimasu", "kaufen"], ["aimasu", "あいます", "aimasu", "treffen"],
+  ["isshoni", "いっしょに", "issho ni", "zusammen"], ["mimasen", "みません", "mimasen", "sehe/sieht nicht"], ["shimasen", "しません", "shimasen", "mache/macht nicht"],
+  ["ikimashou", "いきましょう", "ikimashō", "gehen wir"], ["tabemashou", "たべましょう", "tabemashō", "essen wir"], ["mimashou", "みましょう", "mimashō", "sehen wir"],
+  ["shimashou", "しましょう", "shimashō", "machen wir"], ["aimashou", "あいましょう", "aimashō", "treffen wir uns"],
+  ["ee", "ええ", "ē", "ja (zustimmend)", "phrase"], ["iidesune", "いいですね", "ii desu ne", "Klingt gut!", "phrase"],
+  ["chotto", "ちょっと", "chotto", "ein wenig; (höfliche Absage)"], ["zannen", "ざんねん", "zannen", "schade"],
+  // Einheit 15: Gestern und Wochenende
+  ["kinou", "きのう", "kinō", "gestern"], ["kesa", "けさ", "kesa", "heute Morgen"], ["konban", "こんばん", "konban", "heute Abend"],
+  ["senshuu", "せんしゅう", "senshū", "letzte Woche"], ["shuumatsu", "しゅうまつ", "shūmatsu", "Wochenende"],
+  ["tabemashita", "たべました", "tabemashita", "habe gegessen"], ["nomimashita", "のみました", "nomimashita", "habe getrunken"],
+  ["mimashita", "みました", "mimashita", "habe gesehen"], ["ikimashita", "いきました", "ikimashita", "bin gegangen"],
+  ["shimashita", "しました", "shimashita", "habe gemacht"], ["kaimashita", "かいました", "kaimashita", "habe gekauft"],
+  ["tabemasendeshita", "たべませんでした", "tabemasen deshita", "habe nicht gegessen"], ["nomimasendeshita", "のみませんでした", "nomimasen deshita", "habe nicht getrunken"],
+  ["mimasendeshita", "みませんでした", "mimasen deshita", "habe nicht gesehen"], ["ikimasendeshita", "いきませんでした", "ikimasen deshita", "bin nicht gegangen"],
+  ["shimasendeshita", "しませんでした", "shimasen deshita", "habe nicht gemacht"],
+  ["deshita", "でした", "deshita", "war", "aux", true], ["arimasendeshita", "ありませんでした", "arimasen deshita", "war nicht"],
+  ["tanoshii", "たのしい", "tanoshii", "lustig; schön"], ["oishikatta", "おいしかった", "oishikatta", "war lecker"],
+  ["takakatta", "たかかった", "takakatta", "war teuer"], ["yasukatta", "やすかった", "yasukatta", "war billig"],
+  ["tanoshikatta", "たのしかった", "tanoshikatta", "war schön"],
+  ["dou", "どう", "dō", "wie"],
+  // Einheit 16: Hobbys und Können
+  ["ryouri", "りょうり", "ryōri", "Kochen; Gericht"], ["ryokou", "りょこう", "ryokō", "Reise"], ["supootsu", "スポーツ", "supōtsu", "Sport"],
+  ["gitaa", "ギター", "gitā", "Gitarre"], ["piano", "ピアノ", "piano", "Klavier"], ["shumi", "しゅみ", "shumi", "Hobby"],
+  ["jouzu", "じょうず", "jōzu", "gut (in etwas)"], ["heta", "へた", "heta", "schlecht (in etwas)"],
+  ["totemo", "とても", "totemo", "sehr"], ["amari", "あまり", "amari", "nicht so (mit Verneinung)"], ["sukoshi", "すこし", "sukoshi", "ein wenig"],
+  ["nihongo", "にほんご", "nihongo", "Japanisch"], ["eigo", "えいご", "eigo", "Englisch"], ["doitsugo", "ドイツご", "doitsugo", "Deutsch"],
+  ["dekimasu", "できます", "dekimasu", "können"], ["dekimasen", "できません", "dekimasen", "können nicht"],
+  // Einheit 17: Wetter und Jahreszeiten
+  ["tenki", "てんき", "tenki", "Wetter"], ["ame", "あめ", "ame", "Regen"], ["yuki", "ゆき", "yuki", "Schnee"], ["hare", "はれ", "hare", "sonnig"],
+  ["kaze", "かぜ", "kaze", "Wind"],
+  ["haru", "はる", "haru", "Frühling"], ["natsu", "なつ", "natsu", "Sommer"], ["aki", "あき", "aki", "Herbst"], ["fuyu", "ふゆ", "fuyu", "Winter"],
+  ["kisetsu", "きせつ", "kisetsu", "Jahreszeit"],
+  ["atsui", "あつい", "atsui", "heiß"], ["samui", "さむい", "samui", "kalt"], ["suzushii", "すずしい", "suzushii", "kühl"],
+  ["atatakai", "あたたかい", "atatakai", "warm"], ["tsumetai", "つめたい", "tsumetai", "kalt (Dinge)"],
+  ["atsukunai", "あつくない", "atsukunai", "nicht heiß"], ["samukunai", "さむくない", "samukunai", "nicht kalt"],
+  ["takakunai", "たかくない", "takakunai", "nicht teuer"], ["oishikunai", "おいしくない", "oishikunai", "nicht lecker"],
+  ["yori", "より", "yori", "als (Vergleich)", "part", true], ["demo", "でも", "demo", "aber"], ["dono", "どの", "dono", "welche(r)"],
+  ["ichiban", "いちばん", "ichiban", "am meisten"]
+]);
+
+WEG_UNITS.push(
+  { id: 12, lessons: [
+    { id: "u12l1", type: "kana", title: "Katakana: ガ-Reihe", script: "katakana",
+      chars: [["ガ","ga"],["ギ","gi"],["グ","gu"],["ゲ","ge"],["ゴ","go"]],
+      note: "Auch bei Katakana machen zwei kleine Striche (゛) den Laut stimmhaft: カ → ガ." },
+    { id: "u12l2", type: "kana", title: "Katakana: ザ- und ダ-Reihe", script: "katakana",
+      chars: [["ザ","za"],["ジ","ji"],["ズ","zu"],["ゼ","ze"],["ゾ","zo"],["ダ","da"],["デ","de"],["ド","do"]],
+      note: "ジ klingt „dschi“. Es gibt auch ヂ und ヅ, die aber sehr selten sind." },
+    { id: "u12l3", type: "kana", title: "Katakana: バ- und パ-Reihe", script: "katakana",
+      chars: [["バ","ba"],["ビ","bi"],["ブ","bu"],["ベ","be"],["ボ","bo"],["パ","pa"],["ピ","pi"],["プ","pu"],["ペ","pe"],["ポ","po"]],
+      note: "Mit ゛ wird aus ハ ein バ, mit dem Kreis ゜ ein パ." },
+    { id: "u12l4", type: "words", title: "Orte in der Stadt", teach: ["yuubinkyoku","konbini","suupaa","kouen","toshokan"] },
+    { id: "u12l5", type: "words", title: "Richtungen und Entfernung", teach: ["migi","hidari","massugu","kado","chikai","tooi"] },
+    { id: "u12l6", type: "grammar", title: "Wo ist …?", teach: [], focus: "ni",
+      explain: "Wenn du fragst, <b>wo</b> etwas ist, steht das Gesuchte mit <b>は</b> am Anfang: <b>えきは どこに ありますか</b>. Die Antwort nennt den Ort mit einem Lagewort und <b>に</b>: <b>ぎんこうは えきの まえに あります</b>.",
+      sentences: [
+        wegS("Wo ist der Bahnhof?", "eki wa doko ni arimasu ka ."),
+        wegS("Die Bank ist vor dem Bahnhof.", "ginkou wa eki no mae ni arimasu ."),
+        wegS("Die Post ist neben der Schule.", "yuubinkyoku wa gakkou no tonari ni arimasu ."),
+        wegS("Der Park ist hinter der Bibliothek.", "kouen wa toshokan no ushiro ni arimasu .")
+      ] },
+    { id: "u12l7", type: "grammar", title: "Den Weg beschreiben", teach: ["magarimasu"], focus: "migi",
+      explain: "Eine Wegbeschreibung besteht aus kurzen Schritten: <b>まっすぐ いきます</b> (man geht geradeaus), <b>かどを みぎに まがります</b> (man biegt an der Ecke rechts ab). Mit <b>を</b> nennst du hier die Stelle, an der man abbiegt; mit <b>に</b> die Richtung.",
+      sentences: [
+        wegS("Man geht geradeaus.", "massugu ikimasu ."),
+        wegS("Man biegt an der Ecke rechts ab.", "kado o migi ni magarimasu ."),
+        wegS("Man biegt links ab.", "hidari ni magarimasu ."),
+        wegS("Die Bank ist rechts.", "ginkou wa migi desu .")
+      ] },
+    { id: "u12l8", type: "dialog", title: "Nach dem Weg fragen", teach: [],
+      lines: [
+        ["Hanna", wegS("Entschuldigung. Wo ist die Post?", "sumimasen . yuubinkyoku wa doko desu ka .")],
+        ["Passant", wegS("Man geht geradeaus. An der Ecke biegt man rechts ab.", "massugu ikimasu . kado o migi ni magarimasu .")],
+        ["Passant", wegS("Die Post ist neben der Bank.", "yuubinkyoku wa ginkou no tonari ni arimasu .")],
+        ["Hanna", wegS("Ist es nah?", "chikai desu ka .")],
+        ["Passant", wegS("Ja, es ist nah.", "hai , chikai desu .")],
+        ["Hanna", wegS("Vielen Dank.", "arigatou .")]
+      ] },
+    { id: "u12l9", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 13, lessons: [
+    { id: "u13l1", type: "kana", title: "Katakana: キャ, シャ, チャ", script: "katakana",
+      chars: [["キャ","kya"],["キュ","kyu"],["キョ","kyo"],["シャ","sha"],["シュ","shu"],["ショ","sho"],["チャ","cha"],["チュ","chu"],["チョ","cho"]],
+      note: "Auch bei Katakana verschmilzt ein kleines ャ, ュ oder ョ mit dem Zeichen davor: キ + ャ = キャ (kya)." },
+    { id: "u13l2", type: "kana", title: "Katakana: ニャ, ヒャ, ミャ, リャ", script: "katakana",
+      chars: [["ニャ","nya"],["ニュ","nyu"],["ニョ","nyo"],["ヒャ","hya"],["ヒュ","hyu"],["ヒョ","hyo"],["ミャ","mya"],["ミュ","myu"],["ミョ","myo"],["リャ","rya"],["リュ","ryu"],["リョ","ryo"]] },
+    { id: "u13l3", type: "kana", title: "Katakana: ギャ, ジャ, ビャ, ピャ", script: "katakana",
+      chars: [["ギャ","gya"],["ギュ","gyu"],["ギョ","gyo"],["ジャ","ja"],["ジュ","ju"],["ジョ","jo"],["ビャ","bya"],["ビュ","byu"],["ビョ","byo"],["ピャ","pya"],["ピュ","pyu"],["ピョ","pyo"]] },
+    { id: "u13l4", type: "words", title: "Verkehrsmittel", teach: ["densha","basu","takushii","chikatetsu","hikouki"] },
+    { id: "u13l5", type: "words", title: "Am Bahnhof", teach: ["kippu","hoomu","chizu","jikan"] },
+    { id: "u13l6", type: "grammar", title: "で – Verkehrsmittel", teach: ["nani"], focus: "de",
+      explain: "Mit <b>で</b> sagst du auch, <b>womit</b> du fährst: <b>バスで いきます</b> = „Ich fahre mit dem Bus.“ Nach dem Verkehrsmittel fragst du mit <b>なにで</b> („womit“).",
+      sentences: [
+        wegS("Ich fahre mit dem Bus zur Schule.", "watashi wa basu de gakkou e ikimasu ."),
+        wegS("Ich fahre mit dem Zug nach Hause.", "watashi wa densha de ie e kaerimasu ."),
+        wegS("Womit fährst du zur Schule?", "anata wa nani de gakkou e ikimasu ka ."),
+        wegS("Herr Tanaka fährt mit dem Taxi zur Bank.", "tanaka san wa takushii de ginkou e ikimasu ."),
+        wegS("Ich fahre nicht mit dem Auto.", "kuruma de ikimasen .")
+      ] },
+    { id: "u13l7", type: "grammar", title: "から und まで", teach: ["kara","made"], focus: "kara", uses: ["n3","n5","n10","m5","h9"],
+      explain: "<b>から</b> heißt „von, ab“, <b>まで</b> heißt „bis“. Sie nennen Anfang und Ende von Orten und Zeiten: <b>くじから さんじまで</b> = „von 9 bis 3 Uhr“; <b>ここから えきまで</b> = „von hier bis zum Bahnhof“.",
+      sentences: [
+        wegS("Von hier bis zum Bahnhof sind es 15 Minuten.", "koko kara eki made n10 m5 desu ."),
+        wegS("Die Schule geht von 9 bis 3 Uhr.", "gakkou wa h9 ji kara n3 ji made desu ."),
+        wegS("Die Bibliothek ist von 10 bis 5 Uhr.", "toshokan wa n10 ji kara n5 ji made desu ."),
+        wegS("Vom Bahnhof zur Schule sind es 5 Minuten.", "eki kara gakkou made m5 desu .")
+      ] },
+    { id: "u13l8", type: "grammar", title: "のります und おります", teach: ["norimasu","orimasu"], focus: "norimasu",
+      explain: "Mit <b>に のります</b> steigst du in ein Verkehrsmittel ein: <b>バスに のります</b>. Mit <b>で おります</b> sagst du, wo du aussteigst: <b>えきで おります</b>.",
+      sentences: [
+        wegS("Ich steige in den Bus.", "watashi wa basu ni norimasu ."),
+        wegS("Ich steige am Bahnhof aus.", "watashi wa eki de orimasu ."),
+        wegS("Steigen Sie in den Zug ein?", "densha ni norimasu ka ."),
+        wegS("Ich steige an der Bank aus.", "ginkou de orimasu .")
+      ] },
+    { id: "u13l9", type: "dialog", title: "Am Bahnhof", teach: [],
+      lines: [
+        ["Hanna", wegS("Entschuldigung. Eine Fahrkarte, bitte.", "sumimasen . kippu o kudasai .")],
+        ["Schalter", wegS("Wohin fahren Sie?", "doko e ikimasu ka .")],
+        ["Hanna", wegS("Ich fahre nach Tokio.", "toukyou e ikimasu .")],
+        ["Schalter", wegS("Das macht 500 Yen.", "n5 hyaku en desu .")],
+        ["Hanna", wegS("Wo ist der Bahnsteig?", "hoomu wa doko desu ka .")],
+        ["Schalter", wegS("Er ist da drüben.", "asoko desu .")]
+      ] },
+    { id: "u13l10", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 14, lessons: [
+    { id: "u14l1", type: "kana", title: "Katakana: Zusatzlaute", script: "katakana",
+      chars: [["ファ","fa"],["フィ","fi"],["フェ","fe"],["フォ","fo"],["ティ","ti"],["ディ","di"],["ウィ","wi"],["ウェ","we"],["ウォ","wo"],["シェ","she"],["ジェ","je"],["チェ","che"]],
+      note: "Für Fremdwörter gibt es Zusatzlaute, die es in Hiragana nicht gibt, z. B. ファン (Fan), パーティー (Party), チェック (Check)." },
+    { id: "u14l2", type: "words", title: "Freizeit", teach: ["eiga","ongaku","kaimono","tenisu","sakkaa"] },
+    { id: "u14l3", type: "words", title: "Verben der Freizeit", teach: ["mimasu","kikimasu","shimasu","kaimasu","aimasu"] },
+    { id: "u14l4", type: "grammar", title: "〜ませんか – Einladen", teach: ["isshoni","mimasen","shimasen"], focus: "isshoni",
+      explain: "Eine höfliche Einladung bildest du mit der Verneinung als Frage: <b>Verb-ませんか</b> = „Wollen wir …?“ oder „Möchtest du …?“. <b>いっしょに</b> heißt „zusammen“.",
+      sentences: [
+        wegS("Wollen wir zusammen einen Film sehen?", "isshoni eiga o mimasen ka ."),
+        wegS("Wollen wir zusammen Kaffee trinken?", "isshoni koohii o nomimasen ka ."),
+        wegS("Wollen wir zusammen einkaufen?", "isshoni kaimono o shimasen ka ."),
+        wegS("Wollen wir zusammen Tennis spielen?", "isshoni tenisu o shimasen ka .")
+      ] },
+    { id: "u14l5", type: "grammar", title: "〜ましょう – Vorschlag", teach: ["ikimashou","tabemashou","mimashou","shimashou","aimashou"], focus: "ikimashou",
+      explain: "<b>Verb-ましょう</b> heißt „Lass uns …“. Es ist ein Vorschlag oder die Antwort auf eine Einladung: たべましょう = „Lass uns essen.“",
+      sentences: [
+        wegS("Lass uns zusammen gehen.", "isshoni ikimashou ."),
+        wegS("Lass uns Sushi essen.", "sushi o tabemashou ."),
+        wegS("Lass uns einen Film sehen.", "eiga o mimashou ."),
+        wegS("Lass uns Tennis spielen.", "tenisu o shimashou .")
+      ] },
+    { id: "u14l6", type: "words", title: "Zusagen und Absagen", teach: ["ee","iidesune","chotto","zannen"],
+      note: "Eine Absage klingt in Japan weich: Man sagt nicht „nein“, sondern „ちょっと …“ (eigentlich: „ein wenig …“) und lässt den Satz offen.",
+      scenes: [
+        ["Eine Freundin lädt dich ins Kino ein. Du möchtest gern. Was sagst du?", "iidesune"],
+        ["Du kannst heute leider nicht. Was sagst du höflich?", "chotto"],
+        ["Du bestätigst freundlich mit „ja“:", "ee"],
+        ["Du bedauerst, dass es nicht klappt:", "zannen"]
+      ] },
+    { id: "u14l7", type: "dialog", title: "Verabredung", teach: [],
+      lines: [
+        ["Hanna", wegS("Herr Tanaka, wollen wir heute zusammen einen Film sehen?", "tanaka san , kyou isshoni eiga o mimasen ka .")],
+        ["Tanaka", wegS("Ja, klingt gut. Um wie viel Uhr?", "ee , iidesune . nanji desu ka .")],
+        ["Hanna", wegS("Um 3 Uhr.", "n3 ji desu .")],
+        ["Hanna", wegS("Lass uns uns vor dem Bahnhof treffen.", "eki no mae de aimashou .")],
+        ["Tanaka", wegS("Ja, klingt gut.", "hai , iidesune .")]
+      ] },
+    { id: "u14l8", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 15, lessons: [
+    { id: "u15l1", type: "words", title: "Zeitangaben", teach: ["kinou","kesa","konban","senshuu","shuumatsu"] },
+    { id: "u15l2", type: "grammar", title: "〜ました – Vergangenheit", teach: ["tabemashita","nomimashita","mimashita","ikimashita","shimashita","kaimashita"], focus: "mimashita",
+      explain: "Die Vergangenheit bildest du, indem du <b>ます</b> durch <b>ました</b> ersetzt: たべます → <b>たべました</b> („ich habe gegessen“). Alles andere im Satz bleibt gleich.",
+      sentences: [
+        wegS("Gestern habe ich einen Film gesehen.", "kinou eiga o mimashita ."),
+        wegS("Heute Morgen habe ich Brot gegessen.", "kesa pan o tabemashita ."),
+        wegS("Am Wochenende bin ich nach Tokio gefahren.", "shuumatsu toukyou e ikimashita ."),
+        wegS("Gestern habe ich Kaffee gekauft.", "kinou koohii o kaimashita ."),
+        wegS("Letzte Woche habe ich Tennis gespielt.", "senshuu tenisu o shimashita .")
+      ] },
+    { id: "u15l3", type: "grammar", title: "〜ませんでした", teach: ["tabemasendeshita","nomimasendeshita","mimasendeshita","ikimasendeshita","shimasendeshita"], focus: "ikimasendeshita",
+      explain: "Die verneinte Vergangenheit endet auf <b>ませんでした</b>: いきます → いきません → <b>いきませんでした</b> („ich bin nicht gegangen“).",
+      sentences: [
+        wegS("Gestern bin ich nicht zur Schule gegangen.", "kinou gakkou e ikimasendeshita ."),
+        wegS("Heute Morgen habe ich keinen Kaffee getrunken.", "kesa koohii o nomimasendeshita ."),
+        wegS("Am Wochenende habe ich keinen Film gesehen.", "shuumatsu eiga o mimasendeshita ."),
+        wegS("Gestern habe ich kein Tennis gespielt.", "kinou tenisu o shimasendeshita .")
+      ] },
+    { id: "u15l4", type: "grammar", title: "でした – war", teach: ["deshita","arimasendeshita"], focus: "deshita",
+      explain: "Bei Nomen und な-Adjektiven wird aus <b>です</b> die Vergangenheit <b>でした</b> („war“) und aus ではありません <b>ではありませんでした</b> („war nicht“).",
+      sentences: [
+        wegS("Gestern war Sonntag.", "kinou wa nichiyoubi deshita ."),
+        wegS("Das Zimmer war sauber.", "heya wa kirei deshita ."),
+        wegS("Das Haus war ruhig.", "ie wa shizuka deshita ."),
+        wegS("Gestern war nicht Samstag.", "kinou wa doyoubi dewa arimasendeshita .")
+      ] },
+    { id: "u15l5", type: "grammar", title: "い-Adjektive in der Vergangenheit", teach: ["tanoshii","oishikatta","takakatta","yasukatta","tanoshikatta"], focus: "oishikatta",
+      explain: "Achtung: Bei <b>い-Adjektiven</b> wird nicht です vergangen, sondern das Adjektiv: <b>い → かった</b> + です. おいしい → <b>おいしかったです</b> („war lecker“). Man sagt nicht おいしいでした.",
+      sentences: [
+        wegS("Das Brot war lecker.", "pan wa oishikatta desu ."),
+        wegS("Das Buch war teuer.", "hon wa takakatta desu ."),
+        wegS("Der Kaffee war billig.", "koohii wa yasukatta desu ."),
+        wegS("Gestern war es schön.", "kinou wa tanoshikatta desu .")
+      ] },
+    { id: "u15l6", type: "dialog", title: "Am Wochenende", teach: ["dou"],
+      lines: [
+        ["Hanna", wegS("Herr Tanaka, was haben Sie am Wochenende gemacht?", "tanaka san , shuumatsu wa nani o shimashita ka .")],
+        ["Tanaka", wegS("Ich habe einen Film gesehen.", "eiga o mimashita .")],
+        ["Hanna", wegS("Wie war der Film?", "eiga wa dou deshita ka .")],
+        ["Tanaka", wegS("Er war schön.", "tanoshikatta desu .")],
+        ["Hanna", wegS("Sind Sie gestern zur Schule gegangen?", "kinou wa gakkou e ikimashita ka .")],
+        ["Tanaka", wegS("Nein, ich bin nicht gegangen.", "iie , ikimasendeshita .")]
+      ] },
+    { id: "u15l7", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 16, lessons: [
+    { id: "u16l1", type: "words", title: "Hobbys", teach: ["ryouri","ryokou","supootsu","gitaa","piano"] },
+    { id: "u16l2", type: "grammar", title: "じょうず und へた", teach: ["jouzu","heta"], focus: "jouzu",
+      explain: "Mit <b>じょうず</b> („gut in etwas“) und <b>へた</b> („schlecht in etwas“) sagst du, was du gut oder schlecht kannst. Wie bei すき steht das Gekonnte mit <b>が</b>: <b>りょうりが じょうずです</b>.",
+      sentences: [
+        wegS("Ich kann gut kochen.", "watashi wa ryouri ga jouzu desu ."),
+        wegS("Herr Tanaka spielt gut Gitarre.", "tanaka san wa gitaa ga jouzu desu ."),
+        wegS("Ich bin schlecht im Sport.", "watashi wa supootsu ga heta desu ."),
+        wegS("Spielst du gut Klavier?", "anata wa piano ga jouzu desu ka .")
+      ] },
+    { id: "u16l3", type: "grammar", title: "できます – können", teach: ["nihongo","eigo","doitsugo","dekimasu","dekimasen"], focus: "dekimasu",
+      explain: "Auch <b>できます</b> („können“) nimmt das Gekonnte mit <b>が</b>: <b>にほんごが できます</b> = „Ich kann Japanisch.“ Verneint: <b>できません</b>.",
+      sentences: [
+        wegS("Ich kann Japanisch.", "watashi wa nihongo ga dekimasu ."),
+        wegS("Ich kann Deutsch und Englisch.", "watashi wa doitsugo to eigo ga dekimasu ."),
+        wegS("Kannst du Japanisch?", "anata wa nihongo ga dekimasu ka ."),
+        wegS("Herr Tanaka kann kein Deutsch.", "tanaka san wa doitsugo ga dekimasen .")
+      ] },
+    { id: "u16l4", type: "grammar", title: "とても, あまり, すこし", teach: ["totemo","amari","sukoshi"], focus: "totemo",
+      explain: "<b>とても</b> = „sehr“, <b>すこし</b> = „ein wenig“. <b>あまり</b> = „nicht so (sehr)“ steht immer mit einer Verneinung: <b>あまり すきでは ありません</b> = „Ich mag es nicht so sehr.“",
+      sentences: [
+        wegS("Ich mag Kaffee sehr.", "watashi wa koohii ga totemo suki desu ."),
+        wegS("Ich mag Fisch nicht so gern.", "watashi wa sakana ga amari suki dewa arimasen ."),
+        wegS("Dieses Buch ist sehr teuer.", "kono hon wa totemo takai desu ."),
+        wegS("Dieses Zimmer ist ein bisschen klein.", "kono heya wa sukoshi chiisai desu ."),
+        wegS("Ich bin nicht so gut im Kochen.", "watashi wa ryouri ga amari jouzu dewa arimasen .")
+      ] },
+    { id: "u16l5", type: "dialog", title: "Hobbys", teach: ["shumi"],
+      lines: [
+        ["Hanna", wegS("Was ist Ihr Hobby, Herr Tanaka?", "tanaka san no shumi wa nan desu ka .")],
+        ["Tanaka", wegS("Kochen.", "ryouri desu .")],
+        ["Hanna", wegS("Können Sie gut kochen?", "jouzu desu ka .")],
+        ["Tanaka", wegS("Nein, nicht so gut.", "iie , amari jouzu dewa arimasen .")],
+        ["Tanaka", wegS("Was ist Ihr Hobby?", "anata no shumi wa nan desu ka .")],
+        ["Hanna", wegS("Ich mag Sport. Ich spiele Fußball.", "supootsu ga suki desu . sakkaa o shimasu .")]
+      ] },
+    { id: "u16l6", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 17, lessons: [
+    { id: "u17l1", type: "words", title: "Wetter", teach: ["tenki","ame","yuki","hare","kaze"] },
+    { id: "u17l2", type: "words", title: "Jahreszeiten", teach: ["haru","natsu","aki","fuyu","kisetsu"] },
+    { id: "u17l3", type: "words", title: "Temperatur", teach: ["atsui","samui","suzushii","atatakai","tsumetai"],
+      note: "さむい beschreibt kaltes Wetter oder Kälte, die man spürt. つめたい benutzt man für kalte Dinge, z. B. Wasser oder Getränke." },
+    { id: "u17l4", type: "grammar", title: "Wie ist das Wetter?", teach: [], focus: "dou",
+      explain: "Mit <b>どう</b> („wie“) fragst du nach dem Wetter: <b>きょうの てんきは どうですか</b>. Geantwortet wird mit einem Wetterwort oder einem Adjektiv: はれです, あめです, あついです.",
+      sentences: [
+        wegS("Wie ist das Wetter heute?", "kyou no tenki wa dou desu ka ."),
+        wegS("Heute ist es sonnig.", "kyou wa hare desu ."),
+        wegS("Heute regnet es.", "kyou wa ame desu ."),
+        wegS("Morgen ist es kalt.", "ashita wa samui desu ."),
+        wegS("Im Sommer ist es heiß.", "natsu wa atsui desu .")
+      ] },
+    { id: "u17l5", type: "grammar", title: "い-Adjektive: Verneinung", teach: ["atsukunai","samukunai","takakunai","oishikunai"], focus: "atsukunai",
+      explain: "Die Verneinung der い-Adjektive bildest du so: <b>い → くない</b> + です. あつい → <b>あつくないです</b> („ist nicht heiß“). Für いい gibt es die Ausnahme よくない (später).",
+      sentences: [
+        wegS("Heute ist es nicht heiß.", "kyou wa atsukunai desu ."),
+        wegS("Im Frühling ist es nicht kalt.", "haru wa samukunai desu ."),
+        wegS("Dieses Buch ist nicht teuer.", "kono hon wa takakunai desu ."),
+        wegS("Das Brot ist nicht lecker.", "pan wa oishikunai desu .")
+      ] },
+    { id: "u17l6", type: "grammar", title: "より – Vergleich", teach: ["yori"], focus: "yori",
+      explain: "Mit <b>より</b> („als“) vergleichst du zwei Dinge: <b>A は B より Adjektiv です</b> = „A ist (Adjektiv) als B“. Natsu wa haru yori atsui desu = „Der Sommer ist heißer als der Frühling.“",
+      sentences: [
+        wegS("Der Sommer ist heißer als der Frühling.", "natsu wa haru yori atsui desu ."),
+        wegS("Der Winter ist kälter als der Herbst.", "fuyu wa aki yori samui desu ."),
+        wegS("Der Bus ist billiger als das Taxi.", "basu wa takushii yori yasui desu ."),
+        wegS("Dieses Buch ist teurer als jenes.", "kono hon wa ano hon yori takai desu .")
+      ] },
+    { id: "u17l7", type: "dialog", title: "Jahreszeiten", teach: ["demo","dono","ichiban"],
+      lines: [
+        ["Hanna", wegS("Wie ist das Wetter heute?", "kyou no tenki wa dou desu ka .")],
+        ["Tanaka", wegS("Es ist sonnig. Es ist heiß.", "hare desu . atsui desu .")],
+        ["Hanna", wegS("Ist der Winter kalt?", "fuyu wa samui desu ka .")],
+        ["Tanaka", wegS("Ja, er ist kalt. Aber ich mag den Winter.", "hai , samui desu . demo , fuyu ga suki desu .")],
+        ["Tanaka", wegS("Welche Jahreszeit mögen Sie?", "dono kisetsu ga suki desu ka .")],
+        ["Hanna", wegS("Den Sommer mag ich am liebsten.", "natsu ga ichiban suki desu .")]
+      ] },
+    { id: "u17l8", type: "check", title: "Checkpoint" }
   ] }
 );
 
