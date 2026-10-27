@@ -8871,7 +8871,8 @@ const WEG_SECTIONS = [
   { title: "Abschnitt 4 · Erleben", units: [18, 19, 20, 21, 22, 23], exam: "Abschlussprüfung N5", examId: "exam4" },
   { title: "Abschnitt 5 · Locker sprechen (N4)", units: [24, 25, 26, 27, 28, 29], exam: "Prüfung 5", examId: "exam5" },
   { title: "Abschnitt 6 · Beschreiben und erklären (N4)", units: [30, 31, 32, 33, 34, 35], exam: "Prüfung 6", examId: "exam6" },
-  { title: "Abschnitt 7 · Höflich und selbstständig (N4)", units: [36, 37, 38, 39, 40], exam: "Abschlussprüfung N4", examId: "exam7" }
+  { title: "Abschnitt 7 · Höflich und selbstständig (N4)", units: [36, 37, 38, 39, 40], exam: "Abschlussprüfung N4", examId: "exam7" },
+  { title: "Abschnitt 8 · Praxis und Alltag", units: [41, 42, 43, 44, 45, 46, 47], exam: "Prüfung 8", examId: "exam8" }
 ];
 const WEG_OUTLINE = {
   1: ["Hallo!", "Ich kann grüßen, mich verabschieden und danken."],
@@ -8913,7 +8914,14 @@ const WEG_OUTLINE = {
   37: ["Passiv", "Ich kann sagen, was mit mir geschieht."],
   38: ["Lassen und Veranlassen", "Ich kann erlauben und veranlassen."],
   39: ["Vermutungen", "Ich kann etwas vermuten und beschreiben."],
-  40: ["Alltag meistern", "Ich kann telefonieren, Formulare ausfüllen und über Arbeit sprechen."]
+  40: ["Alltag meistern", "Ich kann telefonieren, Formulare ausfüllen und über Arbeit sprechen."],
+  41: ["Datum und Zählwörter", "Ich kann Daten, Zeiträume und Mengen nennen."],
+  42: ["Farben und Kleidung", "Ich kann Kleidung beschreiben und anprobieren."],
+  43: ["Geld und Reisen", "Ich kann Geld wechseln, abheben und eine Reise buchen."],
+  44: ["Notfälle", "Ich kann Hilfe holen und Probleme melden."],
+  45: ["Ausgehen und Freizeit", "Ich kann ausgehen, singen und über Sport sprechen."],
+  46: ["Reaktionen und Kultur", "Ich kann im Gespräch reagieren und höflich handeln."],
+  47: ["Büro und Telefon", "Ich kann im Büro telefonieren und Nachrichten hinterlassen."]
 };
 
 function wegUnit(id){ return WEG_UNITS.find(u => u.id === id) || null; }
@@ -12035,6 +12043,425 @@ WEG_UNITS.push(
         ["Hanna", wegS("Vielen Dank.", "arigatou .")]
       ] },
     { id: "u40l8", type: "check", title: "Checkpoint" }
+  ] }
+);
+
+// =========================================================
+// Weg, Abschnitt 8 „Praxis und Alltag“: Einheiten 41 bis 47 und Prüfung 8
+// 41 Datum und Zählwörter, 42 Farben und Kleidung, 43 Geld und Reisen, 44 Notfälle,
+// 45 Ausgehen und Freizeit, 46 Reaktionen und Kultur, 47 Büro und Telefon
+// =========================================================
+defTokens([
+  ["!", "！", "!", "(Ausrufezeichen)", "punct", true],
+  // Einheit 41: Datum und Zählwörter
+  ["tsuitachi", "ついたち", "tsuitachi", "der 1. (des Monats)"], ["futsuka", "ふつか", "futsuka", "der 2. / 2 Tage"], ["mikka", "みっか", "mikka", "der 3. / 3 Tage"],
+  ["yokka", "よっか", "yokka", "der 4. / 4 Tage"], ["itsuka", "いつか", "itsuka", "der 5. / 5 Tage"], ["muika", "むいか", "muika", "der 6. / 6 Tage"],
+  ["nanoka", "なのか", "nanoka", "der 7. / 7 Tage"], ["youka", "ようか", "yōka", "der 8. / 8 Tage"], ["kokonoka", "ここのか", "kokonoka", "der 9. / 9 Tage"],
+  ["tooka", "とおか", "tōka", "der 10. / 10 Tage"], ["juuyokka", "じゅうよっか", "jūyokka", "der 14."], ["hatsuka", "はつか", "hatsuka", "der 20."],
+  ["nijuuyokka", "にじゅうよっか", "nijūyokka", "der 24."], ["nichi", "にち", "nichi", "Tag (Zählwort)", "suffix", true], ["nannichi", "なんにち", "nannichi", "welcher Tag; wie viele Tage"],
+  ["kyonen", "きょねん", "kyonen", "letztes Jahr"], ["kotoshi", "ことし", "kotoshi", "dieses Jahr"], ["sengetsu", "せんげつ", "sengetsu", "letzten Monat"],
+  ["kongetsu", "こんげつ", "kongetsu", "diesen Monat"], ["raigetsu", "らいげつ", "raigetsu", "nächsten Monat"], ["konshuu", "こんしゅう", "konshū", "diese Woche"],
+  ["maishuu", "まいしゅう", "maishū", "jede Woche"], ["shuukan", "しゅうかん", "shūkan", "Woche (Dauer)"],
+  ["hi", "ひ", "hi", "Tag"],
+  ["isshuukan", "いっしゅうかん", "isshūkan", "eine Woche (Dauer)"], ["nishuukan", "にしゅうかん", "nishūkan", "zwei Wochen (Dauer)"],
+  ["nen", "ねん", "nen", "Jahr(e) (Zählwort)", "suffix", true], ["kagetsu", "かげつ", "kagetsu", "Monat(e) (Dauer)", "suffix", true],
+  ["mai", "まい", "mai", "(Zählwort für flache Dinge)", "suffix", true], ["daiC", "だい", "dai", "(Zählwort für Fahrzeuge, Geräte)", "suffix", true],
+  ["satsu", "さつ", "satsu", "(Zählwort für Bücher)", "suffix", true], ["ko", "こ", "ko", "(Zählwort für kleine Dinge)", "suffix", true],
+  ["kaiC", "かい", "kai", "-mal (Zählwort)", "suffix", true], ["meOrd", "め", "me", "(Ordnungszahl: -te)", "suffix", true],
+  ["k1", "いっ", "ik", "1 (vor k)", "num"], ["k6", "ろっ", "rok", "6 (vor k)", "num"], ["s1", "いっ", "is", "1 (vor s)", "num"],
+  // Einheit 42: Farben und Kleidung
+  ["akai", "あかい", "akai", "rot"], ["aoi", "あおい", "aoi", "blau"], ["shiroi", "しろい", "shiroi", "weiß"], ["kuroi", "くろい", "kuroi", "schwarz"], ["kiiroi", "きいろい", "kiiroi", "gelb"],
+  ["midori", "みどり", "midori", "grün"], ["chairo", "ちゃいろ", "chairo", "braun"], ["pinku", "ピンク", "pinku", "rosa"], ["haiiro", "はいいろ", "haiiro", "grau"],
+  ["shatsu", "シャツ", "shatsu", "Hemd"], ["zubon", "ズボン", "zubon", "Hose"], ["sukaato", "スカート", "sukāto", "Rock"], ["kutsu", "くつ", "kutsu", "Schuhe"],
+  ["kutsushita", "くつした", "kutsushita", "Socken"], ["boushi", "ぼうし", "bōshi", "Mütze; Hut"], ["kooto", "コート", "kōto", "Mantel"],
+  ["megane", "めがね", "megane", "Brille"], ["saifu", "さいふ", "saifu", "Geldbeutel"], ["saizu", "サイズ", "saizu", "Größe"], ["kitsui", "きつい", "kitsui", "eng; streng"],
+  ["pittari", "ぴったり", "pittari", "genau passend"], ["nagai", "ながい", "nagai", "lang"], ["mijikai", "みじかい", "mijikai", "kurz"], ["hoshii", "ほしい", "hoshii", "haben wollen"],
+  // Einheit 43: Geld und Reisen
+  ["okane", "おかね", "okane", "Geld"], ["genkin", "げんきん", "genkin", "Bargeld"], ["kaado", "カード", "kādo", "Karte"], ["yuuro", "ユーロ", "yūro", "Euro"], ["doru", "ドル", "doru", "Dollar"],
+  ["ryougae", "りょうがえ", "ryōgae", "Geldwechsel"], ["haraimasu", "はらいます", "haraimasu", "bezahlen"], ["haratte", "はらって", "haratte", "bezahlen (て-Form)"],
+  ["kouza", "こうざ", "kōza", "Bankkonto"], ["ATM", "ATM", "ē-tī-emu", "Geldautomat"], ["anshoubangou", "あんしょうばんごう", "anshō bangō", "PIN; Geheimnummer"],
+  ["oroshitai", "おろしたい", "oroshitai", "abheben möchten"], ["irete", "いれて", "irete", "hineintun; eingeben (て-Form)"],
+  ["biza", "ビザ", "biza", "Visum"], ["ryokoudairiten", "りょこうだいりてん", "ryokō dairiten", "Reisebüro"], ["katamichi", "かたみち", "katamichi", "einfache Fahrt"],
+  ["oufuku", "おうふく", "ōfuku", "Hin- und Rückfahrt"], ["ryoukin", "りょうきん", "ryōkin", "Gebühr; Fahrpreis"], ["tomete", "とめて", "tomete", "anhalten (て-Form)"],
+  ["gurai", "ぐらい", "gurai", "ungefähr", "suffix", true],
+  // Einheit 44: Notfälle
+  ["tasukete", "たすけて", "tasukete", "Hilfe!", "phrase"], ["dorobou", "どろぼう", "dorobō", "Dieb"], ["kaji", "かじ", "kaji", "Feuer; Brand"], ["dareka", "だれか", "dareka", "jemand"],
+  ["jiko", "じこ", "jiko", "Unfall"], ["keisatsu", "けいさつ", "keisatsu", "Polizei"], ["kyuukyuusha", "きゅうきゅうしゃ", "kyūkyūsha", "Krankenwagen"], ["kouban", "こうばん", "kōban", "Polizeiwache (Kiosk)"],
+  ["tetsudatte", "てつだって", "tetsudatte", "helfen (て-Form)"], ["yondeC", "よんで", "yonde", "rufen (て-Form)"], ["yobimashou", "よびましょう", "yobimashō", "lass uns rufen; soll ich rufen"],
+  ["mochimashou", "もちましょう", "mochimashō", "lass uns tragen; soll ich tragen"], ["doushitandesuka", "どうしたんですか", "dōshita n desu ka", "Was ist los?", "phrase"],
+  ["nakushimashita", "なくしました", "nakushimashita", "habe verloren"], ["wasuremashita", "わすれました", "wasuremashita", "habe vergessen"], ["mitsukarimasen", "みつかりません", "mitsukarimasen", "ist nicht zu finden"],
+  ["kega", "けが", "kega", "Verletzung"], ["hakike", "はきけ", "hakike", "Übelkeit"], ["memai", "めまい", "memai", "Schwindel"], ["seki", "せき", "seki", "Husten"],
+  ["yakkyoku", "やっきょく", "yakkyoku", "Apotheke"], ["hoken", "ほけん", "hoken", "Versicherung"], ["yasunda", "やすんだ", "yasunda", "ruhte sich aus (einfache Form)"],
+  ["osake", "おさけ", "osake", "Alkohol; Sake"], ["muri", "むり", "muri", "Überanstrengung; unmöglich"], ["arimashita", "ありました", "arimashita", "gab es"],
+  // Einheit 45: Ausgehen und Freizeit
+  ["bijutsukan", "びじゅつかん", "bijutsukan", "Kunstmuseum"], ["hakubutsukan", "はくぶつかん", "hakubutsukan", "Museum"], ["eigakan", "えいがかん", "eigakan", "Kino"],
+  ["gekijou", "げきじょう", "gekijō", "Theater"], ["konsaato", "コンサート", "konsāto", "Konzert"], ["baa", "バー", "bā", "Bar"], ["chiketto", "チケット", "chiketto", "Eintrittskarte"],
+  ["karaoke", "カラオケ", "karaoke", "Karaoke"], ["uta", "うた", "uta", "Lied"], ["utaimasu", "うたいます", "utaimasu", "singen"], ["utaimashou", "うたいましょう", "utaimashō", "lass uns singen"],
+  ["yakyuu", "やきゅう", "yakyū", "Baseball"], ["suiei", "すいえい", "suiei", "Schwimmen"], ["sukii", "スキー", "sukī", "Skifahren"], ["gorufu", "ゴルフ", "gorufu", "Golf"],
+  ["baiorin", "バイオリン", "baiorin", "Geige"], ["hikimasu", "ひきます", "hikimasu", "spielen (Saiteninstrument; Klavier)"],
+  ["geemu", "ゲーム", "gēmu", "Spiel"], ["toranpu", "トランプ", "toranpu", "Spielkarten"], ["tsuri", "つり", "tsuri", "Angeln"], ["haikingu", "ハイキング", "haikingu", "Wandern"],
+  // Einheit 46: Reaktionen und Kultur
+  ["naruhodo", "なるほど", "naruhodo", "Ach so; Verstehe", "phrase"], ["hee", "へえ", "hē", "Echt?; Aha", "phrase"], ["eeto", "ええと", "ēto", "Äh …; Also …", "phrase"],
+  ["yatta", "やった", "yatta", "Geschafft!", "phrase"], ["taihen", "たいへん", "taihen", "schwierig; schlimm"], ["yokatta", "よかった", "yokatta", "Zum Glück; war gut"],
+  ["kekkou", "けっこう", "kekkō", "ausreichend; gut"], ["madamada", "まだまだ", "madamada", "noch lange nicht"], ["zenzen", "ぜんぜん", "zenzen", "überhaupt (nicht)"], ["ikaga", "いかが", "ikaga", "wie (höflich)"],
+  ["genkan", "げんかん", "genkan", "Eingangsbereich"], ["nugimasu", "ぬぎます", "nugimasu", "ausziehen (Schuhe)"], ["nuide", "ぬいで", "nuide", "ausziehen (て-Form)"],
+  ["ohashi", "おはし", "ohashi", "Stäbchen"], ["omiyage", "おみやげ", "omiyage", "Mitbringsel"], ["ojigi", "おじぎ", "ojigi", "Verbeugung"],
+  ["ojamashimasu", "おじゃまします", "ojamashimasu", "Entschuldigung für die Störung (beim Betreten)", "phrase"], ["tadaima", "ただいま", "tadaima", "Ich bin zurück", "phrase"],
+  ["okaerinasai", "おかえりなさい", "okaerinasai", "Willkommen zurück", "phrase"], ["gomenkudasai", "ごめんください", "gomen kudasai", "Hallo? (an der Tür)", "phrase"], ["irasshai", "いらっしゃい", "irasshai", "Willkommen (locker)", "phrase"],
+  ["osakini", "おさきに", "osakini", "vor Ihnen; zuerst"], ["shitsurei", "しつれい", "shitsurei", "Unhöflichkeit; Entschuldigung"], ["otsukaresamadeshita", "おつかれさまでした", "otsukaresama deshita", "Danke für die Arbeit", "phrase"],
+  ["osewa", "おせわ", "osewa", "Fürsorge; Hilfe"],
+  // Einheit 47: Büro und Telefon
+  ["shokuba", "しょくば", "shokuba", "Arbeitsplatz"], ["buchou", "ぶちょう", "buchō", "Abteilungsleiter/in"], ["meishi", "めいし", "meishi", "Visitenkarte"], ["shorui", "しょるい", "shorui", "Unterlagen"],
+  ["konpyuutaa", "コンピューター", "konpyūtā", "Computer"], ["keitai", "けいたい", "keitai", "Handy"],
+  ["dengon", "でんごん", "dengon", "Nachricht"], ["kakenaoshimasu", "かけなおします", "kakenaoshimasu", "noch einmal anrufen"], ["kaigichuu", "かいぎちゅう", "kaigichū", "in einer Besprechung"],
+  ["okutte", "おくって", "okutte", "schicken (て-Form)"]
+]);
+
+// ---------- Tage des Monats und Datum ----------
+const DAY_SPECIAL = { 1: ["tsuitachi"], 2: ["futsuka"], 3: ["mikka"], 4: ["yokka"], 5: ["itsuka"], 6: ["muika"], 7: ["nanoka"], 8: ["youka"], 9: ["kokonoka"], 10: ["tooka"], 14: ["juuyokka"], 20: ["hatsuka"], 24: ["nijuuyokka"] };
+function dayIds(d){
+  if (DAY_SPECIAL[d]) return DAY_SPECIAL[d];
+  const t = Math.floor(d / 10), u = d % 10, out = [];
+  if (t >= 1) { if (t > 1) out.push("n" + t); out.push("n10"); }
+  if (u > 0) out.push(u === 7 ? "h7" : u === 9 ? "h9" : "n" + u);
+  out.push("nichi");
+  return out;
+}
+GENS.day = { vals: [11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 14, 20, 24], ids: dayIds, disp: v => "der " + v + ".", build: [...WEG_NUMS, "h7", "h9", "nichi", "juuyokka", "hatsuka"] };
+GENS.date = { vals: [[1, 1], [2, 3], [3, 14], [4, 29], [5, 5], [7, 7], [8, 20], [9, 10], [11, 23], [12, 25], [6, 18], [10, 31]],
+  ids: v => monthIds(v[0]).concat(dayIds(v[1])), disp: v => v[1] + ". " + MONTH_NAMES[v[0] - 1],
+  build: [...WEG_NUMS, "h7", "h9", "mo4", "gatsu", "nichi", "hatsuka", "tsuitachi", "mikka"] };
+GEN_EXAMPLES.day = [11, 14, 20, 24];
+GEN_EXAMPLES.date = [[1, 1], [3, 3], [7, 7], [12, 25]];
+const MD = (m, d) => monthIds(m).concat(dayIds(d)).join(" ");
+
+WEG_UNITS.push(
+  { id: 41, lessons: [
+    { id: "u41l1", type: "words", title: "Die Tage 1–5", teach: ["tsuitachi","futsuka","mikka","yokka","itsuka"], note: "Die Tage 1 bis 10 haben besondere Namen und müssen einzeln gelernt werden. Sie bedeuten auch „1 Tag“, „2 Tage“ und so weiter, nur der 1. heißt als Dauer いちにち." },
+    { id: "u41l2", type: "words", title: "Die Tage 6–10", teach: ["muika","nanoka","youka","kokonoka","tooka"] },
+    { id: "u41l3", type: "timegen", title: "Der Tag ab dem 11.", gen: "day", teach: ["juuyokka","hatsuka","nijuuyokka","nichi"],
+      explain: "Ab dem 11. gilt die Regel: <b>Zahl + にち</b>: じゅういち<b>にち</b> (11.), にじゅうさん<b>にち</b> (23.). Ausnahmen: <b>じゅうよっか</b> (14.), <b>はつか</b> (20.), <b>にじゅうよっか</b> (24.). Bei 17 und 27 sagt man <b>しち</b>, bei 19 und 29 <b>く</b>: じゅうしちにち, じゅうくにち." },
+    { id: "u41l4", type: "grammar", title: "Das Datum sagen", teach: ["nannichi","hi"], focus: "nichi",
+      explain: "Ein Datum nennst du von groß nach klein: <b>Monat + Tag</b>. Mit <b>なんがつ なんにち</b> fragst du nach dem Datum. Mit <b>に</b> sagst du „am“.",
+      sentences: [
+        wegS("Heute ist der 3. März.", "kyou wa " + MD(3, 3) + " desu ."),
+        wegS("Welches Datum ist heute?", "kyou wa nangatsu nannichi desu ka ."),
+        wegS("Mein Geburtstag ist am 14. Juli.", "watashi no tanjoubi wa " + MD(7, 14) + " desu ."),
+        wegS("Wann hast du Geburtstag?", "tanjoubi wa itsu desu ka ."),
+        wegS("Ich fahre am 20. August nach Japan.", MD(8, 20) + " ni nihon e ikimasu ."),
+        wegS("Neujahr ist am 1. Januar.", "oshougatsu wa " + MD(1, 1) + " desu ."),
+        wegS("Am 11. habe ich einen Termin.", dayIds(11).join(" ") + " ni yotei ga arimasu .")
+      ] },
+    { id: "u41l5", type: "timegen", title: "Datum üben", gen: "date", teach: [],
+      explain: "Jetzt übst du ganze Daten: erst der Monat (<b>〜がつ</b>), dann der Tag (<b>〜にち</b> oder die besonderen Namen)." },
+    { id: "u41l6", type: "words", title: "Jahr, Monat und Woche", teach: ["kyonen","kotoshi","sengetsu","kongetsu","raigetsu","konshuu","maishuu","shuukan"] },
+    { id: "u41l7", type: "grammar", title: "Wie lange?", teach: ["isshuukan","nishuukan","nen","kagetsu","k1"], focus: "kagetsu",
+      explain: "Die Dauer sagst du mit der Zahl und dem Zählwort: <b>〜しゅうかん</b> (Wochen), <b>〜かげつ</b> (Monate), <b>〜ねん</b> (Jahre). Bei 1 Woche und 1 Monat gibt es kleine Änderungen: <b>いっしゅうかん</b>, <b>いっかげつ</b>. Bei 4 Jahren sagt man <b>よねん</b>.",
+      sentences: [
+        wegS("Ich bleibe eine Woche in Japan.", "nihon ni isshuukan imasu ."),
+        wegS("Ich habe zwei Jahre Japanisch gelernt.", "nihongo o n2 nen benkyou shimashita ."),
+        wegS("Ich wohne seit drei Monaten in Japan.", "watashi wa nihon ni n3 kagetsu sunde teiru ."),
+        wegS("Die Ferien dauern zwei Wochen.", "yasumi wa nishuukan desu ."),
+        wegS("Jede Woche habe ich Unterricht.", "maishuu jugyou ga arimasu ."),
+        wegS("Ich bin einen Monat in Tokio.", "toukyou ni k1 kagetsu imasu .")
+      ] },
+    { id: "u41l8", type: "grammar", title: "Zählwörter: 〜まい, 〜だい", teach: ["mai","daiC"], focus: "mai",
+      explain: "Japanisch zählt je nach Art des Gegenstands mit einem <b>Zählwort</b>: <b>〜まい</b> für flache Dinge (Karten, Papier, Briefmarken), <b>〜だい</b> für Fahrzeuge und Geräte. Die Zahl steht direkt davor: <b>にまい</b>, <b>さんだい</b>.",
+      sentences: [
+        wegS("Zwei Fahrkarten, bitte.", "kippu o n2 mai onegai ."),
+        wegS("Fünf Briefmarken, bitte.", "kitte o n5 mai kudasai ."),
+        wegS("Es gibt drei Autos.", "kuruma ga n3 daiC arimasu ."),
+        wegS("Ich habe zwei Fernseher gekauft.", "terebi o n2 daiC kaimashita .")
+      ] },
+    { id: "u41l9", type: "grammar", title: "Zählwörter: 〜さつ, 〜こ, 〜かい", teach: ["satsu","ko","kaiC","k6","s1","meOrd"], focus: "satsu",
+      explain: "<b>〜さつ</b> zählt Bücher, <b>〜こ</b> kleine Dinge (Eier, Äpfel), <b>〜かい</b> „Mal“. Bei 1, 6, 8 und 10 gibt es Verkürzungen: <b>いっさつ</b>, <b>ろっこ</b>, <b>いっかい</b>. Mit <b>〜め</b> machst du eine Ordnungszahl: <b>ひとつめ</b> = „der erste“.",
+      sentences: [
+        wegS("Ich habe zwei Bücher gekauft.", "hon o n2 satsu kaimashita ."),
+        wegS("Ich habe ein Buch gekauft.", "hon o s1 satsu kaimashita ."),
+        wegS("Ich habe sechs Eier gekauft.", "tamago o k6 ko kaimashita ."),
+        wegS("Ich war zweimal in Japan.", "nihon e n2 kaiC ikimashita ."),
+        wegS("Biegen Sie an der ersten Ecke rechts ab.", "hitotsu meOrd no kado o migi e magarimasu .")
+      ] },
+    { id: "u41l10", type: "dialog", title: "Einen Termin ausmachen", teach: [],
+      lines: [
+        ["Tanaka", wegS("Wann treffen wir uns nächstes Mal?", "kondo itsu aimashou ka .")],
+        ["Hanna", wegS("Wie wäre der 20. Mai?", MD(5, 20) + " wa dou desu ka .")],
+        ["Tanaka", wegS("An dem Tag habe ich Arbeit.", "sono hi wa shigoto ga arimasu .")],
+        ["Hanna", wegS("Wie wäre der 22. Mai?", MD(5, 22) + " wa dou desu ka .")],
+        ["Tanaka", wegS("Ja, das passt.", "iidesuyo .")]
+      ] },
+    { id: "u41l11", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 42, lessons: [
+    { id: "u42l1", type: "words", title: "Farben (い-Adjektive)", teach: ["akai","aoi","shiroi","kuroi","kiiroi"] },
+    { id: "u42l2", type: "words", title: "Weitere Farben", teach: ["midori","chairo","pinku","haiiro"], note: "Diese Farben sind Nomen. Du sagst „grüner Mantel“ mit の: みどりの コート." },
+    { id: "u42l3", type: "words", title: "Kleidung", teach: ["shatsu","zubon","sukaato","kutsu","kutsushita","boushi","kooto"] },
+    { id: "u42l4", type: "words", title: "Zubehör und Größe", teach: ["megane","saifu","saizu","kitsui","pittari","nagai","mijikai"] },
+    { id: "u42l5", type: "grammar", title: "Farbe und Ding", teach: ["hoshii"], focus: "hoshii",
+      explain: "い-Adjektive stehen direkt vor dem Nomen: <b>あかい かばん</b> = „eine rote Tasche“. Farben ohne い bekommen <b>の</b>: <b>みどりの コート</b>. Mit <b>〜が ほしいです</b> sagst du, was du haben möchtest.",
+      sentences: [
+        wegS("Ich möchte eine rote Tasche haben.", "akai kaban ga hoshii desu ."),
+        wegS("Ich habe ein blaues Hemd gekauft.", "aoi shatsu o kaimashita ."),
+        wegS("Die schwarzen Schuhe sind teuer.", "kuroi kutsu wa takai desu ."),
+        wegS("Dieser Hut ist braun.", "kono boushi wa chairo desu ."),
+        wegS("Ich mag den grünen Mantel.", "midori no kooto ga suki desu .")
+      ] },
+    { id: "u42l6", type: "grammar", title: "Anprobe und Größe", teach: [], focus: "kitsui",
+      explain: "Beim Anprobieren fragst du mit <b>きて みても いいですか</b> („Darf ich es anprobieren?“). Nach der Größe fragst du mit <b>〜は ありますか</b>. <b>きつい</b> heißt „zu eng“, <b>ぴったり</b> „genau passend“.",
+      sentences: [
+        wegS("Darf ich das anprobieren?", "kite mite mo ii desu ka ."),
+        wegS("Haben Sie eine etwas größere Größe?", "mou sukoshi ookii saizu wa arimasu ka ."),
+        wegS("Das ist ein bisschen eng.", "chotto kitsui desu ."),
+        wegS("Das passt genau.", "kore wa pittari desu ."),
+        wegS("Die Hose ist etwas zu lang.", "kono zubon wa chotto nagai desu .")
+      ] },
+    { id: "u42l7", type: "dialog", title: "Im Kleidungsgeschäft", teach: [],
+      lines: [
+        ["Hanna", wegS("Entschuldigung. Darf ich dieses weiße Hemd anprobieren?", "sumimasen . kono shiroi shatsu o kite mite mo ii desu ka .")],
+        ["Verkäufer", wegS("Ja, bitte.", "hai , douzo .")],
+        ["Hanna", wegS("Es ist ein bisschen klein. Haben Sie eine größere Größe?", "chotto chiisai desu . mou sukoshi ookii saizu wa arimasu ka .")],
+        ["Verkäufer", wegS("Ja, die gibt es.", "hai , arimasu .")],
+        ["Hanna", wegS("Das passt genau. Das nehme ich.", "pittari desu . kore o onegai .")]
+      ] },
+    { id: "u42l8", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 43, lessons: [
+    { id: "u43l1", type: "words", title: "Geld", teach: ["okane","genkin","kaado","yuuro","doru","ryougae"] },
+    { id: "u43l2", type: "grammar", title: "Geld wechseln und bezahlen", teach: ["haraimasu","haratte"], focus: "ryougae",
+      explain: "Zum Geldwechseln sagst du <b>りょうがえを したいです</b> oder <b>りょうがえして ください</b>. Bezahlt wird mit <b>で</b>: <b>げんきんで はらいます</b> = „Ich zahle bar.“",
+      sentences: [
+        wegS("Ich möchte Geld wechseln.", "ryougae o shitai desu ."),
+        wegS("Bitte wechseln Sie Euro in Yen.", "yuuro o en ni ryougae shite kudasai ."),
+        wegS("Ich zahle bar.", "genkin de haraimasu ."),
+        wegS("Kann ich mit Karte zahlen?", "kaado de haratte mo ii desu ka ."),
+        wegS("Wo ist die Bank?", "ginkou wa doko desu ka .")
+      ] },
+    { id: "u43l3", type: "words", title: "Bank und Geldautomat", teach: ["kouza","ATM","anshoubangou"] },
+    { id: "u43l4", type: "grammar", title: "Am Geldautomaten", teach: ["oroshitai","irete"], focus: "oroshitai",
+      explain: "Mit <b>おろしたいです</b> sagst du, dass du Geld abheben möchtest. Am Automaten steht oft <b>〜を いれて ください</b> („Bitte geben Sie … ein“).",
+      sentences: [
+        wegS("Wo ist der Geldautomat?", "ATM wa doko ni arimasu ka ."),
+        wegS("Ich möchte am Automaten Geld abheben.", "ATM de okane o oroshitai desu ."),
+        wegS("Bitte geben Sie die PIN ein.", "anshoubangou o irete kudasai .")
+      ] },
+    { id: "u43l5", type: "words", title: "Reise planen", teach: ["biza","ryokoudairiten","katamichi","oufuku","ryoukin"] },
+    { id: "u43l6", type: "grammar", title: "Im Reisebüro", teach: [], focus: "yoyaku",
+      explain: "Im Reisebüro oder am Schalter sagst du, was du buchen oder kaufen möchtest: <b>〜の よやくを したいです</b>. Fahrpreise erfragst du mit <b>いくらですか</b>.",
+      sentences: [
+        wegS("Ich möchte einen Flug buchen.", "hikouki no yoyaku o shitai desu ."),
+        wegS("Zwei einfache Fahrkarten, bitte.", "katamichi no kippu o n2 mai onegai ."),
+        wegS("Wie viel kostet die Hin- und Rückfahrt?", "oufuku no ryoukin wa ikura desu ka ."),
+        wegS("Ich habe im Reisebüro gebucht.", "ryokoudairiten de yoyaku shimashita .")
+      ] },
+    { id: "u43l7", type: "grammar", title: "Im Taxi", teach: ["tomete","gurai"], focus: "tomete",
+      explain: "Im Taxi sagst du das Ziel mit <b>〜まで おねがいします</b>. Anhalten lässt du mit <b>とめて ください</b>. Mit <b>ぐらい</b> sagst du „ungefähr“.",
+      sentences: [
+        wegS("Zum Flughafen, bitte.", "kuukou made onegai ."),
+        wegS("Bitte halten Sie hier an.", "koko de tomete kudasai ."),
+        wegS("Bitte fahren Sie geradeaus.", "massugu itte kudasai ."),
+        wegS("Wie viel kostet es bis zum Flughafen?", "kuukou made ikura desu ka .")
+      ] },
+    { id: "u43l8", type: "dialog", title: "Im Taxi", teach: [],
+      lines: [
+        ["Hanna", wegS("Zum Flughafen, bitte.", "kuukou made onegai .")],
+        ["Fahrer", wegS("Sehr gern.", "kashikomarimashita .")],
+        ["Hanna", wegS("Wie viel kostet es bis zum Flughafen?", "kuukou made ikura desu ka .")],
+        ["Fahrer", wegS("Ungefähr dreitausend Yen.", "n3 zen en gurai desu .")],
+        ["Hanna", wegS("Bitte halten Sie hier an.", "koko de tomete kudasai .")]
+      ] },
+    { id: "u43l9", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 44, lessons: [
+    { id: "u44l1", type: "words", title: "Hilferufe", teach: ["tasukete","dorobou","kaji","dareka","jiko"] },
+    { id: "u44l2", type: "words", title: "Hilfe holen", teach: ["keisatsu","kyuukyuusha","kouban"] },
+    { id: "u44l3", type: "grammar", title: "Hilfe rufen", teach: ["tetsudatte","yondeC"], focus: "kudasai",
+      explain: "Im Notfall rufst du kurz: <b>たすけて！</b>, <b>どろぼう！</b>, <b>かじ！</b>. Wenn Zeit ist, bittest du höflich mit <b>〜て ください</b>: <b>きゅうきゅうしゃを よんで ください</b> = „Bitte rufen Sie einen Krankenwagen.“",
+      sentences: [
+        wegS("Hilfe!", "tasukete !"),
+        wegS("Ein Dieb!", "dorobou !"),
+        wegS("Feuer!", "kaji !"),
+        wegS("Bitte helfen Sie mir kurz.", "chotto tetsudatte kudasai ."),
+        wegS("Bitte rufen Sie die Polizei an.", "keisatsu ni denwa shite kudasai ."),
+        wegS("Bitte rufen Sie einen Krankenwagen.", "kyuukyuusha o yondeC kudasai .")
+      ] },
+    { id: "u44l4", type: "grammar", title: "〜ましょうか – soll ich?", teach: ["yobimashou","mochimashou","doushitandesuka"], focus: "yobimashou",
+      explain: "Mit <b>〜ましょうか</b> bietest du Hilfe an: <b>きゅうきゅうしゃを よびましょうか</b> = „Soll ich einen Krankenwagen rufen?“ Um nachzufragen, was los ist, sagst du <b>どうしたんですか</b> oder <b>だいじょうぶですか</b>.",
+      sentences: [
+        wegS("Soll ich einen Krankenwagen rufen?", "kyuukyuusha o yobimashou ka ."),
+        wegS("Soll ich die Polizei anrufen?", "keisatsu ni denwa shimashou ka ."),
+        wegS("Soll ich das Gepäck tragen?", "nimotsu o mochimashou ka ."),
+        wegS("Was ist los?", "doushitandesuka ."),
+        wegS("Ist alles in Ordnung?", "daijoubu desu ka .")
+      ] },
+    { id: "u44l5", type: "words", title: "Verloren und verletzt", teach: ["nakushimashita","wasuremashita","mitsukarimasen","kega"] },
+    { id: "u44l6", type: "grammar", title: "Verlorenes melden", teach: [], focus: "nakushimashita",
+      explain: "Verlorenes meldest du mit <b>〜を なくしました</b> (verloren) oder <b>〜を わすれました</b> (vergessen). <b>〜が みつかりません</b> heißt „ist nicht zu finden“. Auf der Wache fragst du nach dem <b>こうばん</b>.",
+      sentences: [
+        wegS("Ich habe meinen Reisepass verloren.", "paspooto o nakushimashita ."),
+        wegS("Ich habe meinen Geldbeutel vergessen.", "saifu o wasuremashita ."),
+        wegS("Meine Tasche ist nicht zu finden.", "kaban ga mitsukarimasen ."),
+        wegS("Wo ist die Polizeiwache?", "kouban wa doko desu ka ."),
+        wegS("Ich habe mich verletzt.", "kega o shimashita .")
+      ] },
+    { id: "u44l7", type: "words", title: "Beschwerden und Apotheke", teach: ["hakike","memai","seki","yakkyoku","hoken"] },
+    { id: "u44l8", type: "grammar", title: "〜ほうが いいです – besser", teach: ["yasunda","osake","muri"], focus: "hou",
+      explain: "Einen Rat gibst du mit <b>〜た ほうが いいです</b> („es ist besser, zu …“). Davor steht die <b>た-Form</b>: <b>やすんだ ほうが いいです</b>. Soll jemand etwas <b>nicht</b> tun, steht die <b>ない-Form</b>: <b>のまない ほうが いいです</b>.",
+      sentences: [
+        wegS("Es ist besser, ins Krankenhaus zu gehen.", "byouin e itta hou ga ii desu ."),
+        wegS("Es ist besser, die Medizin zu nehmen.", "kusuri o nonda hou ga ii desu ."),
+        wegS("Es ist besser, sich auszuruhen.", "yasunda hou ga ii desu ."),
+        wegS("Es ist besser, keinen Alkohol zu trinken.", "osake wa nomanai hou ga ii desu ."),
+        wegS("Es ist besser, sich nicht zu überanstrengen.", "muri o shinai hou ga ii desu .")
+      ] },
+    { id: "u44l9", type: "dialog", title: "Beim Arzt", teach: [],
+      lines: [
+        ["Hanna", wegS("Mir ist schwindelig. Ich habe auch Fieber.", "memai ga shimasu . netsu mo arimasu .")],
+        ["Arzt", wegS("Haben Sie eine Versicherung?", "hoken wa arimasu ka .")],
+        ["Hanna", wegS("Ja, ich habe eine.", "hai , arimasu .")],
+        ["Arzt", wegS("Es ist besser, die Medizin zu nehmen. Bitte ruhen Sie sich aus.", "kusuri o nonda hou ga ii desu . yukkuri yasunde kudasai .")],
+        ["Hanna", wegS("Vielen Dank.", "arigatou .")],
+        ["Arzt", wegS("Gute Besserung.", "odaiji .")]
+      ] },
+    { id: "u44l10", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 45, lessons: [
+    { id: "u45l1", type: "words", title: "Orte zum Ausgehen", teach: ["bijutsukan","hakubutsukan","eigakan","gekijou","konsaato","baa","chiketto"] },
+    { id: "u45l2", type: "grammar", title: "Zum Ausgehen einladen", teach: [], focus: "ikimasen",
+      explain: "Mit <b>〜ませんか</b> lädst du freundlich ein, mit <b>〜ましょう</b> schlägst du vor. Nach dem Preis oder der Zeit fragst du wie gewohnt.",
+      sentences: [
+        wegS("Wollen wir ins Kunstmuseum gehen?", "bijutsukan e ikimasen ka ."),
+        wegS("Die Eintrittskarte, wie viel kostet sie?", "chiketto wa ikura desu ka ."),
+        wegS("Ab wann ist der Film?", "eiga wa nanji kara desu ka ."),
+        wegS("Lass uns nächstes Mal zusammen ins Konzert gehen.", "kondo isshoni konsaato e ikimashou .")
+      ] },
+    { id: "u45l3", type: "words", title: "Karaoke", teach: ["karaoke","uta","utaimasu"] },
+    { id: "u45l4", type: "grammar", title: "Singen und feiern", teach: ["utaimashou"], focus: "utaimasu",
+      explain: "Beim Karaoke singst du <b>うたを うたいます</b>. Zum Anstoßen sagst du <b>かんぱい！</b> Mit <b>〜ましょう</b> forderst du zum Mitmachen auf.",
+      sentences: [
+        wegS("Gehen wir Karaoke singen.", "karaoke e ikimashou ."),
+        wegS("Ich mag Lieder.", "watashi wa uta ga suki desu ."),
+        wegS("Ich singe ein Lied.", "uta o utaimasu ."),
+        wegS("Lass uns zusammen singen.", "isshoni utaimashou ."),
+        wegS("Prost!", "kanpai !")
+      ] },
+    { id: "u45l5", type: "words", title: "Sport und Instrumente", teach: ["yakyuu","suiei","sukii","gorufu","baiorin","hikimasu"] },
+    { id: "u45l6", type: "grammar", title: "Sport, Musik und Spiele", teach: [], focus: "hikimasu",
+      explain: "Sportarten stehen meist mit <b>を します</b> (<b>ゴルフを します</b>). Saiteninstrumente und Klavier „spielt“ man mit <b>ひきます</b>: <b>ギターを ひきます</b>.",
+      sentences: [
+        wegS("Ich mag Baseball.", "yakyuu ga suki desu ."),
+        wegS("Ich bin gut im Schwimmen.", "suiei ga jouzu desu ."),
+        wegS("Ich bin schon einmal Ski gefahren.", "sukii o shitaV koto ga arimasu ."),
+        wegS("Ich spiele Gitarre.", "gitaa o hikimasu ."),
+        wegS("Ich möchte Golf spielen.", "gorufu o shitai desu .")
+      ] },
+    { id: "u45l7", type: "words", title: "Freizeit und Spiele", teach: ["geemu","toranpu","tsuri","haikingu"] },
+    { id: "u45l8", type: "grammar", title: "Freizeit erzählen", teach: [], focus: "tari",
+      explain: "Mehrere Freizeitbeschäftigungen zählst du mit <b>〜たり 〜たり します</b> auf. Mit <b>〜たいです</b> sagst du, was du gern tun würdest.",
+      sentences: [
+        wegS("Am Wochenende spiele ich Spiele oder gehe angeln.", "shuumatsu wa geemu o shitaV tari , tsuri o shitaV tari shimasu ."),
+        wegS("Lass uns Karten spielen.", "toranpu o shimashou ."),
+        wegS("In den Sommerferien möchte ich wandern gehen.", "natsuyasumi ni haikingu o shitai desu .")
+      ] },
+    { id: "u45l9", type: "dialog", title: "Karaoke-Abend", teach: [],
+      lines: [
+        ["Tanaka", wegS("Gehen wir heute Abend zum Karaoke?", "konban karaoke e ikimasen ka .")],
+        ["Hanna", wegS("Gern. Aber ich singe nicht gut.", "iidesune . demo , uta ga heta desu .")],
+        ["Tanaka", wegS("Kein Problem. Lass uns zusammen singen.", "daijoubu desu . isshoni utaimashou .")],
+        ["Hanna", wegS("Ja, lass uns gehen.", "ee , ikimashou .")],
+        ["Tanaka", wegS("Prost!", "kanpai !")]
+      ] },
+    { id: "u45l10", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 46, lessons: [
+    { id: "u46l1", type: "words", title: "Reaktionen im Gespräch", teach: ["naruhodo","hee","eeto","yatta","taihen","yokatta"], note: "Solche kleinen Wörter (Aizuchi) zeigen, dass du zuhörst. Japaner benutzen sie sehr oft." },
+    { id: "u46l2", type: "grammar", title: "Zuhören und reagieren", teach: [], focus: "naruhodo",
+      explain: "Während jemand spricht, nickst du und sagst kurze Reaktionen: <b>なるほど</b> („verstehe“), <b>へえ</b> („echt?“), <b>そうですか</b> („ach so“). Wenn du überlegst, sagst du <b>ええと</b>.",
+      sentences: [
+        wegS("Verstehe. Ach so.", "naruhodo . soudesuka ."),
+        wegS("Echt? Das ist toll.", "hee , sugoi desu ne ."),
+        wegS("Äh, einen Moment bitte.", "eeto , chotto matte kudasai ."),
+        wegS("Ist das wahr?", "hontou desu ka ."),
+        wegS("Geschafft! Zum Glück.", "yatta ! yokatta desu ne ."),
+        wegS("Das ist anstrengend.", "taihen desu ne .")
+      ] },
+    { id: "u46l3", type: "words", title: "Höflich ablehnen", teach: ["kekkou","madamada","zenzen","ikaga"] },
+    { id: "u46l4", type: "grammar", title: "Bescheiden und höflich antworten", teach: [], focus: "madamada",
+      explain: "<b>Kulturtipp:</b> Ein Kompliment lehnst du in Japan eher ab: <b>いいえ、まだまだです</b> („nein, noch lange nicht“). Auch ein Angebot zu Essen oder Trinken lehnst du zuerst höflich ab (<b>いいえ、けっこうです</b>), und das Angebot wird dann meist wiederholt. Ein Angebot machst du mit <b>〜は いかがですか</b> („wie wäre es mit …“), nicht mit „Willst du …?“.",
+      sentences: [
+        wegS("Du sprichst gut Japanisch. – Nein, noch lange nicht.", "nihongo ga jouzu desu ne . iie , madamada desu ."),
+        wegS("Nein danke, es ist gut so.", "iie , kekkou desu ."),
+        wegS("Wie wäre es mit Kaffee?", "koohii wa ikaga desu ka ."),
+        wegS("Ich bin überhaupt nicht gut.", "zenzen dame desu .")
+      ] },
+    { id: "u46l5", type: "words", title: "Zu Besuch und Etikette", teach: ["genkan","nugimasu","ohashi","omiyage","ojigi"] },
+    { id: "u46l6", type: "grammar", title: "Zu Besuch bei Freunden", teach: ["ojamashimasu","nuide","tadaima","okaerinasai"], focus: "nuide",
+      explain: "<b>Kulturtipp:</b> Im Eingangsbereich (<b>げんかん</b>) ziehst du die Schuhe aus. Beim Eintreten sagst du <b>おじゃまします</b>, beim Heimkommen <b>ただいま</b>, und die Antwort ist <b>おかえりなさい</b>. Ein kleines Mitbringsel (<b>おみやげ</b>) ist willkommen. Stäbchen (<b>おはし</b>) steckst du nicht in den Reis.",
+      sentences: [
+        wegS("Entschuldigen Sie die Störung.", "ojamashimasu ."),
+        wegS("Bitte ziehen Sie hier die Schuhe aus.", "koko de kutsu o nuide kudasai ."),
+        wegS("Das ist ein Mitbringsel. Bitte sehr.", "kore wa omiyage desu . douzo ."),
+        wegS("Ich bin wieder da.", "tadaima ."),
+        wegS("Willkommen zurück.", "okaerinasai ."),
+        wegS("Ich esse mit Stäbchen.", "ohashi de tabemasu .")
+      ] },
+    { id: "u46l7", type: "grammar", title: "Höflichkeit im Alltag", teach: ["osakini","shitsurei","otsukaresamadeshita","osewa"], focus: "shitsurei",
+      explain: "<b>Kulturtipp:</b> Beim Verlassen des Büros sagst du <b>おさきに しつれいします</b>, und die Kollegen antworten <b>おつかれさまでした</b>. Für Hilfe bedankst du dich mit <b>おせわに なりました</b>. Statt <b>あなた</b> benutzt du lieber den Namen mit <b>さん</b>.",
+      sentences: [
+        wegS("Ich gehe schon, entschuldigen Sie.", "osakini shitsurei shimasu ."),
+        wegS("Danke für die Arbeit.", "otsukaresamadeshita ."),
+        wegS("Danke für Ihre Hilfe.", "osewa ni narimashita ."),
+        wegS("Was trinkt Herr Tanaka?", "tanaka san wa nani o nomimasu ka .")
+      ] },
+    { id: "u46l8", type: "dialog", title: "Zu Besuch", teach: ["gomenkudasai","irasshai"],
+      lines: [
+        ["Hanna", wegS("Hallo? Ist jemand da?", "gomenkudasai .")],
+        ["Tanaka", wegS("Willkommen. Bitte kommen Sie herein.", "irasshai . douzo .")],
+        ["Hanna", wegS("Entschuldigen Sie die Störung. Das ist ein Mitbringsel.", "ojamashimasu . kore wa omiyage desu .")],
+        ["Tanaka", wegS("Vielen Dank. Wie wäre es mit Kaffee?", "arigatou . koohii wa ikaga desu ka .")],
+        ["Hanna", wegS("Nein danke, es ist gut so.", "iie , kekkou desu .")],
+        ["Tanaka", wegS("Bitte, nehmen Sie ruhig etwas.", "douzo , douzo .")],
+        ["Hanna", wegS("Dann nehme ich gern. Danke.", "arigatou . itadakimasu .")]
+      ] },
+    { id: "u46l9", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 47, lessons: [
+    { id: "u47l1", type: "words", title: "Im Büro", teach: ["shokuba","buchou","meishi","shorui","konpyuutaa","keitai","kaigichuu"] },
+    { id: "u47l2", type: "grammar", title: "Im Büro sprechen", teach: [], focus: "meishi",
+      explain: "Zu Beginn eines Geschäftstreffens tauscht man <b>めいし</b> (Visitenkarten) mit beiden Händen. Du reichst sie mit <b>どうぞ</b>.",
+      sentences: [
+        wegS("Hier ist meine Visitenkarte.", "meishi o douzo ."),
+        wegS("Der Abteilungsleiter ist gerade in einer Besprechung.", "buchou wa ima kaigichuu desu ."),
+        wegS("Bitte sehen Sie sich die Unterlagen an.", "shorui o mite kudasai ."),
+        wegS("Ich schreibe E-Mails am Computer.", "konpyuutaa de meeru o kakimasu ."),
+        wegS("Mein Arbeitsplatz ist in Tokio.", "shokuba wa toukyou ni arimasu .")
+      ] },
+    { id: "u47l3", type: "words", title: "Telefon und E-Mail", teach: ["dengon","kakenaoshimasu","okutte"] },
+    { id: "u47l4", type: "grammar", title: "Nachricht hinterlassen", teach: ["arimashita"], focus: "dengon",
+      explain: "Ist die gewünschte Person nicht erreichbar, sagt man dir meist <b>ただいま 〜</b> oder <b>いま 〜ちゅうです</b> („gerade in …“). Du bietest an, später noch einmal anzurufen, oder bittest um eine <b>でんごん</b>.",
+      sentences: [
+        wegS("Herr Tanaka ist gerade in einer Besprechung.", "tanaka san wa ima kaigichuu desu ."),
+        wegS("Bitte richten Sie eine Nachricht aus.", "dengon o onegai ."),
+        wegS("Ich rufe später noch einmal an.", "atode mata kakenaoshimasu ."),
+        wegS("Es gab einen Anruf von Hanna.", "hanna kara denwa ga arimashita ."),
+        wegS("Entschuldigen Sie, ich lege auf.", "shitsurei shimasu .")
+      ] },
+    { id: "u47l5", type: "grammar", title: "E-Mail und Besprechung", teach: [], focus: "okutte",
+      explain: "Eine E-Mail bittest du mit <b>メールを おくって ください</b>. Besprechungen (<b>かいぎ</b>) haben feste Zeiten: <b>ごご 3じから</b>.",
+      sentences: [
+        wegS("Bitte schicken Sie mir eine E-Mail.", "meeru o okutte kudasai ."),
+        wegS("Morgen ist eine Besprechung.", "ashita kaigi ga arimasu ."),
+        wegS("Die Besprechung beginnt um 15 Uhr.", "kaigi wa gogo n3 ji kara desu ."),
+        wegS("Ich muss Überstunden machen.", "zangyou o shinakereba narimasen .")
+      ] },
+    { id: "u47l6", type: "dialog", title: "Anruf im Büro", teach: [],
+      lines: [
+        ["Hanna", wegS("Hallo. Ich heiße Hanna. Ist Herr Tanaka da?", "moshimoshi . hanna to moushimasu . tanaka san wa irasshaimasu ka .")],
+        ["Büro", wegS("Es tut mir leid. Er ist gerade in einer Besprechung.", "sumimasen . tanaka wa ima kaigichuu desu .")],
+        ["Hanna", wegS("Dann bitte eine Nachricht.", "dengon o onegai .")],
+        ["Büro", wegS("Sehr gern.", "kashikomarimashita .")],
+        ["Hanna", wegS("Ich rufe später noch einmal an. Auf Wiederhören.", "atode mata kakenaoshimasu . shitsurei shimasu .")]
+      ] },
+    { id: "u47l7", type: "check", title: "Checkpoint" }
   ] }
 );
 
