@@ -2173,6 +2173,11 @@ nav {
 .weg-node.locked .weg-circle { opacity:.45; border-color:var(--border); }
 .weg-node.check .weg-circle { border-radius:14px; }
 .weg-label { font-size:.95rem; color:var(--ink); }
+.weg-extra { margin-top:.6rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; }
+.weg-extra .hint { width:100%; }
+.weg-chip { width:auto; display:inline-flex; align-items:center; gap:.4rem; padding:.3rem .7rem; font-size:.85rem; border-radius:999px; }
+.weg-chip.done { border-color:var(--matcha); }
+.weg-chip:disabled { opacity:.5; }
 .lesson { padding-top:.8rem; }
 .lesson-top { display:flex; gap:.6rem; align-items:center; margin-bottom:.6rem; }
 .lesson-top select { width:auto; }
@@ -8369,8 +8374,9 @@ function kanjiBest(gid){
 function kanjiStats(){
   return { passed: KANJI_DB.filter(g => isKanjiPassed(g.id)).length, total: KANJI_DB.length };
 }
-function kanjiUnlocked(){ return hiraBasicDone() || !!loadPath().forceKanji; }
+function kanjiUnlocked(){ return hiraBasicDone() || !!loadPath().forceKanji || Object.keys(WEG_EXTRA).some(u => (WEG_EXTRA[u].kanji || []).length && unitDone(Number(u))); }
 function isKanjiOpen(gid){
+  if (kanjiWegOpen(gid)) return true;
   if (!kanjiUnlocked()) return false;
   return gid === 1 || isKanjiPassed(gid - 1) || isKanjiPassed(gid);
 }
@@ -8489,7 +8495,7 @@ function renderKanjiHome(mount){
         </div>`;
       }).join("")}
     </div>`}
-    <div class="actions" style="margin-top:1rem;"><button onclick="goto('path')">Zurück zum Lernpfad</button></div>`;
+    <div class="actions" style="margin-top:1rem;"><button onclick="goto('weg')">Zurück zum Weg</button></div>`;
 }
 
 function renderKanjiGroup(mount, g){
@@ -9339,6 +9345,7 @@ function renderWeg(mount){
               </button>`;
             }).join("")}
           </div>
+          ${wegExtraHtml(uid)}
         </div>`;
     }).join("")}
     ${examCardHtml(sec)}
@@ -9374,6 +9381,59 @@ function renderWeg(mount){
   const wgResume = $("#wgResume"); if (wgResume) wgResume.onclick = () => { resumeListening(); renderWeg(mount); };
   $("#wgGoal").onchange = (e) => { setDailyGoal(e.target.value); renderWeg(mount); };
   $("#wgScript").onchange = (e) => { setScriptMode(e.target.value); renderWeg(mount); };
+}
+
+// ---------- Zusatzangebote je Einheit: Kanji-Gruppen und Lesegeschichten ----------
+// Beides ist freiwillig: es blockiert weder Einheiten noch Prüfungen. Es wird frei, sobald die Einheit geschafft ist.
+const WEG_EXTRA = {
+  2: { kanji: [20], story: [1] },
+  3: { kanji: [1, 2] },
+  4: { kanji: [6, 7] },
+  5: { kanji: [13] },
+  6: { kanji: [4, 5] },
+  7: { kanji: [15], story: [4] },
+  8: { kanji: [18], story: [3] },
+  9: { kanji: [3, 22] },
+  10: { story: [20] },
+  11: { kanji: [21], story: [2] },
+  12: { kanji: [10, 11], story: [7] },
+  13: { kanji: [16, 19] },
+  14: { story: [6] },
+  15: { kanji: [17], story: [11] },
+  16: { kanji: [14], story: [8] },
+  17: { kanji: [8, 9], story: [9] },
+  19: { story: [15] },
+  20: { kanji: [12], story: [16] },
+  21: { story: [12] },
+  23: { story: [5, 10, 13, 14] }
+};
+const WEG_HARD_STORIES = [11, 12, 13, 14, 15, 16, 20];   // etwas anspruchsvoller: mit Furigana lesen
+function kanjiUnitOf(gid){
+  const hit = Object.keys(WEG_EXTRA).find(u => (WEG_EXTRA[u].kanji || []).includes(gid));
+  return hit ? Number(hit) : null;
+}
+function kanjiWegOpen(gid){ const u = kanjiUnitOf(gid); return !!u && unitDone(u); }
+function storyRead(id){ return !!((loadPath().read || {})[id]); }
+function markStoryRead(id){ const p = loadPath(); p.read = p.read || {}; if (!p.read[id]) { p.read[id] = Date.now(); savePath(p); } }
+function openWegStory(id){ state.fromWeg = true; goto("level/read/" + id); }
+function wegExtraHtml(uid){
+  const ex = WEG_EXTRA[uid];
+  if (!ex) return "";
+  const open = unitDone(uid);
+  const chips = [];
+  (ex.kanji || []).forEach(gid => {
+    const g = kanjiGroup(gid); if (!g) return;
+    const done = isKanjiPassed(gid);
+    chips.push(`<button type="button" class="weg-chip${done ? " done" : ""}" ${open ? `onclick="goto('kanji/${gid}')"` : "disabled"}>
+      <span>漢</span>${done ? "✓ " : ""}Kanji: ${wegEsc(g.title)}</button>`);
+  });
+  contentLevels().filter(l => (ex.story || []).includes(l.level)).forEach(l => {
+    const done = storyRead(l.id);
+    chips.push(`<button type="button" class="weg-chip${done ? " done" : ""}" ${open ? `onclick="openWegStory('${l.id}')"` : "disabled"}>
+      <span>📖</span>${done ? "✓ " : ""}Geschichte: ${wegEsc(String(l.title || "").replace(/（.*?）/g, "").trim())}${WEG_HARD_STORIES.includes(l.level) ? " (schwerer)" : ""}</button>`);
+  });
+  if (!chips.length) return "";
+  return `<div class="weg-extra"><div class="hint">Zusatz${open ? "" : " (nach dieser Einheit)"}</div>${chips.join("")}</div>`;
 }
 
 // ---------- Prüfskript: kommt in einer Lektion etwas vor, das noch nicht gelehrt wurde? ----------
@@ -11663,6 +11723,7 @@ function ensureFocusScroll(selector){
 
 
 function renderLevels(mount){
+  state.fromWeg = false;
   ensureSeedLevels();
   const levels = contentLevels();
   const curr = syncLevelProgress();
@@ -11720,6 +11781,7 @@ function renderLevelRead(mount, id){
   if (!lvl){ mount.innerHTML = `<p>Level nicht gefunden.</p>`; return; }
   const prog = loadProgress();
   const isCurr = prog.currentLevel === lvl.level;
+  markStoryRead(lvl.id);
 
   const jpOf = (v) => v.kana || v.kanji || v.romaji || '';
 
@@ -11771,7 +11833,7 @@ ${
       <button onclick="startTrainingForLevel('${lvl.id}','quiz')">Quiz</button>
       <button onclick="startTrainingForLevel('${lvl.id}','match')">Match 60s</button>
       <button onclick="startTrainingForLevel('${lvl.id}','spell')">Buchstabieren</button>
-      <button onclick="goto('levels')">Zurück</button>
+      <button onclick="goto(state.fromWeg ? 'weg' : 'levels')">Zurück</button>
     </div>
   `;
 
