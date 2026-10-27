@@ -2225,20 +2225,20 @@ button.linklike { background:none; border:0; box-shadow:none; width:auto; paddin
 
   <nav>
     <button data-route="weg">Weg</button>
-    <button data-route="path">Lernpfad (alt)</button>
-    <button data-route="review">Wiederholen</button>
+    <button data-route="review">Wiederholen und Üben</button>
+    <button data-route="write">Schreibübung</button>
+    <button data-route="kanji">Kanji</button>
+    <button data-route="grammar">Grammatik (Nachschlagen)</button>
+    <button data-route="stories">Lesegeschichten</button>
+    <button data-route="chats">Chats</button>
     <button data-route="home">Meine Sets</button>
     <button data-route="new-set">Neues Set</button>
     <button data-route="stats">Statistik</button>
-    <button data-route="stories">Lesegeschichten</button>
-    <button data-route="levels">Level-Modus</button>
-    <button data-route="chats">Chats</button>
-    <button data-route="write">Schreibübung</button>
-    <button data-route="grammar">Grammatik</button>
-    <button data-route="kanji">Kanji</button>
     <button data-route="clock-game">Uhrenspiel</button>
     <button data-route="menu-game">Menükarte</button>
     <button data-route="calendar-game">Kalenderspiel</button>
+    <button data-route="levels">Level-Modus (alt)</button>
+    <button data-route="path">Lernpfad (alt)</button>
     <button id="exportBtn">Export</button>
     <label class="import-label">
       Import
@@ -8736,7 +8736,7 @@ function wegLesson(unitId, idx){ const u = wegUnit(unitId); return u ? u.lessons
 let _knownKana = null;
 function wegDone(){ return (loadPath().weg || {}); }
 function lessonDone(id){ const w = wegDone()[id]; return !!(w && w.done); }
-function lessonBest(id){ const w = wegDone()[id]; return w ? (w.best || 0) : null; }
+function lessonBest(id){ const w = wegDone()[id]; return w && !w.migrated ? (w.best || 0) : null; }
 function markWegLesson(id, pct, passed){
   const p = loadPath();
   p.weg = p.weg || {};
@@ -9376,6 +9376,7 @@ function renderWeg(mount){
           : `<div class="actions" style="margin-top:.5rem;"><button class="primary" onclick="goto('lektion/${next.unit.id}/${next.idx}')">Weiter: ${wegEsc(next.lesson.title)}</button></div>`)
              : `<p>Alle bisher verfügbaren Lektionen sind geschafft. Neue Einheiten folgen.</p>`}
     </div>
+    ${wegMigrateHtml()}
     ${sectionHtml}
     <div class="actions" style="margin-top:1rem;"><button onclick="goto('review')">Wiederholen und Üben</button><button onclick="goto('path')">Zum bisherigen Lernpfad</button></div>`;
   const wgResume = $("#wgResume"); if (wgResume) wgResume.onclick = () => { resumeListening(); renderWeg(mount); };
@@ -9405,7 +9406,17 @@ const WEG_EXTRA = {
   19: { story: [15] },
   20: { kanji: [12], story: [16] },
   21: { story: [12] },
-  23: { story: [5, 10, 13, 14] }
+  23: { story: [5, 10, 13, 14] },
+  26: { story: [19, 23] },
+  27: { story: [21, 31] },
+  28: { story: [28] },
+  30: { story: [22] },
+  31: { story: [24, 29] },
+  33: { story: [25, 26] },
+  34: { story: [18, 27] },
+  35: { story: [30] },
+  39: { story: [32] },
+  40: { story: [17] }
 };
 const WEG_HARD_STORIES = [11, 12, 13, 14, 15, 16, 20];   // etwas anspruchsvoller: mit Furigana lesen
 function kanjiUnitOf(gid){
@@ -9434,6 +9445,39 @@ function wegExtraHtml(uid){
   });
   if (!chips.length) return "";
   return `<div class="weg-extra"><div class="hint">Zusatz${open ? "" : " (nach dieser Einheit)"}</div>${chips.join("")}</div>`;
+}
+
+// ---------- Übernahme aus dem alten Lernpfad ----------
+// Kana-Lektionen im Weg gelten als geschafft, wenn alle Zeichen in alten, bestandenen Kana-Gruppen vorkommen.
+function kanaMigratable(){
+  const known = { hiragana: new Set(), katakana: new Set() };
+  ["hiragana", "katakana"].forEach(script => {
+    KANA[script].groups.forEach(g => { if (isKanaPassed(script, g.id)) g.items.forEach(it => known[script].add(it[0])); });
+  });
+  const out = [];
+  WEG_UNITS.forEach(u => u.lessons.forEach(l => {
+    if (l.type !== "kana" || lessonDone(l.id)) return;
+    if ((l.chars || []).length && l.chars.every(c => known[l.script].has(c[0]))) out.push(l.id);
+  }));
+  return out;
+}
+function migrateKana(){
+  const ids = kanaMigratable();
+  const p = loadPath();
+  p.weg = p.weg || {};
+  ids.forEach(id => { p.weg[id] = { best: 0, done: true, at: Date.now(), migrated: true }; });
+  savePath(p);
+  _knownKana = null;
+  goto("weg");
+}
+function wegMigrateHtml(){
+  const n = kanaMigratable().length;
+  if (!n) return "";
+  return `<div class="card" style="margin-top:.75rem;">
+    <h3>Aus dem alten Lernpfad übernehmen</h3>
+    <p class="hint">Du hast im alten Lernpfad schon Kana-Gruppen bestanden. ${n} Kana-Lektion${n === 1 ? "" : "en"} im Weg ${n === 1 ? "kann" : "können"} deshalb als geschafft gelten.</p>
+    <div class="actions"><button onclick="migrateKana()">${n} Lektion${n === 1 ? "" : "en"} übernehmen</button></div>
+  </div>`;
 }
 
 // ---------- Prüfskript: kommt in einer Lektion etwas vor, das noch nicht gelehrt wurde? ----------
@@ -12607,6 +12651,10 @@ function renderLevels(mount){
   const doneCount = levels.filter(isLevelPassed).length;
   mount.innerHTML = `
     <h2>Level-Modus</h2>
+    <div class="card">
+      <p class="hint">Die Geschichten gehören jetzt zu den Einheiten im Weg (Bereich „Zusatz“). Der Level-Modus bleibt als alte Ansicht erhalten.</p>
+      <div class="actions"><button class="primary" onclick="goto('weg')">Zum Weg</button></div>
+    </div>
     ${hiraBasicDone() ? "" : `
     <div class="card">
       <p><strong>Tipp:</strong> Die Geschichten sind auf Japanisch geschrieben. Lerne zuerst Hiragana im Lernpfad, dann verstehst du viel mehr.</p>
