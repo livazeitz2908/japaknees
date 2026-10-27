@@ -2178,6 +2178,11 @@ nav {
 .weg-chip { width:auto; display:inline-flex; align-items:center; gap:.4rem; padding:.3rem .7rem; font-size:.85rem; border-radius:999px; }
 .weg-chip.done { border-color:var(--matcha); }
 .weg-chip:disabled { opacity:.5; }
+.vt { border-collapse:collapse; width:100%; font-size:.9rem; }
+.vt th, .vt td { padding:.25rem .4rem; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }
+.vt .vt-no { color:var(--muted); }
+.vt .vt-new { opacity:.55; }
+.vt .vt-grp { border-bottom:2px solid var(--border); padding-top:0; }
 .lesson { padding-top:.8rem; }
 .lesson-top { display:flex; gap:.6rem; align-items:center; margin-bottom:.6rem; }
 .lesson-top select { width:auto; }
@@ -2226,6 +2231,7 @@ button.linklike { background:none; border:0; box-shadow:none; width:auto; paddin
   <nav>
     <button data-route="weg">Weg</button>
     <button data-route="review">Wiederholen und Üben</button>
+    <button data-route="nachschlagen">Nachschlagen</button>
     <button data-route="write">Schreibübung</button>
     <button data-route="kanji">Kanji</button>
     <button data-route="grammar">Grammatik (Nachschlagen)</button>
@@ -4132,6 +4138,7 @@ const m = $("#app");
   if (state.route === "path") return renderPath(m);
   if (state.route === "review" || state.route.startsWith("review/")) return renderReview(m, state.route.split("/").slice(1));
   if (state.route === "weg") return renderWeg(m);
+  if (state.route === "nachschlagen" || state.route.startsWith("nachschlagen/")) return renderNachschlagen(m, state.route.split("/").slice(1));
   if (state.route.startsWith("lektion/")) return renderLektion(m, state.route.split("/").slice(1));
   if (state.route.startsWith("pruefung/")) return renderPruefung(m, state.route.split("/").slice(1));
   if (state.route === "kanji" || state.route.startsWith("kanji/")) return renderKanjiRoute(m, state.route.split("/").slice(1));
@@ -9679,6 +9686,180 @@ function wegMigrateHtml(){
     <p class="hint">Du hast im alten Lernpfad schon Kana-Gruppen bestanden. ${n} Kana-Lektion${n === 1 ? "" : "en"} im Weg ${n === 1 ? "kann" : "können"} deshalb als geschafft gelten.</p>
     <div class="actions"><button onclick="migrateKana()">${n} Lektion${n === 1 ? "" : "en"} übernehmen</button></div>
   </div>`;
+}
+
+// =========================================================
+// Nachschlagen: Wörterbuch, Verbformen, Aussprache
+// Routen: nachschlagen | nachschlagen/woerter | nachschlagen/verben | nachschlagen/aussprache
+// =========================================================
+function normSearch(s){ return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+function kata2hira(s){ return String(s || "").replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)); }
+
+// Bausteine, die in geschafften Lektionen vorkamen
+function learnedTokenSet(){
+  const set = new Set();
+  WEG_UNITS.forEach(u => u.lessons.forEach(l => { if (lessonDone(l.id)) (l.teach || []).forEach(id => set.add(id)); }));
+  return set;
+}
+
+function dictSearch(q){
+  const nq = normSearch(q).trim(), hq = kata2hira(q).trim();
+  if (!nq) return { words: [], kanji: [], total: 0 };
+  const pos = tokenPos(), learned = learnedTokenSet();
+  const words = Object.values(TOK).filter(t => t.kind !== "punct" && pos[t.id]).filter(t =>
+    normSearch(t.de).includes(nq) || normSearch(t.ro).replace(/[^a-z]/g, "").includes(nq.replace(/[^a-z]/g, "") || "\u0000") || kata2hira(t.ja).includes(hq || "\u0000")
+  ).map(t => ({ t, unit: pos[t.id][0], learned: learned.has(t.id) }));
+  words.sort((a, b) => (b.learned - a.learned) || (a.unit - b.unit));
+  const kanji = [];
+  KANJI_DB.forEach(g => g.items.forEach(it => {
+    const hit = it.k === q.trim() || normSearch(it.m).includes(nq) || kata2hira(it.on).includes(hq || "\u0000") || kata2hira(it.kun).replace(/[()・]/g, "").includes((hq || "\u0000").replace(/[()・]/g, ""))
+      || it.words.some(w => w[0].includes(q.trim()) || kata2hira(w[1]).includes(hq || "\u0000") || normSearch(w[2]).includes(nq));
+    if (hit) kanji.push({ it, gid: g.id });
+  }));
+  return { words, kanji, total: words.length + kanji.length };
+}
+
+function renderDictResults(box, q){
+  const r = dictSearch(q);
+  if (!q.trim()) { box.innerHTML = `<p class="hint">Gib ein deutsches Wort, Romaji, Kana oder ein Kanji ein.</p>`; return; }
+  if (!r.total) { box.innerHTML = `<p>Nichts gefunden.</p>`; return; }
+  const shown = r.words.slice(0, 40);
+  box.innerHTML = `
+    ${shown.length ? `<h3>Wörter (${r.words.length})</h3>` : ""}
+    ${shown.map(e => `
+      <div class="intro-ex"><button type="button" class="mini" data-say="${escapeHTML(e.t.ja)}" aria-label="Vorlesen" style="width:auto;">🔊</button>
+        <div><div class="intro-ja">${wegHtml([e.t.id])}</div>
+          <div class="hint">${escapeHTML(e.t.de)} · Einheit ${e.unit}${e.learned ? " · ✓ gelernt" : ""}</div></div></div>`).join("")}
+    ${r.words.length > shown.length ? `<p class="hint">… und ${r.words.length - shown.length} weitere. Gib mehr Buchstaben ein.</p>` : ""}
+    ${r.kanji.length ? `<h3>Kanji (${r.kanji.length})</h3>` : ""}
+    ${r.kanji.slice(0, 15).map(({ it, gid }) => `
+      <div class="intro-ex"><div class="kanji-big" style="min-width:3rem;">${escapeHTML(it.k)}</div>
+        <div><b>${escapeHTML(it.m)}</b><div class="hint">on: ${escapeHTML(it.on || "–")} · kun: ${escapeHTML(it.kun || "–")}</div>
+          <div class="hint">${it.words.map(w => escapeHTML(w[0] + " " + w[1] + " – " + w[2])).join(" · ")}</div>
+          ${isKanjiOpen(gid) ? `<button type="button" class="linklike" onclick="goto('kanji/${gid}')">Zur Gruppe ${gid}</button>` : ""}</div></div>`).join("")}`;
+  $$("[data-say]", box).forEach(el => { el.onclick = () => speak(el.dataset.say); });
+}
+
+// Verbformen: [Wörterbuchform, ます, ない, た, て, Möglichkeit, Passiv, させる, Aufforderung, ば, Gruppe]
+const VERB_TABLE = [
+  ["taberu", "tabemasu", "tabenai", "tabeta", "tabete", "taberareru", "taberareruP", "tabesaseru", "tabeyou", "tabereba", "る-Verb"],
+  ["miru", "mimasu", "minai", "mita", "mite", "mirareru", "mirareruP", "misaseru", "miyou", "mireba", "る-Verb"],
+  ["okiru", "okimasu", "okinai", "okita", "okite", null, null, null, null, null, "る-Verb"],
+  ["neru", "nemasu", "nenai", "neta", "nete", null, null, null, null, null, "る-Verb"],
+  ["iku", "ikimasu", "ikanai", "itta", "itte", "ikeru", "ikareru", "ikaseru", "ikou", "ikeba", "う-Verb (Ausnahme: いった)"],
+  ["nomu", "nomimasu", "nomanai", "nonda", "nonde", "nomeru", "nomareru", "nomaseru", "nomou", "nomeba", "う-Verb"],
+  ["kau", "kaimasu", "kawanai", "katta", "katte", null, null, null, null, null, "う-Verb"],
+  ["hanasu", "hanashimasu", "hanasanai", "hanashita", "hanashite", "hanaseru", "hanasareru", "hanasaseru", "hanasou", null, "う-Verb"],
+  ["yomu", "yomimasu", "yomanai", "yonda", "yonde", "yomeru", "yomareru", "yomaseru", "yomou", "yomeba", "う-Verb"],
+  ["kaku", "kakimasu", "kakanai", "kaita", "kaite", "kakeru", "kakareru", "kakaseru", "kakou", "kakeba", "う-Verb"],
+  ["matsu", "machimasu", "matanai", "matta", "matte", "materu", "matareru", "mataseru", null, null, "う-Verb"],
+  ["kaeru", "kaerimasu", "kaeranai", "kaetta", "kaette", null, null, null, "kaerou", null, "う-Verb (sieht aus wie る-Verb)"],
+  ["suru", "shimasu", "shinai", "shitaV", "shite", null, "sareru", "saseru", "shiyou", "sureba", "unregelmäßig"],
+  ["kuru", "kimasu", "konai", "kita", "kite", null, "korareru", "kosaseru", "koyou", "kureba", "unregelmäßig"]
+];
+const VERB_COLS = ["Wörterbuch", "ます", "ない", "た", "て", "Möglich", "Passiv", "させる", "Aufford.", "ば"];
+
+function renderVerbTable(mount){
+  const learned = learnedTokenSet();
+  const cell = id => !id || !TOK[id] ? `<td class="vt-no">–</td>` :
+    `<td${learned.has(id) || (TOK[id] && !WEG_UNITS.some(u => u.lessons.some(l => (l.teach || []).includes(id)))) ? "" : ` class="vt-new"`}><button type="button" class="linklike" data-say="${escapeHTML(TOK[id].ja)}">${wegHtml([id], { noSub: true })}</button></td>`;
+  mount.innerHTML = `
+    <h2>Verbformen</h2>
+    <div class="actions" style="margin-bottom:.5rem;">
+      <button onclick="goto('nachschlagen')">Zurück</button>
+      <label>Schrift
+        <select id="vtScript">
+          <option value="auto"${scriptMode() === "auto" ? " selected" : ""}>Auto (Romaji-Hilfe)</option>
+          <option value="romaji"${scriptMode() === "romaji" ? " selected" : ""}>Nur Romaji</option>
+          <option value="kana"${scriptMode() === "kana" ? " selected" : ""}>Nur Kana</option>
+        </select></label>
+    </div>
+    <p class="hint">Alle Verben, deren Formen im Weg vorkommen. Tippe auf eine Form, um sie zu hören. Grau hinterlegte Formen hast du noch nicht gelernt. Ein „–“ bedeutet, dass die Form im Weg nicht vorkommt.</p>
+    <div class="card" style="overflow-x:auto;">
+      <table class="vt">
+        <thead><tr>${VERB_COLS.map(c => `<th>${c}</th>`).join("")}</tr></thead>
+        <tbody>${VERB_TABLE.map(r => `<tr>${r.slice(0, 10).map(cell).join("")}</tr>
+          <tr><td colspan="10" class="hint vt-grp">${escapeHTML(TOK[r[0]].de.replace(" (einfache Form)", ""))} · ${escapeHTML(r[10])}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <div class="card" style="margin-top:.75rem;"><b>Kurz erklärt</b>
+      <ul>
+        <li><b>る-Verben</b> (z. B. たべる): る weg, dann ない, た, て, よう, れば oder られる anhängen.</li>
+        <li><b>う-Verben</b> (z. B. のむ): der letzte Laut wechselt die Reihe: あ-Reihe für ない, い-Reihe für ます, え-Reihe für Möglichkeit und ば, お-Reihe für „Lass uns“.</li>
+        <li><b>て-/た-Form</b> der う-Verben: う, つ, る → って / った · む, ぶ, ぬ → んで / んだ · く → いて / いた · す → して / した.</li>
+        <li><b>Unregelmäßig:</b> する und くる, dazu いく → いって / いった.</li>
+      </ul></div>`;
+  $$("[data-say]", mount).forEach(el => { el.onclick = () => speak(el.dataset.say); });
+  $("#vtScript").onchange = (e) => { setScriptMode(e.target.value); renderVerbTable(mount); };
+}
+
+function renderPronunciation(mount){
+  const ex = (ja, ro, de) => `<div class="intro-ex"><button type="button" class="mini" data-say="${escapeHTML(ja)}" aria-label="Vorlesen" style="width:auto;">🔊</button>
+    <div><div class="intro-ja">${escapeHTML(ja)}</div><div class="hint">${escapeHTML(ro)} · ${escapeHTML(de)}</div></div></div>`;
+  mount.innerHTML = `
+    <h2>Aussprache</h2>
+    <div class="actions" style="margin-bottom:.5rem;"><button onclick="goto('nachschlagen')">Zurück</button></div>
+    <div class="card"><h3>Die fünf Vokale</h3>
+      <p>Japanisch hat nur fünf Vokale: <b>あ</b> (a), <b>い</b> (i), <b>う</b> (u), <b>え</b> (e), <b>お</b> (o). Sie klingen ähnlich wie im Deutschen, aber kurz und klar, ohne zu „gleiten“. <b>う</b> sprichst du mit wenig Lippenrundung.</p>
+      ${ex("あいうえお", "a i u e o", "die fünf Vokale")}</div>
+    <div class="card" style="margin-top:.75rem;"><h3>Konsonanten</h3>
+      <ul>
+        <li><b>ら・り・る・れ・ろ:</b> ein kurzes Zungenschlag-r, zwischen r, l und d.</li>
+        <li><b>ふ:</b> mit gespitzten Lippen, fast wie ein sanftes „hu“.</li>
+        <li><b>し, ち, じ:</b> wie „sch“ in „schi“, „tschi“ und „dschi“.</li>
+        <li><b>ん:</b> ein eigener Laut. Vor m, b, p klingt er wie „m“, sonst wie „n“ (oder nasal am Wortende).</li>
+        <li><b>が:</b> am Wortanfang wie „g“, mitten im Wort oft nasal „ng“.</li>
+      </ul>
+      ${ex("ふじさん", "fujisan", "Fuji")}${ex("りんご", "ringo", "Apfel")}</div>
+    <div class="card" style="margin-top:.75rem;"><h3>Rhythmus: jedes Kana ist ein Takt</h3>
+      <p>Im Japanischen hat jedes Kana (außer kleinen) die gleiche Länge. Du sprichst gleichmäßig, ohne Betonung auf einer Silbe.</p>
+      <ul>
+        <li><b>Lange Vokale</b> dauern doppelt so lang: <b>おばさん</b> (Tante) und <b>おばあさん</b> (Großmutter) sind verschiedene Wörter.</li>
+        <li><b>Kleines っ</b> ist eine kurze Pause vor dem nächsten Konsonanten: <b>きて</b> (komm) und <b>きって</b> (Briefmarke).</li>
+        <li><b>ん</b> zählt als ganzer Takt: <b>かど</b> (Ecke) und <b>かんど</b> klingen verschieden lang.</li>
+      </ul>
+      ${ex("おばさん", "obasan", "Tante")}${ex("おばあさん", "obaasan", "Großmutter")}${ex("きて", "kite", "komm!")}${ex("きって", "kitte", "Briefmarke")}</div>
+    <div class="card" style="margin-top:.75rem;"><h3>Betonung und Melodie</h3>
+      <p>Japanisch betont nicht mit Lautstärke, sondern mit <b>Tonhöhe</b>. Manche Wörter unterscheiden sich nur durch die Tonhöhe, zum Beispiel <b>はし</b> (Stäbchen, Brücke, Rand). Hör genau zu und sprich nach. Im Zweifel ist gleichmäßiges Sprechen besser als zu viel Betonung.</p>
+      <p><b>Fragen:</b> Mit <b>か</b> am Ende, im lockeren Gespräch mit steigender Stimme am Satzende.</p>
+      ${ex("はし", "hashi", "Stäbchen / Brücke / Rand")}${ex("そうですか", "sō desu ka", "Ach so?")}</div>
+    <div class="card" style="margin-top:.75rem;"><h3>Tempo</h3>
+      <p>Anfangs sprichst du langsam und sauber. Mit der Zeit steigerst du das Tempo, ohne die Takte zu verkürzen. Sprich laut mit den Hörübungen mit. Das trainiert Rhythmus und Aussprache am besten.</p></div>`;
+  $$("[data-say]", mount).forEach(el => { el.onclick = () => speak(el.dataset.say); });
+}
+
+function renderDictionary(mount){
+  mount.innerHTML = `
+    <h2>Wörterbuch</h2>
+    <div class="actions" style="margin-bottom:.5rem;"><button onclick="goto('nachschlagen')">Zurück</button></div>
+    <div class="card">
+      <input id="dictQ" type="search" placeholder="Suchen: Deutsch, Romaji, Kana oder Kanji" autocomplete="off" style="width:100%;">
+      <div id="dictOut" style="margin-top:.6rem;"></div>
+    </div>`;
+  const out = $("#dictOut"), inp = $("#dictQ");
+  inp.oninput = () => renderDictResults(out, inp.value);
+  renderDictResults(out, "");
+  inp.focus();
+}
+
+function renderNachschlagen(mount, parts){
+  if (parts[0] === "woerter") return renderDictionary(mount);
+  if (parts[0] === "verben") return renderVerbTable(mount);
+  if (parts[0] === "aussprache") return renderPronunciation(mount);
+  const nTok = Object.values(TOK).filter(t => t.kind !== "punct").length;
+  mount.innerHTML = `
+    <h2>Nachschlagen</h2>
+    <div class="card"><h3>Wörterbuch</h3>
+      <p class="hint">Suche alle ${nTok} Wörter und ${KANJI_DB.reduce((a, g) => a + g.items.length, 0)} Kanji des Weges, auf Deutsch, in Romaji, Kana oder Kanji.</p>
+      <div class="actions"><button class="primary" onclick="goto('nachschlagen/woerter')">Wörterbuch öffnen</button></div></div>
+    <div class="card" style="margin-top:.75rem;"><h3>Verbformen</h3>
+      <p class="hint">Eine Tabelle aller Verben mit ます-, ない-, た-, て-Form, Möglichkeit, Passiv, Kausativ und mehr.</p>
+      <div class="actions"><button onclick="goto('nachschlagen/verben')">Verbtabelle öffnen</button></div></div>
+    <div class="card" style="margin-top:.75rem;"><h3>Aussprache</h3>
+      <p class="hint">Vokale, Konsonanten, Rhythmus, Betonung und lange Vokale, mit Hörbeispielen.</p>
+      <div class="actions"><button onclick="goto('nachschlagen/aussprache')">Aussprache öffnen</button></div></div>
+    <div class="card" style="margin-top:.75rem;"><h3>Weitere Nachschlagewerke</h3>
+      <div class="actions"><button onclick="goto('grammar')">Grammatik</button><button onclick="goto('kana')">Kana-Tabelle</button><button onclick="goto('kanji')">Kanji</button></div></div>`;
 }
 
 // ---------- Prüfskript: kommt in einer Lektion etwas vor, das noch nicht gelehrt wurde? ----------
