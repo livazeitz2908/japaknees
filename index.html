@@ -4125,7 +4125,7 @@ const m = $("#app");
   if (state.route === "stats") return renderStats(m);
   if (state.route === "levels") return renderLevels(m);
   if (state.route === "path") return renderPath(m);
-  if (state.route === "review") return renderReview(m);
+  if (state.route === "review" || state.route.startsWith("review/")) return renderReview(m, state.route.split("/").slice(1));
   if (state.route === "weg") return renderWeg(m);
   if (state.route.startsWith("lektion/")) return renderLektion(m, state.route.split("/").slice(1));
   if (state.route.startsWith("pruefung/")) return renderPruefung(m, state.route.split("/").slice(1));
@@ -7794,7 +7794,7 @@ function renderPath(mount){
       <h3>Wiederholung</h3>
       ${sr.due
         ? `<p><strong>${sr.due} ${sr.due === 1 ? "Karte ist" : "Karten sind"} fällig.</strong><br><span class="hint">Kurz wiederholen, bevor du Neues lernst.</span></p>
-           <div class="actions"><button class="primary" onclick="goto('review')">Jetzt wiederholen</button></div>`
+           <div class="actions"><button class="primary" onclick="goto('review/due')">Jetzt wiederholen</button></div>`
         : `<p>${sr.total ? "Heute ist nichts fällig. 🎉" : "Noch nichts zu wiederholen. Nach den ersten Tests erscheinen hier deine Karten."}</p>
            ${sr.total ? `<p class="hint">${sr.total} Karten im System, ${sr.solid} schon sicher.</p>` : ""}`}
     </div>
@@ -8096,35 +8096,129 @@ function srsQuestion(item){
   return null;
 }
 
-function renderReview(mount){
+// Gelerntes aus abgeschlossenen Weg-Lektionen, nach Einheit
+function learnedByUnit(){
+  const out = [];
+  WEG_UNITS.forEach(u => {
+    const toks = [], kana = [];
+    u.lessons.forEach(l => {
+      if (!lessonDone(l.id)) return;
+      if (l.type === "kana") (l.chars || []).forEach(c => kana.push(c));
+      (l.teach || []).forEach(id => {
+        const t = TOK[id];
+        if (t && !["punct", "part", "aux", "suffix"].includes(t.kind) && !toks.some(x => x.id === id)) toks.push(t);
+      });
+    });
+    if (toks.length || kana.length) out.push({ unit: u, toks, kana });
+  });
+  return out;
+}
+function freeQuestions(groups, n){
+  const items = [];
+  groups.forEach(g => {
+    g.toks.forEach(t => items.push({ t: "tok", d: { id: t.id } }));
+    g.kana.forEach(([k, r]) => items.push({ t: "kana", d: { k, r } }));
+  });
+  return shuffle(items).slice(0, n).map(srsQuestion).filter(Boolean);
+}
+
+function renderReview(mount, sub){
+  sub = sub || [];
+  if (sub[0] === "due") return renderReviewDue(mount);
+  if (sub[0] === "free") return renderReviewFree(mount, sub[1]);
+  if (sub[0] === "list") return renderWordList(mount);
+  const st = srsStats(), nxt = srsNextDue(), groups = learnedByUnit();
+  const count = g => g.toks.length + g.kana.length;
+  const total = groups.reduce((a, g) => a + count(g), 0);
+  mount.innerHTML = `
+    <h2>Wiederholen und Üben</h2>
+    <div class="card">
+      <h3>Fällige Karten</h3>
+      ${st.due
+        ? `<p><strong>${st.due} ${st.due === 1 ? "Karte ist" : "Karten sind"} fällig.</strong></p>
+           <div class="actions"><button class="primary" onclick="goto('review/due')">Jetzt wiederholen</button></div>`
+        : `<p>${st.total ? "Heute ist nichts fällig. 🎉" : "Hier erscheinen Zeichen, Wörter und Vokabeln, sobald du Lektionen oder Tests gemacht hast."}</p>
+           ${st.total ? `<p class="hint">${st.total} Karten im System, ${st.solid} davon schon sicher. Die nächste Karte ist ${srsWhen(nxt)} dran.</p>` : ""}`}
+    </div>
+    <div class="card" style="margin-top:.75rem;">
+      <h3>Frei üben</h3>
+      ${total
+        ? `<p class="hint">Hier übst du alles, was du im Weg schon gelernt hast, unabhängig vom Zeitplan.</p>
+           <div class="actions"><button class="primary" onclick="goto('review/free/all')">Alles bisher Gelernte (${total})</button></div>
+           <div class="actions" style="margin-top:.5rem;">${groups.map(g => {
+             const o = WEG_OUTLINE[g.unit.id] || ["Einheit " + g.unit.id];
+             return `<button onclick="goto('review/free/${g.unit.id}')">Einheit ${g.unit.id} · ${escapeHTML(o[0])} (${count(g)})</button>`;
+           }).join("")}</div>`
+        : `<p class="hint">Sobald du die erste Lektion im Weg geschafft hast, kannst du es hier frei üben.</p>`}
+    </div>
+    <div class="card" style="margin-top:.75rem;">
+      <h3>Wortliste</h3>
+      <p class="hint">Alle Wörter und Zeichen aus geschafften Lektionen zum Nachschauen und Anhören.</p>
+      <div class="actions"><button onclick="goto('review/list')"${total ? "" : " disabled"}>Wortliste öffnen</button></div>
+    </div>`;
+}
+
+function renderReviewDue(mount){
   const due = srsDueItems().slice(0, SRS_SESSION);
   const qs = due.map(srsQuestion).filter(Boolean);
-  if (!qs.length) {
-    const st = srsStats();
-    const nxt = srsNextDue();
-    mount.innerHTML = `
-      <h2>Wiederholung</h2>
-      <div class="card">
-        <p>${st.total ? "Heute ist nichts fällig. 🎉" : "Hier erscheinen Zeichen, Wörter und Vokabeln, sobald du Tests oder Übungen gemacht hast."}</p>
-        ${st.total ? `<p class="hint">${st.total} Karten im System, ${st.solid} davon schon sicher. Die nächste Karte ist ${srsWhen(nxt)} dran.</p>` : ""}
-        <div class="actions"><button class="primary" onclick="goto('path')">Zum Lernpfad</button></div>
-      </div>`;
-    return;
-  }
+  if (!qs.length) { goto("review"); return; }
   runQuizSession(mount, {
     title: "Wiederholung",
     questions: qs,
     graded: false,
     onFinish: () => dailyAdd(1),
     ungradedNote: "Deine Karten wurden neu eingeordnet: Richtiges kommt später wieder, Falsches früher.",
-    backRoute: "path",
+    backRoute: "review",
     buttons: () => {
       const more = srsDueItems().length;
-      const b = [{ label: "Zum Lernpfad", route: "path", primary: !more }];
-      if (more) b.unshift({ label: `Weiter (${more} fällig)`, route: "review", primary: true });
+      const b = [{ label: "Zur Übersicht", route: "review", primary: !more }];
+      if (more) b.unshift({ label: `Weiter (${more} fällig)`, route: "review/due", primary: true });
       return b;
     }
   });
+}
+
+function renderReviewFree(mount, which){
+  let groups = learnedByUnit();
+  if (which && which !== "all") groups = groups.filter(g => String(g.unit.id) === which);
+  const qs = freeQuestions(groups, SRS_SESSION);
+  if (!qs.length) { goto("review"); return; }
+  runQuizSession(mount, {
+    title: which && which !== "all" ? `Üben: Einheit ${which}` : "Üben: alles bisher Gelernte",
+    questions: qs,
+    graded: false,
+    ungradedNote: "Gut geübt! Deine Antworten fließen auch in den Wiederholungsplan ein.",
+    backRoute: "review",
+    buttons: () => [{ label: "Noch eine Runde", route: "review/free/" + (which || "all"), primary: true }, { label: "Zur Übersicht", route: "review" }]
+  });
+}
+
+function renderWordList(mount){
+  const groups = learnedByUnit();
+  if (!groups.length) { goto("review"); return; }
+  mount.innerHTML = `
+    <h2>Wortliste</h2>
+    <div class="actions" style="margin-bottom:.5rem;">
+      <button onclick="goto('review')">Zurück</button>
+      <label>Schrift
+        <select id="wlScript">
+          <option value="auto"${scriptMode() === "auto" ? " selected" : ""}>Auto (Romaji-Hilfe)</option>
+          <option value="romaji"${scriptMode() === "romaji" ? " selected" : ""}>Nur Romaji</option>
+          <option value="kana"${scriptMode() === "kana" ? " selected" : ""}>Nur Kana</option>
+        </select></label>
+    </div>
+    ${groups.map(g => {
+      const o = WEG_OUTLINE[g.unit.id] || ["Einheit " + g.unit.id];
+      return `<div class="card" style="margin-bottom:.75rem;">
+        <h3>Einheit ${g.unit.id} · ${escapeHTML(o[0])}</h3>
+        ${g.kana.length ? `<div class="hint">Zeichen: ${g.kana.map(([k, r]) => `<button type="button" class="linklike" data-say="${escapeHTML(k)}" title="${escapeHTML(r)}">${escapeHTML(k)}</button>`).join(" ")}</div>` : ""}
+        ${g.toks.map(t => `
+          <div class="intro-ex"><button type="button" class="mini" data-say="${escapeHTML(t.ja)}" aria-label="Vorlesen" style="width:auto;">🔊</button>
+            <div><div class="intro-ja">${wegHtml([t.id])}</div><div class="hint">${escapeHTML(t.de)}</div></div></div>`).join("")}
+      </div>`;
+    }).join("")}`;
+  $$("[data-say]", mount).forEach(el => { el.onclick = () => speak(el.dataset.say); });
+  $("#wlScript").onchange = (e) => { setScriptMode(e.target.value); renderWordList(mount); };
 }
 
 // =========================================================
@@ -9276,7 +9370,7 @@ function renderWeg(mount){
              : `<p>Alle bisher verfügbaren Lektionen sind geschafft. Neue Einheiten folgen.</p>`}
     </div>
     ${sectionHtml}
-    <div class="actions" style="margin-top:1rem;"><button onclick="goto('path')">Zum bisherigen Lernpfad</button></div>`;
+    <div class="actions" style="margin-top:1rem;"><button onclick="goto('review')">Wiederholen und Üben</button><button onclick="goto('path')">Zum bisherigen Lernpfad</button></div>`;
   const wgResume = $("#wgResume"); if (wgResume) wgResume.onclick = () => { resumeListening(); renderWeg(mount); };
   $("#wgGoal").onchange = (e) => { setDailyGoal(e.target.value); renderWeg(mount); };
   $("#wgScript").onchange = (e) => { setScriptMode(e.target.value); renderWeg(mount); };
