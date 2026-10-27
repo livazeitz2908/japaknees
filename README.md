@@ -14,7 +14,7 @@ Die Startseite ist der **Weg**: 47 Einheiten in 8 Abschnitten, von den ersten Ka
 ## Weitere Bereiche
 - **Wiederholen und Üben:** fällige Karten (Leitner-System), freies Üben nach Einheit, Wortliste
 - **Schreibübung:** gelernte Wörter oder eigene Listen auf dem Canvas schreiben
-- **Nachschlagen:** Wörterbuch über alle Wörter und Kanji, Verbformen-Tabelle, Aussprache (Branch `claude/nachschlagen`)
+- **Nachschlagen:** Wörterbuch über alle Wörter und Kanji, Verbformen-Tabelle, Aussprache
 - **Kanji, Grammatik (zum Nachschlagen), Lesegeschichten, Chats, Spiele, eigene Sets**
 - „Level-Modus (alt)“ und „Lernpfad (alt)“ bleiben als alte Ansichten erhalten
 
