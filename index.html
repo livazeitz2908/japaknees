@@ -2183,6 +2183,8 @@ nav {
 .feedback-bar.bad { background:rgba(233,138,165,.3); border-color:var(--lavender); }
 .feedback-bar button { width:auto; }
 .w-ja, .w-ro-main, .w-de { display:block; }
+.w-num { display:block; font-size:1.3em; }
+button.linklike { background:none; border:0; box-shadow:none; width:auto; padding:.2rem .4rem; color:var(--muted); text-decoration:underline; font-size:.9rem; }
 .w-ro, .w-ja-sub { display:block; font-size:.62em; color:var(--muted); font-weight:400; }
 .w-de-sub { display:block; font-size:.55em; color:var(--muted); margin-top:.3rem; }
 .w-opt.sel { outline:3px solid var(--mizu); }
@@ -2215,8 +2217,8 @@ nav {
   </button>
 
   <nav>
-    <button data-route="weg">Weg (neu)</button>
-    <button data-route="path">Lernpfad</button>
+    <button data-route="weg">Weg</button>
+    <button data-route="path">Lernpfad (alt)</button>
     <button data-route="review">Wiederholen</button>
     <button data-route="home">Meine Sets</button>
     <button data-route="new-set">Neues Set</button>
@@ -2276,7 +2278,7 @@ const $ = (sel, el=document) => el.querySelector(sel);
 const $$ = (sel, el=document) => [...el.querySelectorAll(sel)];
 
 // -------- Routing --------
-const state = { route: "path", sets: [], search: "" };
+const state = { route: "weg", sets: [], search: "" };
 
 // Navigation-Buttons (Routen) + Burger-Menü
 $$("nav [data-route]").forEach(b => b.addEventListener("click", () => {
@@ -4124,6 +4126,7 @@ const m = $("#app");
   if (state.route === "review") return renderReview(m);
   if (state.route === "weg") return renderWeg(m);
   if (state.route.startsWith("lektion/")) return renderLektion(m, state.route.split("/").slice(1));
+  if (state.route.startsWith("pruefung/")) return renderPruefung(m, state.route.split("/").slice(1));
   if (state.route === "kanji" || state.route.startsWith("kanji/")) return renderKanjiRoute(m, state.route.split("/").slice(1));
   if (state.route === "kana" || state.route.startsWith("kana/")) return renderKanaRoute(m, state.route.split("/").slice(1));
   if (state.route.startsWith("level/test/")) return renderLevelTest(m, state.route.split("/")[2]);
@@ -7773,8 +7776,8 @@ function renderPath(mount){
   mount.innerHTML = `
     <h2>Lernpfad</h2>
     <div class="card">
-      <h3>Neu: Der Weg</h3>
-      <p>Kurze Lektionen in einer festen, logischen Reihenfolge, mit Tagesziel und Serie. Der Weg wird Schritt für Schritt ausgebaut und ersetzt später diesen Lernpfad.</p>
+      <h3>Der neue Weg</h3>
+      <p>Kurze Lektionen in einer festen, logischen Reihenfolge, mit Tagesziel und Serie. Der Weg ist jetzt die Startseite und wird Schritt für Schritt ausgebaut. Dieser alte Lernpfad bleibt, bis der Weg alles abdeckt.</p>
       <div class="actions"><button class="primary" onclick="goto('weg')">Zum Weg</button></div>
     </div>
     <div class="card" style="margin-top:.75rem;">
@@ -8081,7 +8084,7 @@ function srsQuestion(item){
     let pool = learnedTokens().filter(x => x.kind !== "punct" && x.kind !== "part" && x.kind !== "aux" && x.kind !== "suffix");
     if (pool.length < 4) pool = Object.values(TOK).filter(x => x.kind === "word" || x.kind === "phrase");
     if (dir) return { prompt: t.ja, promptHtml: () => wegHtml([t.id]), big: true, say: t.ja, sub: "Was bedeutet das?", answer: t.de,
-      options: shuffle([t.de, ...pickDistractors(t.de, pool.map(x => x.de), 3)]), srs: tokSrs(t) };
+      options: shuffle([t.de, ...pickDistractors(t.de, pool.filter(x => x.ja !== t.ja).map(x => x.de), 3)]), srs: tokSrs(t) };
     return { prompt: t.de, big: false, sub: "Wie sagt man das auf Japanisch?", answer: t.ja,
       options: shuffle([t.ja, ...pickDistractors(t.ja, pool.map(x => x.ja), 3)]), srs: tokSrs(t) };
   }
@@ -8573,7 +8576,7 @@ const WEG_UNITS = [
 
 // Alle geplanten Einheiten (Inhalte folgen in den nächsten Etappen)
 const WEG_SECTIONS = [
-  { title: "Abschnitt 1 · Ankommen", units: [1, 2, 3, 4, 5], exam: "Prüfung 1" },
+  { title: "Abschnitt 1 · Ankommen", units: [1, 2, 3, 4, 5], exam: "Prüfung 1", examId: "exam1" },
   { title: "Abschnitt 2 · Alltag", units: [6, 7, 8, 9, 10, 11], exam: "Prüfung 2" },
   { title: "Abschnitt 3 · Unterwegs", units: [12, 13, 14, 15, 16, 17], exam: "Prüfung 3" },
   { title: "Abschnitt 4 · Erleben", units: [18, 19, 20, 21, 22, 23], exam: "Abschlussprüfung N5" },
@@ -8647,7 +8650,11 @@ function unitDone(unitId){
 function unitUnlocked(unitId){
   if (!wegUnit(unitId)) return false;
   if (unitId === 1) return true;
-  return unitDone(unitId - 1);
+  if (!unitDone(unitId - 1)) return false;
+  // Ist die Vorgängereinheit die letzte ihres Abschnitts, muss die Prüfung bestanden sein
+  const sec = sectionOfUnit(unitId - 1);
+  if (sec && sec.examId && sec.units[sec.units.length - 1] === unitId - 1) return examDone(sec);
+  return true;
 }
 function lessonUnlocked(unitId, idx){
   if (!unitUnlocked(unitId)) return false;
@@ -8657,12 +8664,27 @@ function lessonUnlocked(unitId, idx){
 // Nächste offene Lektion auf dem Weg
 function wegNext(){
   for (const u of WEG_UNITS) {
+    // Beginnt ein neuer Abschnitt und die Prüfung des vorigen steht noch aus, kommt zuerst die Prüfung
+    const sec = sectionOfUnit(u.id);
+    if (sec && sec.units[0] === u.id) {
+      const prev = WEG_SECTIONS[WEG_SECTIONS.indexOf(sec) - 1];
+      if (prev && examAvailable(prev) && !examDone(prev)) return { exam: prev };
+    }
     for (let i = 0; i < u.lessons.length; i++) {
       if (!lessonDone(u.lessons[i].id)) return lessonUnlocked(u.id, i) ? { unit: u, idx: i, lesson: u.lessons[i] } : null;
     }
   }
-  return null;
+  const last = WEG_SECTIONS.find(sec => examAvailable(sec) && !examDone(sec));
+  return last ? { exam: last } : null;
 }
+
+// ---------- Hörübungen pausieren ("Kann gerade nicht hören") ----------
+const NOLISTEN_KEY = "quizcards_nolisten_until";
+function listenPausedUntil(){ const v = Number(lsGet(NOLISTEN_KEY)); return v > Date.now() ? v : 0; }
+function pauseListening(){ lsSet(NOLISTEN_KEY, String(Date.now() + 60 * 60 * 1000)); }
+function resumeListening(){ lsSet(NOLISTEN_KEY, "0"); }
+function dropHear(list){ return listenPausedUntil() ? list.filter(e => e.kind !== "hear") : list; }
+function clockTime(ts){ const d = new Date(ts); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
 
 // ---------- Tagesziel und Serie ----------
 function dayKey(d){
@@ -8720,10 +8742,11 @@ function wegJoin(toks, field){
     const txt = t[field];
     if (i === 0) { out += txt; return; }
     const prev = toks[i - 1];
+    const numRun = t.kind === "num" && prev.kind === "num";   // Zahlen werden ohne Lücke zusammengesetzt
     if (field === "ja") {
-      if (t.attach || prev.kind === "punct") out += txt; else out += " " + txt;
+      if (t.attach || prev.kind === "punct" || numRun) out += txt; else out += " " + txt;
     } else {
-      if (t.kind === "punct" || t.kind === "suffix") out += txt; else out += " " + txt;
+      if (t.kind === "punct" || t.kind === "suffix" || numRun) out += txt; else out += " " + txt;
     }
   });
   return out;
@@ -8770,7 +8793,7 @@ function uniqueJa(list){
 function exMc(o){ return Object.assign({ kind: "mc", big: true, options: [], optionsBig: false }, o); }
 
 function exTokJa2De(t, pool){
-  const wrong = pickDistractors(t.de, pool.map(x => x.de), 3);
+  const wrong = pickDistractors(t.de, pool.filter(x => x.ja !== t.ja).map(x => x.de), 3);
   return exMc({ promptHtml: () => wegHtml([t.id]), sub: "Was bedeutet das?", say: t.ja,
     options: shuffle([t.de, ...wrong]).map(d => ({ k: d, h: wegEsc(d) })), answerK: t.de, srs: tokSrs(t) });
 }
@@ -8879,11 +8902,14 @@ function lessonCore(unit, idx){
   const poolAll = introducedTokens(unit.id, idx, false);
   const teachToks = (lesson.teach || []).map(id => TOK[id]).filter(Boolean);
   const exs = [];
+  if (lesson.type === "numgen" || lesson.type === "phone" || (lesson.type === "words" && teachToks.length && teachToks.every(t => t.kind === "num"))) {
+    return numberLessonCore(lesson, unit, idx);
+  }
   if (lesson.type === "kana") {
     const kp = kanaPoolFor(lesson, unit.id, idx);
     exs.push({ kind: "intro", title: `Neue Zeichen: ${lesson.title}`,
       cards: lesson.chars.map(([k, r]) => ({ big: wegEsc(k), sub: wegEsc(r), say: k })),
-      note: "Tippe ein Zeichen an, um es zu hören." });
+      note: lesson.note || "Tippe ein Zeichen an, um es zu hören." });
     const body = [];
     lesson.chars.forEach(([k, r]) => { body.push(exKanaRead(k, r, kp)); body.push(exKanaFind(k, r, kp)); });
     shuffle(lesson.chars).slice(0, 2).forEach(([k, r]) => body.push(exKanaHear(k, r, kp)));
@@ -8892,7 +8918,7 @@ function lessonCore(unit, idx){
   } else if (lesson.type === "words") {
     exs.push({ kind: "intro", title: lesson.title,
       cards: teachToks.map(t => ({ big: () => wegHtml([t.id], { noSub: true }), sub: wegEsc(t.de), say: t.ja })),
-      note: lesson.reading ? "Lies die Wörter laut mit. Die Kana kennst du schon." : "Tippe ein Wort an, um es zu hören." });
+      note: lesson.note || (lesson.reading ? "Lies die Wörter laut mit. Die Kana kennst du schon." : "Tippe ein Wort an, um es zu hören.") });
     const body = [];
     teachToks.forEach(t => { body.push(exTokJa2De(t, pool)); body.push(exTokDe2Ja(t, pool)); });
     shuffle(teachToks).slice(0, 3).forEach(t => body.push(exTokHear(t, pool)));
@@ -8931,9 +8957,9 @@ function lessonExercises(unit, idx){
   if (lesson.type === "check") {
     const all = [];
     unit.lessons.slice(0, idx).forEach((l, i) => { if (l.type !== "check") lessonCore(unit, i).forEach(e => { if (e.kind !== "intro") all.push(e); }); });
-    return shuffle(all).slice(0, 14);
+    return dropHear(shuffle(all)).slice(0, 14);
   }
-  const core = lessonCore(unit, idx);
+  const core = dropHear(lessonCore(unit, idx));
   const review = reviewExercises(unit.id, idx, 3, lesson);
   const intro = core.filter(e => e.kind === "intro");
   const body = core.filter(e => e.kind !== "intro");
@@ -8946,7 +8972,7 @@ function lessonExercises(unit, idx){
 function playLesson(mount, cfg){
   const exs = cfg.exs;
   const queue = exs.slice();
-  const scored = exs.filter(e => e.kind !== "intro").length || 1;
+  let scored = exs.filter(e => e.kind !== "intro").length || 1;
   let pos = 0, right = 0;
   const test = !!window.__wegTest;
 
@@ -8963,6 +8989,7 @@ function playLesson(mount, cfg){
             <option value="kana"${scriptMode() === "kana" ? " selected" : ""}>Kana</option>
           </select>
         </div>
+        ${listenPausedUntil() ? `<div class="hint" style="margin-bottom:.4rem;">🔇 Hörübungen sind pausiert (bis ${clockTime(listenPausedUntil())}). Auf dem Weg kannst du sie wieder einschalten.</div>` : ""}
         <div class="card lesson-card" id="lBody">${inner}</div>
         <div id="lFoot" class="lesson-foot"></div>
       </div>`;
@@ -8998,6 +9025,17 @@ function playLesson(mount, cfg){
     advance();
   }
 
+  // Alle Hörübungen ab hier aus der Lektion nehmen: nicht gewertet, auch keine Wiederholung für das Wiederholungssystem
+  function skipListening(){
+    pauseListening();
+    let removed = 0;
+    for (let i = queue.length - 1; i >= pos; i--) {
+      if (queue[i].kind === "hear") { if (!queue[i].retry) removed++; queue.splice(i, 1); }
+    }
+    scored = Math.max(1, scored - removed);
+    show();
+  }
+
   function showIntro(ex){
     let inner = `<h3>${wegEsc(ex.title || "")}</h3>`;
     if (ex.explain) inner += `<p>${ex.explain}</p>`;
@@ -9027,7 +9065,10 @@ function playLesson(mount, cfg){
     inner += `<div class="hint" style="text-align:center;">${wegEsc(ex.sub || "")}${ex.review ? " · Wiederholung" : ""}</div>`;
     if (!isHear && ex.say) inner += `<div style="text-align:center; margin-top:.4rem;"><button type="button" class="mini" id="lSay" aria-label="Vorlesen" style="width:auto;">🔊</button></div>`;
     inner += `<div class="kana-opts${ex.optionsBig ? " kana-opts-big" : ""}" id="lOpts"></div>`;
+    if (isHear) inner += `<div style="text-align:center; margin-top:.7rem;"><button type="button" class="linklike" id="lNoHear">🔇 Kann gerade nicht hören</button></div>`;
     chrome(inner);
+    const noHear = $("#lNoHear");
+    if (noHear) noHear.onclick = () => skipListening();
     const say = $("#lSay"); if (say) say.onclick = () => speak(ex.say);
     const hear = $("#lHear"); if (hear) { hear.onclick = () => speak(ex.say); setTimeout(() => speak(ex.say), 250); }
     const box = $("#lOpts");
@@ -9076,7 +9117,7 @@ function playLesson(mount, cfg){
   }
 
   function showBuild(ex, firstTry){
-    chrome(`<div class="hint" style="text-align:center;">Übersetze in Japanisch</div>
+    chrome(`<div class="hint" style="text-align:center;">${wegEsc(ex.hint || "Übersetze in Japanisch")}</div>
       <div class="quiz-prompt"><span class="w-de">${wegEsc(ex.de)}</span></div>
       <div class="chips-answer" id="bAns"></div>
       <div class="chips-bank" id="bBank"></div>`);
@@ -9152,7 +9193,17 @@ function renderLektion(mount, parts){
 }
 
 function wegNodeIcon(l){
-  return ({ kana: "あ", words: "語", grammar: "文", dialog: "話", check: "★" })[l.type] || "•";
+  return ({ kana: "あ", words: "語", grammar: "文", dialog: "話", check: "★", numgen: "数", phone: "電" })[l.type] || "•";
+}
+
+function examCardHtml(sec){
+  if (!sec.examId) return `<div class="card weg-unit step-locked"><div class="hint">🔒 ${wegEsc(sec.exam)} (folgt)</div></div>`;
+  const n = sec.examId.slice(4);
+  if (examDone(sec)) return `<div class="card weg-unit"><b>✓ ${wegEsc(sec.exam)}</b> <span class="badge">Bestanden · ${lessonBest(sec.examId)} %</span>
+    <div class="actions" style="margin-top:.4rem;"><button onclick="goto('pruefung/${n}')">Wiederholen</button></div></div>`;
+  if (examAvailable(sec)) return `<div class="card weg-unit"><b>${wegEsc(sec.exam)}</b><div class="hint">Alle Einheiten dieses Abschnitts sind geschafft. Zeig, was du kannst (mind. ${PASS_PCT} %).</div>
+    <div class="actions" style="margin-top:.4rem;"><button class="primary" onclick="goto('pruefung/${n}')">Prüfung starten</button></div></div>`;
+  return `<div class="card weg-unit step-locked"><div class="hint">🔒 ${wegEsc(sec.exam)}: Schließe zuerst alle Einheiten des Abschnitts ab.</div></div>`;
 }
 
 function renderWeg(mount){
@@ -9174,7 +9225,7 @@ function renderWeg(mount){
           <div class="weg-head"><b>Einheit ${uid} · ${wegEsc(o[0])}</b><div class="hint">${wegEsc(o[1])}</div></div>
           <div class="weg-nodes">
             ${u.lessons.map((l, i) => {
-              const done = lessonDone(l.id), cur = next && next.lesson.id === l.id, unlocked = lessonUnlocked(uid, i);
+              const done = lessonDone(l.id), cur = !!(next && next.lesson && next.lesson.id === l.id), unlocked = lessonUnlocked(uid, i);
               const cls = done ? "done" : (cur ? "current" : "locked");
               const best = lessonBest(l.id);
               return `
@@ -9186,10 +9237,10 @@ function renderWeg(mount){
           </div>
         </div>`;
     }).join("")}
-    <div class="card weg-unit step-locked"><div class="hint">🔒 ${wegEsc(sec.exam)} (folgt)</div></div>
+    ${examCardHtml(sec)}
   `).join("");
   mount.innerHTML = `
-    <h2>Weg <span class="badge">neu</span></h2>
+    <h2>Weg</h2>
     <div class="card weg-top">
       <div class="daily-row">
         <div class="daily-pill">🔥 <b>${streak}</b> ${streak === 1 ? "Tag" : "Tage"} Serie</div>
@@ -9207,11 +9258,16 @@ function renderWeg(mount){
             <option value="kana"${scriptMode() === "kana" ? " selected" : ""}>Nur Kana</option>
           </select></label>
       </div>
-      ${next ? `<div class="actions" style="margin-top:.5rem;"><button class="primary" onclick="goto('lektion/${next.unit.id}/${next.idx}')">Weiter: ${wegEsc(next.lesson.title)}</button></div>`
+      ${listenPausedUntil() ? `<div class="hint" style="margin-top:.6rem;">🔇 Hörübungen sind pausiert (bis ${clockTime(listenPausedUntil())}).
+        <button type="button" class="linklike" id="wgResume">Wieder einschalten</button></div>` : ""}
+      ${next ? (next.exam
+          ? `<div class="actions" style="margin-top:.5rem;"><button class="primary" onclick="goto('pruefung/${next.exam.examId.slice(4)}')">Weiter: ${wegEsc(next.exam.exam)}</button></div>`
+          : `<div class="actions" style="margin-top:.5rem;"><button class="primary" onclick="goto('lektion/${next.unit.id}/${next.idx}')">Weiter: ${wegEsc(next.lesson.title)}</button></div>`)
              : `<p>Alle bisher verfügbaren Lektionen sind geschafft. Neue Einheiten folgen.</p>`}
     </div>
     ${sectionHtml}
     <div class="actions" style="margin-top:1rem;"><button onclick="goto('path')">Zum bisherigen Lernpfad</button></div>`;
+  const wgResume = $("#wgResume"); if (wgResume) wgResume.onclick = () => { resumeListening(); renderWeg(mount); };
   $("#wgGoal").onchange = (e) => { setDailyGoal(e.target.value); renderWeg(mount); };
   $("#wgScript").onchange = (e) => { setScriptMode(e.target.value); renderWeg(mount); };
 }
@@ -9233,7 +9289,8 @@ function checkCurriculum(){
     (l.sentences || []).forEach(s => { if (!s.de) problems.push(`${l.id}: Satz ohne Übersetzung`); used.push(...s.ids); });
     (l.lines || []).forEach(([who, s]) => { if (!s.de) problems.push(`${l.id}: Dialogzeile ohne Übersetzung`); used.push(...s.ids); });
     (l.scenes || []).forEach(([q, id]) => used.push(id));
-    if (l.type === "words" || l.type === "dialog" || l.type === "grammar") (l.teach || []).forEach(id => used.push(id));
+    (l.uses || []).forEach(id => used.push(id));
+    if (["words", "dialog", "grammar", "phone"].includes(l.type)) (l.teach || []).forEach(id => used.push(id));
     used.forEach(id => {
       const t = TOK[id];
       if (!t) { problems.push(`${l.id}: Baustein ${id} nicht definiert`); return; }
@@ -9243,10 +9300,327 @@ function checkCurriculum(){
       else if (!posLE(p, [u.id, li])) problems.push(`${l.id}: „${t.ja}“ (${id}) kommt vor, wird aber erst in Einheit ${p[0]}, Lektion ${p[1] + 1} gelehrt`);
     });
     if (l.type === "kana" && !(l.chars && l.chars.length)) problems.push(`${l.id}: Kana-Lektion ohne Zeichen`);
-    if (l.type === "grammar" && !(l.sentences && l.sentences.length >= 3)) problems.push(`${l.id}: weniger als 3 Beispielsätze`);
+    if ((l.type === "grammar" || l.type === "phone") && !(l.sentences && l.sentences.length >= 2)) problems.push(`${l.id}: weniger als 3 Beispielsätze`);
     if (l.type === "grammar" && l.focus && !l.sentences.some(s => s.ids.includes(l.focus))) problems.push(`${l.id}: Schwerpunkt „${l.focus}“ kommt in keinem Satz vor`);
   }));
   return problems;
+}
+
+// =========================================================
+// Weg, Etappe 2: Einheiten 3 bis 5 und Prüfung 1
+// =========================================================
+defTokens([
+  // Zahlen (Art "num": Zahlbausteine werden ohne Leerzeichen aneinandergehängt)
+  ["n0", "ゼロ", "zero", "null", "num"], ["n1", "いち", "ichi", "eins", "num"], ["n2", "に", "ni", "zwei", "num"],
+  ["n3", "さん", "san", "drei", "num"], ["n4", "よん", "yon", "vier", "num"], ["n5", "ご", "go", "fünf", "num"],
+  ["n6", "ろく", "roku", "sechs", "num"], ["n7", "なな", "nana", "sieben", "num"], ["n8", "はち", "hachi", "acht", "num"],
+  ["n9", "きゅう", "kyū", "neun", "num"], ["n10", "じゅう", "jū", "zehn", "num"],
+  ["sai", "さい", "-sai", "Jahre (Alter)", "suffix", true], ["nansai", "なんさい", "nansai", "wie alt"],
+  ["denwabangou", "でんわばんごう", "denwa bangō", "Telefonnummer"],
+  ["no", "の", "no", "(Partikel: von, Zugehörigkeit)", "part", true],
+  // Einheit 4: Familie
+  ["kazoku", "かぞく", "kazoku", "Familie"], ["chichi", "ちち", "chichi", "(mein) Vater"], ["haha", "はは", "haha", "(meine) Mutter"],
+  ["otousan", "おとうさん", "otōsan", "Vater (eines anderen)"], ["okaasan", "おかあさん", "okāsan", "Mutter (einer anderen)"],
+  ["ani", "あに", "ani", "(mein) älterer Bruder"], ["ane", "あね", "ane", "(meine) ältere Schwester"],
+  ["otouto", "おとうと", "otōto", "(mein) jüngerer Bruder"], ["imouto", "いもうと", "imōto", "(meine) jüngere Schwester"],
+  ["tomodachi", "ともだち", "tomodachi", "Freund/in"],
+  ["mo", "も", "mo", "auch", "part", true], ["to", "と", "to", "und", "part", true],
+  // Einheit 5: Dinge und Orte
+  ["hon", "ほん", "hon", "Buch"], ["kaban", "かばん", "kaban", "Tasche"], ["tokei", "とけい", "tokei", "Uhr"],
+  ["kasa", "かさ", "kasa", "Regenschirm"], ["kuruma", "くるま", "kuruma", "Auto"],
+  ["kore", "これ", "kore", "das hier"], ["sore", "それ", "sore", "das da"], ["are", "あれ", "are", "das dort drüben"],
+  ["kono", "この", "kono", "dieses … hier"], ["sono", "その", "sono", "dieses … da"], ["ano", "あの", "ano", "jenes … dort drüben"],
+  ["toire", "トイレ", "toire", "Toilette"], ["gakkou", "がっこう", "gakkō", "Schule"], ["ginkou", "ぎんこう", "ginkō", "Bank"],
+  ["byouin", "びょういん", "byōin", "Krankenhaus"],
+  ["koko", "ここ", "koko", "hier"], ["soko", "そこ", "soko", "dort (bei dir)"], ["asoko", "あそこ", "asoko", "da drüben"], ["doko", "どこ", "doko", "wo"]
+]);
+["n0", "n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "n9"].forEach((id, i) => { TOK[id].val = i; TOK[id].dg = String(i); });
+TOK.n10.val = 10; TOK.n10.dg = "10";
+
+WEG_UNITS.push(
+  { id: 3, lessons: [
+    { id: "u3l1", type: "kana", title: "な-Reihe", script: "hiragana",
+      chars: [["な","na"],["に","ni"],["ぬ","nu"],["ね","ne"],["の","no"]] },
+    { id: "u3l2", type: "kana", title: "は-Reihe", script: "hiragana",
+      chars: [["は","ha"],["ひ","hi"],["ふ","fu"],["へ","he"],["ほ","ho"]],
+      note: "Achtung: Als Partikel wird は „wa“ gelesen (わたしは), へ wird dann „e“. ふ klingt zwischen f und h." },
+    { id: "u3l3", type: "words", title: "Zahlen 1–5", teach: ["n1","n2","n3","n4","n5"] },
+    { id: "u3l4", type: "words", title: "Zahlen 6–10", teach: ["n6","n7","n8","n9","n10"] },
+    { id: "u3l5", type: "numgen", title: "Zahlen 11–99", min: 11, max: 99, uses: ["n1","n2","n3","n4","n5","n6","n7","n8","n9","n10"],
+      explain: "Ab 11 werden die Zahlen aus Bausteinen gebaut: <b>10 = じゅう</b>, 11 = じゅう + いち, 20 = に + じゅう, 23 = に + じゅう + さん. Zehner und Einer folgen direkt aufeinander, ohne Pause. Das Muster gilt bis 99." },
+    { id: "u3l6", type: "grammar", title: "Alter: 〜さい", teach: ["sai","nansai"], focus: "sai", uses: ["n2","n3","n4","n5","n10"],
+      explain: "Das Alter sagst du mit der Zahl und <b>さい</b> („Jahre“). Gefragt wird mit <b>なんさい</b> („wie alt?“). Achtung: Bei 1, 8, 10 und 20 ändert sich die Aussprache (いっさい, はっさい, じゅっさい, はたち). Das lernst du später.",
+      sentences: [
+        wegS("Ich bin 23 Jahre alt.", "watashi wa n2 n10 n3 sai desu ."),
+        wegS("Wie alt bist du?", "anata wa nansai desu ka ."),
+        wegS("Herr Tanaka ist 42 Jahre alt.", "tanaka san wa n4 n10 n2 sai desu ."),
+        wegS("Hanna ist 25 Jahre alt.", "hanna san wa n2 n10 n5 sai desu .")
+      ] },
+    { id: "u3l7", type: "phone", title: "Telefonnummer", teach: ["n0","no","denwabangou"],
+      uses: ["n1","n2","n3","n4","n5","n6","n7","n8","n9"],
+      explain: "Telefonnummern liest man <b>Ziffer für Ziffer</b>. Die Null heißt meist ゼロ, die 4 wird よん, die 7 なな und die 9 きゅう gesprochen. Das kleine <b>の</b> verbindet die Gruppen (wie ein Bindestrich). Als Partikel heißt の „von“: <b>A の B</b> = „B von A“.",
+      sentences: [
+        wegS("Wie lautet deine Telefonnummer?", "anata no denwabangou wa nan desu ka ."),
+        wegS("Meine Telefonnummer ist 090-1234-5678.", "watashi no denwabangou wa n0 n9 n0 no n1 n2 n3 n4 no n5 n6 n7 n8 desu .")
+      ] },
+    { id: "u3l8", type: "dialog", title: "Wie alt bist du?", teach: [],
+      lines: [
+        ["Hanna", wegS("Wie heißen Sie?", "onamae wa nan desu ka .")],
+        ["Tanaka", wegS("Ich bin Tanaka.", "tanaka desu .")],
+        ["Hanna", wegS("Wie alt sind Sie, Herr Tanaka?", "tanaka san wa nansai desu ka .")],
+        ["Tanaka", wegS("Ich bin 35 Jahre alt.", "n3 n10 n5 sai desu .")],
+        ["Hanna", wegS("Wie lautet Ihre Telefonnummer?", "anata no denwabangou wa nan desu ka .")],
+        ["Tanaka", wegS("Sie ist 090-1234-5678.", "n0 n9 n0 no n1 n2 n3 n4 no n5 n6 n7 n8 desu .")]
+      ] },
+    { id: "u3l9", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 4, lessons: [
+    { id: "u4l1", type: "kana", title: "ま-Reihe", script: "hiragana",
+      chars: [["ま","ma"],["み","mi"],["む","mu"],["め","me"],["も","mo"]] },
+    { id: "u4l2", type: "kana", title: "や-Reihe", script: "hiragana",
+      chars: [["や","ya"],["ゆ","yu"],["よ","yo"]],
+      note: "Nur drei Zeichen: „yi“ und „ye“ gibt es im modernen Japanisch nicht." },
+    { id: "u4l3", type: "words", title: "Familie 1", teach: ["kazoku","chichi","haha","otousan","okaasan"],
+      note: "Über die eigene Familie sagst du ちち und はは. Über die Familie anderer sagst du おとうさん und おかあさん." },
+    { id: "u4l4", type: "words", title: "Familie 2", teach: ["ani","ane","otouto","imouto","tomodachi"] },
+    { id: "u4l5", type: "grammar", title: "の – Zugehörigkeit", teach: [], focus: "no",
+      explain: "Mit <b>の</b> verbindest du zwei Nomen: <b>A の B</b> = „B von A“ (oder „A’s B“). Das Bestimmende steht vorn: わたしの はは = „meine Mutter“.",
+      sentences: [
+        wegS("Meine Mutter ist Lehrerin.", "watashi no haha wa sensei desu ."),
+        wegS("Hannas jüngerer Bruder ist Student.", "hanna san no otouto wa gakusei desu ."),
+        wegS("Wie lautet dein Name?", "anata no onamae wa nan desu ka ."),
+        wegS("Mein Freund ist Büroangestellter.", "watashi no tomodachi wa kaishain desu .")
+      ] },
+    { id: "u4l6", type: "grammar", title: "も – auch", teach: ["mo"], focus: "mo",
+      explain: "<b>も</b> heißt „auch“ und ersetzt は: わたしも がくせいです = „Ich bin auch Student/in“. Man schreibt nicht は und も zusammen.",
+      sentences: [
+        wegS("Ich bin auch Student/in.", "watashi mo gakusei desu ."),
+        wegS("Herr Tanaka ist auch Lehrer.", "tanaka san mo sensei desu ."),
+        wegS("Meine Mutter ist auch Büroangestellte.", "haha mo kaishain desu ."),
+        wegS("Bist du auch Student/in?", "anata mo gakusei desu ka .")
+      ] },
+    { id: "u4l7", type: "grammar", title: "と – und", teach: ["to"], focus: "to",
+      explain: "<b>と</b> heißt „und“ und verbindet Nomen: ちちと はは = „Vater und Mutter“. Zwischen zwei Sätzen benutzt man es nicht.",
+      sentences: [
+        wegS("Mein Vater und meine Mutter sind Büroangestellte.", "chichi to haha wa kaishain desu ."),
+        wegS("Mein Freund und ich sind Studenten.", "watashi to tomodachi wa gakusei desu ."),
+        wegS("Herr Tanaka und Hanna sind Freunde.", "tanaka san to hanna san wa tomodachi desu ."),
+        wegS("Mein älterer Bruder und meine ältere Schwester sind Lehrer.", "ani to ane wa sensei desu .")
+      ] },
+    { id: "u4l8", type: "dialog", title: "Meine Familie", teach: [],
+      lines: [
+        ["Hanna", wegS("Ist Herrn Tanakas Vater Lehrer?", "tanaka san no otousan wa sensei desu ka .")],
+        ["Tanaka", wegS("Nein, er ist kein Lehrer. Er ist Büroangestellter.", "iie , sensei dewa arimasen . kaishain desu .")],
+        ["Hanna", wegS("Ist Ihre Mutter auch Büroangestellte?", "tanaka san no okaasan mo kaishain desu ka .")],
+        ["Tanaka", wegS("Ja, meine Mutter ist auch Büroangestellte.", "hai , haha mo kaishain desu .")],
+        ["Tanaka", wegS("Ist Hannas Vater auch Büroangestellter?", "hanna san no otousan mo kaishain desu ka .")],
+        ["Hanna", wegS("Nein, mein Vater ist Lehrer.", "iie , chichi wa sensei desu .")]
+      ] },
+    { id: "u4l9", type: "check", title: "Checkpoint" }
+  ] },
+  { id: 5, lessons: [
+    { id: "u5l1", type: "kana", title: "ら-Reihe", script: "hiragana",
+      chars: [["ら","ra"],["り","ri"],["る","ru"],["れ","re"],["ろ","ro"]],
+      note: "Das japanische r liegt zwischen r, l und d: Die Zungenspitze tippt nur kurz an den Gaumen." },
+    { id: "u5l2", type: "kana", title: "わ, を, ん", script: "hiragana",
+      chars: [["わ","wa"],["を","wo"],["ん","n"]],
+      note: "を wird „o“ gesprochen und kommt nur als Partikel vor. ん ist der einzige Laut ohne Vokal." },
+    { id: "u5l3", type: "words", title: "Dinge", teach: ["hon","kaban","tokei","kasa","kuruma"] },
+    { id: "u5l4", type: "grammar", title: "これ・それ・あれ", teach: ["kore","sore","are"], focus: "kore",
+      explain: "Drei Zeigewörter für Dinge: <b>これ</b> = das hier (nah bei mir), <b>それ</b> = das da (nah bei dir), <b>あれ</b> = das dort drüben (weit von uns beiden).",
+      sentences: [
+        wegS("Das (hier) ist ein Buch.", "kore wa hon desu ."),
+        wegS("Das (da) ist eine Tasche.", "sore wa kaban desu ."),
+        wegS("Das (dort drüben) ist ein Auto.", "are wa kuruma desu ."),
+        wegS("Was ist das (hier)?", "kore wa nan desu ka .")
+      ] },
+    { id: "u5l5", type: "grammar", title: "この・その・あの", teach: ["kono","sono","ano"], focus: "kono",
+      explain: "Steht ein Nomen dahinter, heißt es <b>この</b> (dieses hier), <b>その</b> (dieses da), <b>あの</b> (jenes dort drüben). これ steht allein, この braucht immer ein Nomen: この ほん, aber これは.",
+      sentences: [
+        wegS("Dieses Buch ist mein Buch.", "kono hon wa watashi no hon desu ."),
+        wegS("Diese Tasche (bei dir) ist Herrn Tanakas Tasche.", "sono kaban wa tanaka san no kaban desu ."),
+        wegS("Jenes Auto (dort drüben) ist das Auto des Lehrers.", "ano kuruma wa sensei no kuruma desu ."),
+        wegS("Ist dieser Schirm dein Schirm?", "kono kasa wa anata no kasa desu ka .")
+      ] },
+    { id: "u5l6", type: "words", title: "Orte", teach: ["toire","gakkou","ginkou","byouin"] },
+    { id: "u5l7", type: "grammar", title: "ここ・そこ・あそこ・どこ", teach: ["koko","soko","asoko","doko"], focus: "koko",
+      explain: "Vier Wörter für Orte: <b>ここ</b> (hier), <b>そこ</b> (dort bei dir), <b>あそこ</b> (da drüben) und <b>どこ</b> (wo?). Mit どこ fragst du: <b>X は どこですか</b> = „Wo ist X?“",
+      sentences: [
+        wegS("Hier ist die Schule.", "koko wa gakkou desu ."),
+        wegS("Die Toilette ist da drüben.", "toire wa asoko desu ."),
+        wegS("Wo ist die Bank?", "ginkou wa doko desu ka ."),
+        wegS("Der Bahnhof ist dort (bei dir).", "eki wa soko desu .")
+      ] },
+    { id: "u5l8", type: "dialog", title: "Wo ist …?", teach: [],
+      lines: [
+        ["Hanna", wegS("Entschuldigung. Wo ist die Toilette?", "sumimasen . toire wa doko desu ka .")],
+        ["Passant", wegS("Die Toilette ist da drüben.", "toire wa asoko desu .")],
+        ["Hanna", wegS("Vielen Dank.", "arigatou .")],
+        ["Passant", wegS("Gern geschehen.", "douitashimashite .")],
+        ["Hanna", wegS("Ist das dort drüben die Schule?", "are wa gakkou desu ka .")],
+        ["Passant", wegS("Ja, das dort drüben ist die Schule.", "hai , are wa gakkou desu .")]
+      ] },
+    { id: "u5l9", type: "check", title: "Checkpoint" }
+  ] }
+);
+
+// ---------- Zahlen und Telefonnummern ----------
+// Bausteine für 1 bis 99
+function numIds(v){
+  if (v === 10) return ["n10"];
+  const t = Math.floor(v / 10), u = v % 10, out = [];
+  if (t >= 1) { if (t > 1) out.push("n" + t); out.push("n10"); if (u > 0) out.push("n" + u); }
+  else out.push("n" + u);
+  return out;
+}
+function numDistractors(v, min, max, n){
+  const t = Math.floor(v / 10), u = v % 10;
+  const cands = [t >= 1 && u >= 1 ? u * 10 + t : null, v + 10, v - 10, v + 1, v - 1, v + 2, v - 2, min + Math.floor(Math.random() * (max - min + 1))];
+  const uniq = [];
+  shuffle(cands).forEach(c => { if (c != null && c >= min && c <= max && c !== v && !uniq.includes(c)) uniq.push(c); });
+  let guard = 0;
+  while (uniq.length < n && guard++ < 50) { const c = min + Math.floor(Math.random() * (max - min + 1)); if (c !== v && !uniq.includes(c)) uniq.push(c); }
+  return uniq.slice(0, n);
+}
+function numTok(v){ return v >= 0 && v <= 9 ? TOK["n" + v] : (v === 10 ? TOK.n10 : null); }
+function exNumA2J(v, min, max){
+  const opts = [v, ...numDistractors(v, min, max, 3)];
+  const t = v <= 10 ? numTok(v) : null;
+  return exMc({ big: true, promptHtml: `<span class="w-num">${v}</span>`, sub: "Wie sagt man die Zahl auf Japanisch?", say: wegJa(numIds(v)),
+    options: shuffle(opts).map(x => ({ k: String(x), h: () => wegHtml(numIds(x)) })), optionsBig: true, answerK: String(v), srs: t ? tokSrs(t) : null });
+}
+function exNumJ2A(v, min, max){
+  const opts = [v, ...numDistractors(v, min, max, 3)];
+  const t = v <= 10 ? numTok(v) : null;
+  return exMc({ big: true, promptHtml: () => wegHtml(numIds(v)), say: wegJa(numIds(v)), sub: "Welche Zahl ist das?",
+    options: shuffle(opts).map(x => ({ k: String(x), h: String(x) })), optionsBig: true, answerK: String(v), srs: t ? tokSrs(t) : null });
+}
+function exNumHear(v, min, max){
+  const opts = [v, ...numDistractors(v, min, max, 3)];
+  return { kind: "hear", say: wegJa(numIds(v)), sub: "Welche Zahl hörst du?",
+    options: shuffle(opts).map(x => ({ k: String(x), h: String(x) })), optionsBig: true, answerK: String(v) };
+}
+function exNumBuild(v, pool){
+  const ids = numIds(v);
+  const extra = shuffle(pool.filter(id => !ids.includes(id))).slice(0, 2);
+  return { kind: "build", hint: "Schreibe die Zahl auf Japanisch", de: String(v), answerIds: ids, fullIds: ids, bank: shuffle([...ids, ...extra]), say: wegJa(ids) };
+}
+function exNumMatch(ids){
+  return { kind: "match", pairs: ids.map(id => ({ id, l: TOK[id].dg, r: () => wegHtml([id], { noSub: true }), say: TOK[id].ja })) };
+}
+
+// Telefonnummern: Gruppen aus Ziffern, getrennt durch の
+function phoneGroups(local){
+  const g = n => Array.from({ length: n }, () => Math.floor(Math.random() * 10));
+  if (local) return [g(3), g(4)];
+  return [[0, [9, 8, 7][Math.floor(Math.random() * 3)], 0], g(4), g(4)];
+}
+function phoneIds(groups){ return groups.flatMap((grp, i) => (i ? ["no"] : []).concat(grp.map(d => "n" + d))); }
+function phoneStr(groups){ return groups.map(g => g.join("")).join("-"); }
+function phoneVariant(groups){
+  const c = groups.map(g => g.slice());
+  const gi = c.length > 1 ? 1 + Math.floor(Math.random() * (c.length - 1)) : 0;
+  const di = Math.floor(Math.random() * c[gi].length);
+  c[gi][di] = (c[gi][di] + 1 + Math.floor(Math.random() * 9)) % 10;
+  return c;
+}
+function phoneOptions(groups){
+  const opts = [phoneStr(groups)];
+  let guard = 0;
+  while (opts.length < 4 && guard++ < 50) { const s = phoneStr(phoneVariant(groups)); if (!opts.includes(s)) opts.push(s); }
+  return shuffle(opts);
+}
+function exPhoneHear(groups){
+  return { kind: "hear", say: wegJa(phoneIds(groups)), sub: "Welche Nummer hörst du?",
+    options: phoneOptions(groups).map(x => ({ k: x, h: x })), answerK: phoneStr(groups) };
+}
+function exPhoneRead(groups){
+  return exMc({ big: false, promptHtml: () => wegHtml(phoneIds(groups)), say: wegJa(phoneIds(groups)), sub: "Welche Nummer ist das?",
+    options: phoneOptions(groups).map(x => ({ k: x, h: x })), answerK: phoneStr(groups) });
+}
+function exPhoneBuild(groups, pool){
+  const ids = phoneIds(groups);
+  const extra = shuffle(pool.filter(id => !ids.includes(id))).slice(0, 2);
+  return { kind: "build", hint: "Schreibe die Nummer auf Japanisch", de: phoneStr(groups), answerIds: ids, fullIds: ids, bank: shuffle([...ids, ...extra]), say: wegJa(ids) };
+}
+
+// Aufgaben für Zahlen- und Telefonlektionen (aus lessonCore aufgerufen)
+function numberLessonCore(lesson, unit, idx){
+  const exs = [];
+  const toks = (lesson.teach || []).map(id => TOK[id]).filter(Boolean);
+  const range = (ids) => { const vals = ids.map(id => TOK[id].val); return [Math.min(...vals), Math.max(...vals)]; };
+  if (lesson.type === "words") {
+    const [lo, hi] = range(lesson.teach);
+    exs.push({ kind: "intro", title: lesson.title,
+      cards: toks.map(t => ({ big: () => wegHtml([t.id], { noSub: true }), sub: wegEsc(t.dg + " · " + t.de), say: t.ja })),
+      note: "Tippe eine Zahl an, um sie zu hören." });
+    const body = [];
+    toks.forEach(t => { body.push(exNumA2J(t.val, lo, hi)); body.push(exNumJ2A(t.val, lo, hi)); });
+    shuffle(toks).slice(0, 3).forEach(t => body.push(exNumHear(t.val, lo, hi)));
+    body.push(exNumMatch(lesson.teach));
+    exs.push(...shuffle(body));
+  } else if (lesson.type === "numgen") {
+    exs.push({ kind: "intro", title: lesson.title, explain: lesson.explain,
+      examples: [23, 40, 57, 99].map(v => ({ html: () => wegHtml(numIds(v)), de: String(v), say: wegJa(numIds(v)) })) });
+    const body = [];
+    const vals = () => 11 + Math.floor(Math.random() * 89);
+    const pickVals = n => { const s = new Set(); while (s.size < n) s.add(lesson.min + Math.floor(Math.random() * (lesson.max - lesson.min + 1))); return [...s]; };
+    const all = pickVals(12);
+    all.slice(0, 3).forEach(v => body.push(exNumBuild(v, ["n1","n2","n3","n4","n5","n6","n7","n8","n9","n10"])));
+    all.slice(3, 7).forEach(v => body.push(exNumA2J(v, lesson.min, lesson.max)));
+    all.slice(7, 10).forEach(v => body.push(exNumJ2A(v, lesson.min, lesson.max)));
+    all.slice(10, 12).forEach(v => body.push(exNumHear(v, lesson.min, lesson.max)));
+    exs.push(...shuffle(body));
+  } else if (lesson.type === "phone") {
+    const poolAll = introducedTokens(unit.id, idx, false);
+    exs.push({ kind: "intro", title: lesson.title, explain: lesson.explain,
+      examples: lesson.sentences.map(s => ({ html: () => wegHtml(s.ids), de: wegEsc(s.de), say: wegJa(s.ids) })) });
+    const body = [];
+    const tp = poolAll.filter(t => t.kind !== "part" && t.kind !== "aux" && t.kind !== "suffix" && t.kind !== "num");
+    (lesson.teach || []).map(id => TOK[id]).filter(t => t && t.kind !== "num" && t.kind !== "part").forEach(t => { body.push(exTokJa2De(t, tp)); body.push(exTokDe2Ja(t, tp)); });
+    lesson.sentences.forEach(s => body.push(exSentJa2De(s, lesson.sentences)));
+    body.push(exBuild(lesson.sentences[0], poolAll));
+    for (let i = 0; i < 3; i++) body.push(exPhoneHear(phoneGroups(i === 2)));
+    for (let i = 0; i < 3; i++) body.push(exPhoneRead(phoneGroups(i === 2)));
+    const numPool = ["n0","n1","n2","n3","n4","n5","n6","n7","n8","n9","no"];
+    body.push(exPhoneBuild(phoneGroups(true), numPool));
+    body.push(exNumMatch(["n0", "n4", "n7", "n9"]));
+    exs.push(...shuffle(body));
+  }
+  return exs;
+}
+
+// ---------- Prüfungen ----------
+function sectionOfUnit(uid){ return WEG_SECTIONS.find(sec => sec.units.includes(uid)) || null; }
+function sectionComplete(sec){ return sec.units.every(uid => wegUnit(uid) && unitDone(uid)); }
+function examDone(sec){ return !!sec.examId && lessonDone(sec.examId); }
+function examAvailable(sec){ return !!sec.examId && sectionComplete(sec); }
+function examExercises(sec){
+  const all = [];
+  sec.units.forEach(uid => {
+    const u = wegUnit(uid);
+    const part = [];
+    u.lessons.forEach((l, i) => { if (l.type !== "check") lessonCore(u, i).forEach(e => { if (e.kind !== "intro") part.push(e); }); });
+    dropHear(shuffle(part)).slice(0, 5).forEach(e => all.push(e));
+  });
+  return shuffle(all);
+}
+function renderPruefung(mount, parts){
+  const sec = WEG_SECTIONS.find(s => s.examId === "exam" + parts[0]);
+  if (!sec || !examAvailable(sec)) { goto("weg"); return; }
+  _knownKana = null;
+  playLesson(mount, {
+    exs: examExercises(sec),
+    passPct: PASS_PCT,
+    onDone: (pct, passed) => { markWegLesson(sec.examId, pct, passed); dailyAdd(1); },
+    buttons: (pct, passed) => passed
+      ? [{ label: "Zum Weg", route: "weg", primary: true }]
+      : [{ label: "Nochmal", route: "pruefung/" + parts[0], primary: true }, { label: "Zum Weg", route: "weg" }],
+    extra: () => {
+      const g = dailyGoal(), t = dailyToday();
+      return `<p class="hint">Heute: ${t} / ${g} Lektion${g === 1 ? "" : "en"} · Serie: ${dailyStreak()} Tag${dailyStreak() === 1 ? "" : "e"}</p>`;
+    }
+  });
 }
 
 // ---------- Reihenfolge des Lernpfads ----------
